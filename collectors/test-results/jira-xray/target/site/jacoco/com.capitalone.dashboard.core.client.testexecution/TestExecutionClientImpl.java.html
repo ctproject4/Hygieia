@@ -1,0 +1,450 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>TestExecutionClientImpl.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:jira-xray-testresult-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.core.client.testexecution</a> &gt; <span class="el_source">TestExecutionClientImpl.java</span></div><h1>TestExecutionClientImpl.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.core.client.testexecution;
+
+import com.capitalone.dashboard.TestResultSettings;
+import com.capitalone.dashboard.api.domain.TestExecution;
+import com.capitalone.dashboard.api.domain.TestRun;
+import com.capitalone.dashboard.api.domain.TestStep;
+import com.capitalone.dashboard.core.client.JiraXRayRestClientImpl;
+import com.capitalone.dashboard.core.client.JiraXRayRestClientSupplier;
+import com.capitalone.dashboard.model.CollectorItem;
+import com.capitalone.dashboard.model.Feature;
+import com.capitalone.dashboard.model.TestResult;
+import com.capitalone.dashboard.model.TestCase;
+import com.capitalone.dashboard.model.TestCaseStatus;
+import com.capitalone.dashboard.model.TestCaseStep;
+import com.capitalone.dashboard.model.TestCapability;
+import com.capitalone.dashboard.model.TestSuite;
+import com.capitalone.dashboard.model.TestSuiteType;
+import com.capitalone.dashboard.model.FeatureIssueLink;
+
+import com.capitalone.dashboard.model.TestResultCollector;
+import com.capitalone.dashboard.model.CollectorType;
+import com.capitalone.dashboard.repository.CollectorItemRepository;
+import com.capitalone.dashboard.repository.FeatureRepository;
+import com.capitalone.dashboard.repository.TestResultCollectorRepository;
+import com.capitalone.dashboard.repository.TestResultRepository;
+import com.capitalone.dashboard.util.FeatureCollectorConstants;
+import com.google.common.collect.Lists;
+import org.slf4j.LoggerFactory;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.stream.Collectors;
+
+public class TestExecutionClientImpl implements TestExecutionClient {
+<span class="nc" id="L45">    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(TestExecutionClientImpl.class);</span>
+    private final TestResultSettings testResultSettings;
+    private final TestResultRepository testResultRepository;
+    private final TestResultCollectorRepository testResultCollectorRepository;
+    private final FeatureRepository featureRepository;
+    private final CollectorItemRepository collectorItemRepository;
+    private JiraXRayRestClientImpl restClient;
+    private final JiraXRayRestClientSupplier restClientSupplier;
+<span class="nc" id="L53">    private List&lt;TestCase&gt; testCases = new ArrayList&lt;&gt;();</span>
+
+    public TestExecutionClientImpl(TestResultRepository testResultRepository, TestResultCollectorRepository testResultCollectorRepository,
+                                   FeatureRepository featureRepository, CollectorItemRepository collectorItemRepository,
+<span class="nc" id="L57">                                   TestResultSettings testResultSettings, JiraXRayRestClientSupplier restClientSupplier) {</span>
+<span class="nc" id="L58">        this.testResultRepository = testResultRepository;</span>
+<span class="nc" id="L59">        this.testResultCollectorRepository = testResultCollectorRepository;</span>
+<span class="nc" id="L60">        this.featureRepository = featureRepository;</span>
+<span class="nc" id="L61">        this.testResultSettings = testResultSettings;</span>
+<span class="nc" id="L62">        this.restClientSupplier = restClientSupplier;</span>
+<span class="nc" id="L63">        this.collectorItemRepository = collectorItemRepository;</span>
+<span class="nc" id="L64">    }</span>
+
+    public void setTestCases(List&lt;TestCase&gt; testCases) {
+<span class="nc" id="L67">        this.testCases = testCases;</span>
+<span class="nc" id="L68">    }</span>
+<span class="nc" id="L69">    private enum TEST_STATUS_COUNT_ATTRIBUTES {</span>
+<span class="nc" id="L70">        PASS_COUNT, FAIL_COUNT, SKIP_COUNT, UNKNOWN_COUNT</span>
+    }
+<span class="nc" id="L72">    private enum TEST_STEP_STATUS_COUNT_ATTRIBUTES {</span>
+<span class="nc" id="L73">        PASSSTEP_COUNT, FAILSTEP_COUNT, SKIPSTEP_COUNT, UNKNOWNSTEP_COUNT</span>
+    }
+    /**
+     * Updates the test result information in MongoDB with Pagination. pageSize is defined in properties
+     *
+     * @return
+     */
+    public int updateTestResultInformation() {
+<span class="nc" id="L81">        int count = 0;</span>
+<span class="nc" id="L82">        int pageSize = testResultSettings.getPageSize();</span>
+
+<span class="nc" id="L84">        boolean hasMore = true;</span>
+<span class="nc" id="L85">        List&lt;Feature&gt; testExecutions = featureRepository.getStoryByType(&quot;Test Execution&quot;);</span>
+<span class="nc" id="L86">        List&lt;Feature&gt; manualTestExecutions = this.getManualTestExecutions(testExecutions);</span>
+
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        for (int i = 0; hasMore; i += 1) {</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">            if (LOGGER.isDebugEnabled()) {</span>
+<span class="nc" id="L90">                LOGGER.debug(&quot;Obtaining story information starting at index &quot; + i + &quot;...&quot;);</span>
+            }
+<span class="nc" id="L92">            long queryStart = System.currentTimeMillis();</span>
+
+<span class="nc" id="L94">            List&lt;Feature&gt; pagedTestExecutions = this.getTestExecutions(manualTestExecutions, i, pageSize);</span>
+
+<span class="nc bnc" id="L96" title="All 2 branches missed.">            if (LOGGER.isDebugEnabled()) {</span>
+<span class="nc" id="L97">                LOGGER.debug(&quot;Story information query took &quot; + (System.currentTimeMillis() - queryStart) + &quot; ms&quot;);</span>
+            }
+
+<span class="nc bnc" id="L100" title="All 4 branches missed.">            if (manualTestExecutions != null &amp;&amp; !manualTestExecutions.isEmpty()) {</span>
+<span class="nc" id="L101">                updateMongoInfo(pagedTestExecutions);</span>
+<span class="nc" id="L102">                count += pagedTestExecutions.size();</span>
+            }
+
+<span class="nc" id="L105">            LOGGER.info(&quot;Loop i &quot; + i + &quot; pageSize &quot; + pagedTestExecutions.size());</span>
+
+            // will result in an extra call if number of results == pageSize
+            // but I would rather do that then complicate the jira client implementation
+<span class="nc bnc" id="L109" title="All 4 branches missed.">            if (pagedTestExecutions == null || pagedTestExecutions.size() &lt; pageSize) {</span>
+<span class="nc" id="L110">                hasMore = false;</span>
+<span class="nc" id="L111">                break;</span>
+            }
+        }
+
+<span class="nc" id="L115">        return count;</span>
+    }
+
+    /**
+     * Updates the MongoDB with a JSONArray received from the source system
+     * back-end with story-based data.
+     *
+     * @param currentPagedTestExecutions
+     *            A list response of Jira issues from the source system
+     */
+    private void updateMongoInfo(List&lt;Feature&gt; currentPagedTestExecutions) {
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        if (LOGGER.isDebugEnabled()) {</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">            LOGGER.debug(&quot;Size of paged Jira response: &quot; + (currentPagedTestExecutions == null? 0 : currentPagedTestExecutions.size()));</span>
+        }
+
+<span class="nc bnc" id="L130" title="All 2 branches missed.">        if (currentPagedTestExecutions != null) {</span>
+<span class="nc" id="L131">            List&lt;TestResult&gt; testResultsToSave = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L133" title="All 2 branches missed.">            for (Feature testExec : currentPagedTestExecutions) {</span>
+
+                // Set collectoritemid for manual test results
+<span class="nc" id="L136">                CollectorItem collectorItem = createCollectorItem(testExec);</span>
+<span class="nc" id="L137">                TestResult testResult = testResultRepository.findByCollectorItemId(collectorItem.getId());</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">                if(testResult == null) {</span>
+<span class="nc" id="L139">                    testResult = new TestResult();</span>
+                }
+<span class="nc" id="L141">                testResult.setCollectorItemId(collectorItem.getId());</span>
+<span class="nc" id="L142">                testResult.setDescription(testExec.getsName());</span>
+
+<span class="nc" id="L144">                testResult.setTargetAppName(testExec.getsProjectName());</span>
+<span class="nc" id="L145">                testResult.setType(TestSuiteType.Manual);</span>
+                try {
+<span class="nc" id="L147">                    TestExecution testExecution = new TestExecution(new URI(testExec.getsUrl()), testExec.getsNumber(), Long.parseLong(testExec.getsId()));</span>
+<span class="nc" id="L148">                    testResult.setUrl(testExecution.getSelf().toString());</span>
+
+<span class="nc" id="L150">                    restClient = (JiraXRayRestClientImpl) restClientSupplier.get();</span>
+<span class="nc" id="L151">                    Iterable&lt;TestExecution.Test&gt; tests = restClient.getTestExecutionClient().getTests(testExecution).claim();</span>
+
+<span class="nc bnc" id="L153" title="All 2 branches missed.">                    if (tests != null) {</span>
+<span class="nc" id="L154">                        int totalCount = (int) tests.spliterator().getExactSizeIfKnown();</span>
+
+<span class="nc" id="L156">                        Map&lt;String,Integer&gt; testCountByStatus = this.getTestCountStatusMap(testExec, tests);</span>
+<span class="nc" id="L157">                        int failCount = testCountByStatus.get(TEST_STATUS_COUNT_ATTRIBUTES.FAIL_COUNT.name());</span>
+<span class="nc" id="L158">                        int passCount = testCountByStatus.get(TEST_STATUS_COUNT_ATTRIBUTES.PASS_COUNT.name());</span>
+
+<span class="nc" id="L160">                        List&lt;TestCapability&gt; capabilities = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L161">                        TestCapability capability = new TestCapability();</span>
+<span class="nc" id="L162">                        capability.setDescription(testExec.getsName());</span>
+<span class="nc" id="L163">                        capability.setTotalTestSuiteCount(1);</span>
+<span class="nc" id="L164">                        capability.setType(TestSuiteType.Manual);</span>
+<span class="nc" id="L165">                        List&lt;TestSuite&gt; testSuites = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L166">                        TestSuite testSuite = new TestSuite();</span>
+
+<span class="nc" id="L168">                        testSuite.setDescription(testExec.getsName());</span>
+<span class="nc" id="L169">                        testSuite.setType(TestSuiteType.Manual);</span>
+
+<span class="nc" id="L171">                        testSuite.setTotalTestCaseCount(totalCount);</span>
+<span class="nc" id="L172">                        testSuite.setFailedTestCaseCount(failCount);</span>
+<span class="nc" id="L173">                        testSuite.setSuccessTestCaseCount(passCount);</span>
+
+<span class="nc" id="L175">                        int skipCount = totalCount - (failCount + passCount);</span>
+<span class="nc" id="L176">                        testSuite.setSkippedTestCaseCount(skipCount);</span>
+
+<span class="nc bnc" id="L178" title="All 2 branches missed.">                        if(failCount &gt; 0) {</span>
+<span class="nc" id="L179">                            capability.setStatus(TestCaseStatus.Failure);</span>
+<span class="nc" id="L180">                            testResult.setResultStatus(&quot;Failure&quot;);</span>
+<span class="nc" id="L181">                            testSuite.setStatus(TestCaseStatus.Failure);</span>
+<span class="nc" id="L182">                            testResult.setFailureCount(1);</span>
+<span class="nc" id="L183">                            capability.setFailedTestSuiteCount(1);</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">                        } else if (totalCount == passCount){</span>
+<span class="nc" id="L185">                            capability.setStatus(TestCaseStatus.Success);</span>
+<span class="nc" id="L186">                            testResult.setResultStatus(&quot;Success&quot;);</span>
+<span class="nc" id="L187">                            testSuite.setStatus(TestCaseStatus.Success);</span>
+<span class="nc" id="L188">                            testResult.setSuccessCount(1);</span>
+<span class="nc" id="L189">                            capability.setSuccessTestSuiteCount(1);</span>
+                        } else {
+<span class="nc" id="L191">                            capability.setStatus(TestCaseStatus.Skipped);</span>
+<span class="nc" id="L192">                            testResult.setResultStatus(&quot;Skipped&quot;);</span>
+<span class="nc" id="L193">                            testSuite.setStatus(TestCaseStatus.Skipped);</span>
+<span class="nc" id="L194">                            testResult.setSkippedCount(1);</span>
+<span class="nc" id="L195">                            capability.setSkippedTestSuiteCount(1);</span>
+                        }
+
+<span class="nc" id="L198">                        testSuite.setTestCases(this.getTestCases());</span>
+<span class="nc" id="L199">                        testSuites.add(testSuite);</span>
+<span class="nc" id="L200">                        capability.setTestSuites(testSuites);</span>
+<span class="nc" id="L201">                        capabilities.add(capability);</span>
+<span class="nc" id="L202">                        testResult.setTestCapabilities(capabilities);</span>
+                    }
+
+<span class="nc" id="L205">                } catch (URISyntaxException u) {</span>
+<span class="nc" id="L206">                    LOGGER.error(&quot;URI Syntax Invalid&quot;);</span>
+<span class="nc" id="L207">                }</span>
+<span class="nc" id="L208">                testResultsToSave.add(testResult);</span>
+<span class="nc" id="L209">            }</span>
+
+            // Saving back to MongoDB
+<span class="nc" id="L212">            testResultRepository.save(testResultsToSave);</span>
+        }
+<span class="nc" id="L214">    }</span>
+
+    /**
+     * Get the test cases for a test suite
+     *
+     * @return testCases
+     */
+    private List&lt;TestCase&gt; getTestCases() {
+<span class="nc" id="L222">        return this.testCases;</span>
+    }
+
+    /**
+     * Gets the test steps for a test case
+     *
+     * @param testRun
+     * @return
+     */
+    private List&lt;TestCaseStep&gt; getTestSteps(TestRun testRun) {
+
+<span class="nc" id="L233">        List&lt;TestCaseStep&gt; testSteps = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L235" title="All 2 branches missed.">        for (TestStep testStep : testRun.getSteps()) {</span>
+<span class="nc" id="L236">            TestCaseStep testCaseStep = new TestCaseStep();</span>
+
+<span class="nc" id="L238">            testCaseStep.setId(testStep.getId().toString());</span>
+<span class="nc" id="L239">            testCaseStep.setDescription(testStep.getStep().getRaw());</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">            if (testStep.getStatus().toString().equals(&quot;PASS&quot;)) {</span>
+<span class="nc" id="L241">                testCaseStep.setStatus(TestCaseStatus.Success);</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">            } else if (testStep.getStatus().toString().equals(&quot;FAIL&quot;)) {</span>
+<span class="nc" id="L243">                testCaseStep.setStatus(TestCaseStatus.Failure);</span>
+            } else {
+<span class="nc" id="L245">                testCaseStep.setStatus(TestCaseStatus.Skipped);</span>
+            }
+<span class="nc" id="L247">            testSteps.add(testCaseStep);</span>
+<span class="nc" id="L248">        }</span>
+
+<span class="nc" id="L250">        return testSteps;</span>
+    }
+
+
+    /**
+     * Gets the test cases count map based on the status {pass, fail, skip &amp; unknown}
+     *
+     * @param testExec
+     * @param tests
+     * @return
+     */
+    private Map&lt;String,Integer&gt; getTestCountStatusMap(Feature testExec, Iterable&lt;TestExecution.Test&gt; tests) {
+
+<span class="nc" id="L263">        Map&lt;String,Integer&gt; map = new HashMap&lt;String, Integer&gt;(TEST_STATUS_COUNT_ATTRIBUTES.values().length);</span>
+<span class="nc" id="L264">        int failTestCount = 0, passTestCount = 0, skipTestCount = 0, unknownTestCount = 0;</span>
+
+<span class="nc" id="L266">        List&lt;TestCase&gt; testCases = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L268" title="All 2 branches missed.">        for(TestExecution.Test test : tests){</span>
+<span class="nc" id="L269">            Optional&lt;TestRun&gt; testRunOpt = Optional.ofNullable(restClient.getTestRunClient().getTestRun(testExec.getsNumber(), test.getKey()).claim());</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">            if(testRunOpt.isPresent()){</span>
+<span class="nc" id="L271">                TestRun testRun = testRunOpt.get();</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">                if(testRun.getStatus().equals(TestRun.Status.FAIL)){</span>
+<span class="nc" id="L273">                    failTestCount++;</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">                }else if(testRun.getStatus().equals(TestRun.Status.PASS)){</span>
+<span class="nc" id="L275">                    passTestCount++;</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">                }else if (testRun.getStatus().equals(TestRun.Status.SKIP)){</span>
+<span class="nc" id="L277">                    skipTestCount++;</span>
+                }else{
+<span class="nc" id="L279">                    unknownTestCount++;</span>
+                }
+<span class="nc" id="L281">                TestCase testCase = createTestCase(test, testRun, testExec);</span>
+<span class="nc" id="L282">                testCases.add(testCase);</span>
+                }
+<span class="nc" id="L284">            }</span>
+<span class="nc" id="L285">            this.setTestCases(testCases);</span>
+
+<span class="nc" id="L287">        map.put(TEST_STATUS_COUNT_ATTRIBUTES.PASS_COUNT.name(), passTestCount);</span>
+<span class="nc" id="L288">        map.put(TEST_STATUS_COUNT_ATTRIBUTES.FAIL_COUNT.name(), failTestCount);</span>
+<span class="nc" id="L289">        map.put(TEST_STATUS_COUNT_ATTRIBUTES.SKIP_COUNT.name(), skipTestCount);</span>
+<span class="nc" id="L290">        map.put(TEST_STATUS_COUNT_ATTRIBUTES.UNKNOWN_COUNT.name(), unknownTestCount);</span>
+<span class="nc" id="L291">        return map;</span>
+    }
+
+    // This method needs a core project update, so temporarily warnings suppressed
+    @SuppressWarnings(&quot;PMD&quot;)
+    private TestCase createTestCase(TestExecution.Test test, TestRun testRun, Feature feature) {
+<span class="nc" id="L297">        TestCase testCase = new TestCase();</span>
+<span class="nc" id="L298">        testCase.setId(testRun.getId().toString());</span>
+<span class="nc" id="L299">        testCase.setDescription(test.toString());</span>
+<span class="nc" id="L300">        Optional&lt;Iterable&lt;TestStep&gt;&gt; testStepsOpt = Optional.ofNullable(testRun.getSteps());</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">        if (testStepsOpt.isPresent()) {</span>
+<span class="nc" id="L302">            int totalSteps = (int) testRun.getSteps().spliterator().getExactSizeIfKnown();</span>
+<span class="nc" id="L303">            Map&lt;String, Integer&gt; stepCountByStatus = this.getStepCountStatusMap(testRun);</span>
+<span class="nc" id="L304">            int failSteps = stepCountByStatus.get(TEST_STEP_STATUS_COUNT_ATTRIBUTES.FAILSTEP_COUNT.name());</span>
+<span class="nc" id="L305">            int passSteps = stepCountByStatus.get(TEST_STEP_STATUS_COUNT_ATTRIBUTES.PASSSTEP_COUNT.name());</span>
+<span class="nc" id="L306">            int skipSteps = stepCountByStatus.get(TEST_STEP_STATUS_COUNT_ATTRIBUTES.SKIPSTEP_COUNT.name());</span>
+<span class="nc" id="L307">            int unknownSteps = stepCountByStatus.get(TEST_STEP_STATUS_COUNT_ATTRIBUTES.UNKNOWNSTEP_COUNT.name());</span>
+
+<span class="nc" id="L309">            testCase.setTotalTestStepCount(totalSteps);</span>
+<span class="nc" id="L310">            testCase.setFailedTestStepCount(failSteps);</span>
+<span class="nc" id="L311">            testCase.setSuccessTestStepCount(passSteps);</span>
+<span class="nc" id="L312">            testCase.setSkippedTestStepCount(skipSteps);</span>
+<span class="nc" id="L313">            testCase.setUnknownStatusCount(unknownSteps);</span>
+
+<span class="nc bnc" id="L315" title="All 2 branches missed.">            if (failSteps &gt; 0) {</span>
+<span class="nc" id="L316">                testCase.setStatus(TestCaseStatus.Failure);</span>
+<span class="nc bnc" id="L317" title="All 2 branches missed.">            } else if (skipSteps &gt; 0) {</span>
+<span class="nc" id="L318">                testCase.setStatus(TestCaseStatus.Skipped);</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">            } else if (passSteps &gt; 0) {</span>
+<span class="nc" id="L320">                testCase.setStatus(TestCaseStatus.Success);</span>
+            } else {
+<span class="nc" id="L322">                testCase.setStatus(TestCaseStatus.Unknown);</span>
+            }
+
+<span class="nc" id="L325">             Set&lt;String&gt; tags = getStoryIds(feature.getIssueLinks());</span>
+            // Temporarily commented for core project update
+            // testCase.setTags(tags);
+<span class="nc" id="L328">            testCase.setTestSteps(this.getTestSteps(testRun));</span>
+        }
+<span class="nc" id="L330">        return testCase;</span>
+    }
+
+    private Set&lt;String&gt; getStoryIds(Collection&lt;FeatureIssueLink&gt; issueLinks) {
+<span class="nc" id="L334">        Set&lt;String&gt; tags = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L335">        issueLinks.forEach(issueLink -&gt; tags.add(issueLink.getTargetIssueKey()));</span>
+<span class="nc" id="L336">        return tags;</span>
+    }
+
+    /**
+     * Gets the test step count map based on the status
+     *
+     * @param testRun
+     * @return
+     */
+    private Map&lt;String,Integer&gt; getStepCountStatusMap(TestRun testRun) {
+<span class="nc" id="L346">        Map&lt;String,Integer&gt; map = new HashMap&lt;&gt;(TEST_STEP_STATUS_COUNT_ATTRIBUTES.values().length);</span>
+<span class="nc" id="L347">        int failStepCount = 0, passStepCount = 0, skipStepCount = 0, unknownStepCount = 0;</span>
+
+<span class="nc" id="L349">        List&lt;TestStep&gt; testSteps = Lists.newArrayList(testRun.getSteps());</span>
+<span class="nc" id="L350">        passStepCount = testSteps.stream().filter(testStep -&gt; testStep.getStatus().equals(TestStep.Status.PASS)).collect(Collectors.toList()).size();</span>
+<span class="nc" id="L351">        failStepCount = testSteps.stream().filter(testStep -&gt; testStep.getStatus().equals(TestStep.Status.FAIL)).collect(Collectors.toList()).size();</span>
+<span class="nc" id="L352">        skipStepCount = testSteps.stream().filter(testStep -&gt; testStep.getStatus().equals(TestStep.Status.SKIP)).collect(Collectors.toList()).size();</span>
+<span class="nc bnc" id="L353" title="All 2 branches missed.">        unknownStepCount = testSteps.stream().filter(testStep -&gt; !testStep.getStatus().equals(TestStep.Status.PASS) ||</span>
+<span class="nc bnc" id="L354" title="All 4 branches missed.">                !testStep.getStatus().equals(TestStep.Status.FAIL) || testStep.getStatus().equals(TestStep.Status.SKIP)</span>
+<span class="nc" id="L355">        ).collect(Collectors.toList()).size();</span>
+
+<span class="nc" id="L357">        map.put(TEST_STEP_STATUS_COUNT_ATTRIBUTES.FAILSTEP_COUNT.name(), failStepCount);</span>
+<span class="nc" id="L358">        map.put(TEST_STEP_STATUS_COUNT_ATTRIBUTES.PASSSTEP_COUNT.name(), passStepCount);</span>
+<span class="nc" id="L359">        map.put(TEST_STEP_STATUS_COUNT_ATTRIBUTES.SKIPSTEP_COUNT.name(), skipStepCount);</span>
+<span class="nc" id="L360">        map.put(TEST_STEP_STATUS_COUNT_ATTRIBUTES.UNKNOWNSTEP_COUNT.name(), unknownStepCount);</span>
+<span class="nc" id="L361">        return map;</span>
+    }
+
+    /**
+     * Gets test executions with pagination
+     *
+     * @param sourceList
+     * @param page
+     * @param pageSize
+     * @return
+     */
+    public List&lt;Feature&gt; getTestExecutions(List&lt;Feature&gt; sourceList, int page, int pageSize) {
+<span class="nc bnc" id="L373" title="All 4 branches missed.">        if(pageSize &lt;= 0 || page &lt; 0) {</span>
+<span class="nc" id="L374">            throw new IllegalArgumentException(&quot;invalid page size: &quot; + pageSize);</span>
+        }
+
+<span class="nc" id="L377">        int fromIndex = page * pageSize;</span>
+<span class="nc bnc" id="L378" title="All 4 branches missed.">        if(sourceList == null || sourceList.size() &lt; fromIndex){</span>
+<span class="nc" id="L379">            return Collections.emptyList();</span>
+        }
+<span class="nc" id="L381">        return sourceList.subList(fromIndex, Math.min(fromIndex + pageSize, sourceList.size()));</span>
+    }
+
+    /**
+     * Filters all the manual test executions
+     *
+     * @param testExecutions
+     * @return
+     */
+    public List&lt;Feature&gt; getManualTestExecutions(List&lt;Feature&gt; testExecutions) {
+<span class="nc" id="L391">        List&lt;Feature&gt; manualTestExecutions = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L392">        String[] automationKeywords = {&quot;automated&quot;, &quot;automation&quot;};</span>
+
+<span class="nc bnc" id="L394" title="All 2 branches missed.">        for (Feature testExecution : testExecutions) {</span>
+<span class="nc bnc" id="L395" title="All 2 branches missed.">            if (!Arrays.stream(automationKeywords).parallel().anyMatch(testExecution.getsName().toLowerCase()::contains)) {</span>
+<span class="nc" id="L396">                manualTestExecutions.add(testExecution);</span>
+            }
+<span class="nc" id="L398">        }</span>
+<span class="nc" id="L399">        return manualTestExecutions;</span>
+    }
+
+    /**
+     * Retrieves the maximum change date for a given query.
+     *
+     * @return A list object of the maximum change date
+     */
+    public String getMaxChangeDate() {
+<span class="nc" id="L408">        String data = null;</span>
+
+        try {
+<span class="nc" id="L411">            List&lt;Feature&gt; response = featureRepository</span>
+<span class="nc" id="L412">                    .findTopByCollectorIdAndChangeDateGreaterThanOrderByChangeDateDesc(</span>
+<span class="nc" id="L413">                            testResultCollectorRepository.findByName(FeatureCollectorConstants.JIRA_XRAY).getId(),</span>
+<span class="nc" id="L414">                            testResultSettings.getDeltaStartDate());</span>
+<span class="nc bnc" id="L415" title="All 4 branches missed.">            if ((response != null) &amp;&amp; !response.isEmpty()) {</span>
+<span class="nc" id="L416">                data = response.get(0).getChangeDate();</span>
+            }
+<span class="nc" id="L418">        } catch (Exception e) {</span>
+<span class="nc" id="L419">            LOGGER.error(&quot;There was a problem retrieving or parsing data from the local &quot;</span>
+                    + &quot;repository while retrieving a max change date\nReturning null&quot;, e);
+<span class="nc" id="L421">        }</span>
+
+<span class="nc" id="L423">        return data;</span>
+    }
+
+    private CollectorItem createCollectorItem(Feature testExec) {
+<span class="nc" id="L427">        List&lt;TestResultCollector&gt; collector = testResultCollectorRepository.findByCollectorTypeAndName(CollectorType.Test, &quot;Jira XRay&quot;);</span>
+<span class="nc" id="L428">        TestResultCollector collector1 = collector.get(0);</span>
+<span class="nc" id="L429">        CollectorItem existing = collectorItemRepository.findByCollectorIdNiceNameAndJobName(collector1.getId(), &quot;Manual&quot;, testExec.getsName());</span>
+<span class="nc" id="L430">        CollectorItem tempCollItem = new CollectorItem();</span>
+<span class="nc" id="L431">        Optional&lt;CollectorItem&gt; optionalCollectorItem = Optional.ofNullable(existing);</span>
+<span class="nc bnc" id="L432" title="All 2 branches missed.">        if(optionalCollectorItem.isPresent()) {</span>
+<span class="nc" id="L433">            tempCollItem.setId(existing.getId());</span>
+        }else {
+<span class="nc" id="L435">            tempCollItem.setCollectorId(collector1.getId());</span>
+<span class="nc" id="L436">            tempCollItem.setDescription(&quot;JIRAXRay:&quot; + testExec.getsName());</span>
+<span class="nc" id="L437">            tempCollItem.setPushed(true);</span>
+<span class="nc" id="L438">            tempCollItem.setLastUpdated(System.currentTimeMillis());</span>
+<span class="nc" id="L439">            tempCollItem.setNiceName(&quot;Manual&quot;);</span>
+<span class="nc" id="L440">            Map&lt;String, Object&gt; option = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L441">            option.put(&quot;jobName&quot;, testExec.getsName());</span>
+<span class="nc" id="L442">            option.put(&quot;instanceUrl&quot;, testExec.getsUrl());</span>
+<span class="nc" id="L443">            tempCollItem.getOptions().putAll(option);</span>
+<span class="nc" id="L444">            collectorItemRepository.save(tempCollItem);</span>
+        }
+<span class="nc" id="L446">        return tempCollItem;</span>
+
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

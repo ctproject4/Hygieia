@@ -1,0 +1,16 @@
+com/capitalone/dashboard/collector/XLDeploySettings.class
+com/capitalone/dashboard/collector/DefaultXLDeployClient.class
+com/capitalone/dashboard/Application.class
+com/capitalone/dashboard/model/XLDeployApplication.class
+com/capitalone/dashboard/repository/XLDeployCollectorRepository.class
+com/capitalone/dashboard/model/Environment.class
+com/capitalone/dashboard/collector/RestOperationsSupplier.class
+com/capitalone/dashboard/model/XLDeployCollector.class
+com/capitalone/dashboard/collector/DefaultXLDeployClient$NodeListWrapper.class
+com/capitalone/dashboard/repository/XLDeployEnvironmentComponentRepository.class
+com/capitalone/dashboard/collector/XLDeployCollectorTask$1.class
+com/capitalone/dashboard/model/XLDeployApplicationHistoryItem.class
+com/capitalone/dashboard/repository/XLDeployApplicationRepository.class
+com/capitalone/dashboard/collector/XLDeployClient.class
+com/capitalone/dashboard/model/ConfigurationItemId.class
+com/capitalone/dashboard/collector/XLDeployCollectorTask.class

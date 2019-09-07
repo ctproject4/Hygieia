@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CommitPullMatcher.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:github-graphql-scm-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">CommitPullMatcher.java</span></div><h1>CommitPullMatcher.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+import com.capitalone.dashboard.model.Commit;
+import com.capitalone.dashboard.model.GitRequest;
+import org.apache.commons.collections.CollectionUtils;
+
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+
+<span class="nc" id="L12">public class CommitPullMatcher {</span>
+
+    /**
+     * Normal merge: Match PR's commit sha's with commit list
+     * Squash merge: Match PR's merge sha's with commit list
+     * Rebase merge: Match PR's commit's &quot;message&quot;+&quot;author name&quot;+&quot;date&quot; with commit list
+     * &lt;p&gt;
+     * If match found, set the commit's PR number and possibly set the PR merge type
+     * &lt;p&gt;
+     * For setting type:
+     * If PR commit's SHAs are all found in commit stream, then the commit for the merge sha is a merge commit.
+     * In all other cases it is a new commit
+     */
+
+    public static List&lt;Commit&gt; matchCommitToPulls(List&lt;Commit&gt; commits, List&lt;GitRequest&gt; pullRequests) {
+<span class="fc" id="L27">        List&lt;Commit&gt; newCommitList = new LinkedList&lt;&gt;();</span>
+<span class="pc bpc" id="L28" title="3 of 4 branches missed.">        if (CollectionUtils.isEmpty(commits) || CollectionUtils.isEmpty(pullRequests)) {</span>
+<span class="fc" id="L29">            return commits;</span>
+        }
+        //TODO: Need to optimize this method
+<span class="nc bnc" id="L32" title="All 2 branches missed.">        for (Commit commit : commits) {</span>
+<span class="nc" id="L33">            Iterator&lt;GitRequest&gt; pIter = pullRequests.iterator();</span>
+<span class="nc" id="L34">            boolean foundPull = false;</span>
+<span class="nc bnc" id="L35" title="All 4 branches missed.">            while (!foundPull &amp;&amp; pIter.hasNext()) {</span>
+<span class="nc" id="L36">                GitRequest pull = pIter.next();</span>
+<span class="nc bnc" id="L37" title="All 2 branches missed.">                if (Objects.equals(pull.getScmRevisionNumber(), commit.getScmRevisionNumber()) ||</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">                        Objects.equals(pull.getScmMergeEventRevisionNumber(), commit.getScmRevisionNumber())) {</span>
+<span class="nc" id="L39">                    foundPull = true;</span>
+<span class="nc" id="L40">                    commit.setPullNumber(pull.getNumber());</span>
+                } else {
+<span class="nc" id="L42">                    List&lt;Commit&gt; prCommits = pull.getCommits();</span>
+<span class="nc" id="L43">                    boolean foundCommit = false;</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">                    if (!CollectionUtils.isEmpty(prCommits)) {</span>
+<span class="nc" id="L45">                        Iterator&lt;Commit&gt; cIter = prCommits.iterator();</span>
+<span class="nc bnc" id="L46" title="All 4 branches missed.">                        while (!foundCommit &amp;&amp; cIter.hasNext()) {</span>
+<span class="nc" id="L47">                            Commit loopCommit = cIter.next();</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">                            if (Objects.equals(commit.getScmAuthor(), loopCommit.getScmAuthor()) &amp;&amp;</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">                                    (commit.getScmCommitTimestamp() == loopCommit.getScmCommitTimestamp()) &amp;&amp;</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">                                    Objects.equals(commit.getScmCommitLog(), loopCommit.getScmCommitLog())) {</span>
+<span class="nc" id="L51">                                foundCommit = true;</span>
+<span class="nc" id="L52">                                foundPull = true;</span>
+<span class="nc" id="L53">                                commit.setPullNumber(pull.getNumber());</span>
+                            }
+<span class="nc" id="L55">                        }</span>
+                    }
+                }
+<span class="nc" id="L58">            }</span>
+<span class="nc" id="L59">            newCommitList.add(commit);</span>
+<span class="nc" id="L60">        }</span>
+<span class="nc" id="L61">        return newCommitList;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

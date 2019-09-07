@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GithubScmWidgetScore.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:score-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.widget</a> &gt; <span class="el_source">GithubScmWidgetScore.java</span></div><h1>GithubScmWidgetScore.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.widget;
+
+import com.capitalone.dashboard.Constants;
+import com.capitalone.dashboard.ThresholdUtils;
+import com.capitalone.dashboard.Utils;
+import com.capitalone.dashboard.exception.DataNotFoundException;
+import com.capitalone.dashboard.exception.ThresholdException;
+import com.capitalone.dashboard.model.*;
+import com.capitalone.dashboard.model.score.settings.*;
+import com.capitalone.dashboard.repository.CommitRepository;
+import com.capitalone.dashboard.repository.ComponentRepository;
+import com.google.common.collect.Lists;
+import com.mysema.query.BooleanBuilder;
+import org.apache.commons.collections.CollectionUtils;
+import org.bson.types.ObjectId;
+import org.joda.time.LocalDate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+
+/**
+ * Service to calculate scm widget score
+ * Scm scores are based on
+ * 1. Percentage of days with commits
+ */
+@Service
+public class GithubScmWidgetScore extends WidgetScoreAbstract {
+
+  protected final static String WIDGET_GITHUB_SCM_COMMITS_PER_DAY = &quot;commitsPerDay&quot;;
+  protected final static String WIDGET_GITHUB_SCM_COMMITS_PER_DAY_NAME = &quot;Commits Per Day&quot;;
+
+<span class="fc" id="L33">  public final static IdName WIDGET_ID_NAME = new IdName(</span>
+    Constants.WIDGET_GITHUB_SCM,
+    Constants.WIDGET_GITHUB_SCM_NAME
+  );
+
+<span class="fc" id="L38">  public final static IdName WIDGET_GITHUB_SCM_COMMITS_PER_DAY_ID_NAME = new IdName(</span>
+    WIDGET_GITHUB_SCM_COMMITS_PER_DAY,
+    WIDGET_GITHUB_SCM_COMMITS_PER_DAY_NAME
+  );
+
+  //Categories are various factors which contribute to the overall score of the widget
+  public final List&lt;IdName&gt; categories;
+
+  private final CommitRepository commitRepository;
+  private final ComponentRepository componentRepository;
+
+  @Autowired
+  public GithubScmWidgetScore(CommitRepository commitRepository,
+<span class="fc" id="L51">    ComponentRepository componentRepository) {</span>
+<span class="fc" id="L52">    this.commitRepository = commitRepository;</span>
+<span class="fc" id="L53">    this.componentRepository = componentRepository;</span>
+<span class="fc" id="L54">    this.categories = Lists.newArrayList(</span>
+      WIDGET_GITHUB_SCM_COMMITS_PER_DAY_ID_NAME
+    );
+<span class="fc" id="L57">  }</span>
+
+  @Override
+  protected IdName getWidgetIdName() {
+<span class="fc" id="L61">    return WIDGET_ID_NAME;</span>
+  }
+
+  @Override
+  protected List&lt;IdName&gt; getCategories() {
+<span class="fc" id="L66">    return this.categories;</span>
+  }
+
+  @Override
+  protected void calculateCategoryScores(Widget githubScmWidget, ScoreComponentSettings paramSettings, List&lt;ScoreWeight&gt; categoryScores)
+    throws DataNotFoundException, ThresholdException {
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">    if (CollectionUtils.isEmpty(categoryScores)) {</span>
+<span class="nc" id="L73">      return;</span>
+    }
+
+<span class="fc" id="L76">    ScmScoreSettings scmScoreSettings = (ScmScoreSettings) paramSettings;</span>
+
+<span class="fc" id="L78">    ScoreComponentSettings commitsPerDaySettings = Utils.getInstanceIfNull(</span>
+<span class="fc" id="L79">      scmScoreSettings.getCommitsPerDay(),</span>
+      ScoreComponentSettings.class
+    );
+
+<span class="fc" id="L83">    setCategoryScoreWeight(categoryScores, WIDGET_GITHUB_SCM_COMMITS_PER_DAY_ID_NAME, commitsPerDaySettings.getWeight());</span>
+
+<span class="fc" id="L85">    boolean isCommitsPerDayScoreEnabled = Utils.isScoreEnabled(commitsPerDaySettings);</span>
+
+<span class="fc" id="L87">    Iterable&lt;Commit&gt; commits = null;</span>
+
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">    if (isCommitsPerDayScoreEnabled) {</span>
+<span class="fc" id="L90">      commits = search(githubScmWidget.getComponentId(), scmScoreSettings.getNumberOfDays());</span>
+    }
+
+<span class="pc bpc" id="L93" title="2 of 4 branches missed.">    if (null == commits || !commits.iterator().hasNext()) {</span>
+<span class="nc" id="L94">      throw new DataNotFoundException(Constants.SCORE_ERROR_NO_DATA_FOUND);</span>
+    }
+
+    //Check thresholds at widget level
+<span class="fc" id="L98">    checkWidgetDataThresholds(scmScoreSettings, commits, scmScoreSettings.getNumberOfDays());</span>
+
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">    if (isCommitsPerDayScoreEnabled) {</span>
+<span class="fc" id="L101">      processCommitsPerDayScore(</span>
+        commits,
+<span class="fc" id="L103">        scmScoreSettings.getCommitsPerDay(),</span>
+<span class="fc" id="L104">        scmScoreSettings.getNumberOfDays(),</span>
+        categoryScores
+      );
+    }
+
+<span class="fc" id="L109">  }</span>
+
+
+  public Iterable&lt;Commit&gt; search(ObjectId componentId, int numberOfDays) {
+<span class="fc" id="L113">    QCommit commit = new QCommit(&quot;search&quot;);</span>
+<span class="fc" id="L114">    BooleanBuilder builder = new BooleanBuilder();</span>
+
+<span class="fc" id="L116">    Component component = componentRepository.findOne(componentId);</span>
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">    CollectorItem item = (component != null) ? component.getFirstCollectorItemForType(CollectorType.SCM):null;</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">    if (item == null) {</span>
+<span class="nc" id="L119">      return new ArrayList&lt;&gt;();</span>
+    }
+<span class="fc" id="L121">    builder.and(commit.collectorItemId.eq(item.getId()));</span>
+
+<span class="fc" id="L123">    long endTimeTarget = new LocalDate().minusDays(numberOfDays).toDate().getTime();</span>
+<span class="fc" id="L124">    builder.and(commit.scmCommitTimestamp.goe(endTimeTarget));</span>
+
+<span class="fc" id="L126">    return commitRepository.findAll(builder.getValue());</span>
+  }
+
+  private void checkWidgetDataThresholds(ScoreComponentSettings githubScmScoreSettings, Iterable&lt;Commit&gt; commits, int numberOfDays)
+    throws ThresholdException {
+<span class="fc" id="L131">    ScoreCriteria scoreCriteria = githubScmScoreSettings.getCriteria();</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">    if (null == scoreCriteria) {</span>
+<span class="fc" id="L133">      return;</span>
+    }
+
+<span class="fc" id="L136">    List&lt;ScoreThresholdSettings&gt; thresholdSettings = scoreCriteria.getDataRangeThresholds();</span>
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">    if (CollectionUtils.isEmpty(thresholdSettings)) {</span>
+<span class="nc" id="L138">      return;</span>
+    }
+
+<span class="fc" id="L141">    ThresholdUtils.sortByValueType(thresholdSettings);</span>
+<span class="fc" id="L142">    List&lt;Long&gt; commitTimestamps = getCommitTimestamps(commits);</span>
+<span class="fc" id="L143">    List&lt;ScoreThresholdSettings&gt; percentThresholds = ThresholdUtils.findAllPercentThresholds(thresholdSettings);</span>
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">    if (CollectionUtils.isNotEmpty(percentThresholds)) {</span>
+      //Check if it meets the first threshold, and return with Score zero or valuePercent Or throw noscoreexeption
+<span class="fc" id="L146">      ThresholdUtils.checkPercentThresholds(percentThresholds, commitTimestamps, numberOfDays);</span>
+
+    }
+
+<span class="fc" id="L150">    List&lt;ScoreThresholdSettings&gt; daysThresholds = ThresholdUtils.findAllDaysThresholds(thresholdSettings);</span>
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">    if (CollectionUtils.isNotEmpty(daysThresholds)) {</span>
+      //Check if it meets the first threshold, and return with Score zero or valuePercent Or throw noscoreexeption
+<span class="nc" id="L153">      ThresholdUtils.checkDaysThresholds(daysThresholds, getCommitTimestamps(commits), numberOfDays);</span>
+    }
+<span class="fc" id="L155">  }</span>
+
+  /**
+   * Calculate percentage of days with commits out of total days
+   *
+   * @param commits
+   * @param days
+   * @return percentage of days with commits
+   */
+  private Double getPercentCoverageForDays(Iterable&lt;Commit&gt; commits, int days) {
+<span class="fc" id="L165">    Set&lt;String&gt; dates = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">    for (Commit commit : commits) {</span>
+<span class="fc" id="L167">      dates.add(Constants.DAY_FORMAT.format(new Date(commit.getScmCommitTimestamp())));</span>
+<span class="fc" id="L168">    }</span>
+<span class="fc" id="L169">    return (dates.size() / (double) days) * 100;</span>
+  }
+
+  private List&lt;Long&gt; getCommitTimestamps(Iterable&lt;Commit&gt; commits) {
+<span class="fc" id="L173">    List&lt;Long&gt; timestamps = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">    for (Commit commit : commits) {</span>
+<span class="fc" id="L175">      timestamps.add(commit.getScmCommitTimestamp());</span>
+<span class="fc" id="L176">    }</span>
+<span class="fc" id="L177">    return timestamps;</span>
+  }
+
+
+  private void processCommitsPerDayScore(
+    Iterable&lt;Commit&gt; commits,
+    ScoreComponentSettings commitsPerDaySettings,
+    int numberOfDays,
+    List&lt;ScoreWeight&gt; categoryScores) {
+<span class="fc" id="L186">    ScoreWeight commitsPerDayScore = getCategoryScoreByIdName(categoryScores, WIDGET_GITHUB_SCM_COMMITS_PER_DAY_ID_NAME);</span>
+    try {
+      //Check thresholds at widget level
+<span class="fc" id="L189">      checkWidgetDataThresholds(commitsPerDaySettings, commits, numberOfDays);</span>
+<span class="fc" id="L190">      commitsPerDayScore.setScore(</span>
+        new ScoreTypeValue(
+<span class="fc" id="L192">          getPercentCoverageForDays(commits, numberOfDays)</span>
+        )
+      );
+<span class="fc" id="L195">      commitsPerDayScore.setState(ScoreWeight.ProcessingState.complete);</span>
+<span class="nc" id="L196">    } catch (ThresholdException ex) {</span>
+<span class="nc" id="L197">      setThresholdFailureWeight(ex, commitsPerDayScore);</span>
+<span class="fc" id="L198">    }</span>
+<span class="fc" id="L199">  }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

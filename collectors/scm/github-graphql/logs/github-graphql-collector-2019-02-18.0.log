@@ -1,0 +1,92 @@
+2019-02-18 11:56:23,224 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 11:56:23,228 INFO  c.c.d.collector.CollectorTask - Starting...
+2019-02-18 11:56:23,228 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 11:56:23,257 INFO  c.c.d.collector.GitHubCollectorTask - Starting collection: 1 of 1: http://current/tree/null
+2019-02-18 11:56:23,416 INFO  c.c.d.collector.GitHubCollectorTask - Remaining 100 of limit 0 resetTime 1970-01-01 05:30:00.00AM
+2019-02-18 11:56:23,427 INFO  c.c.d.collector.GitHubCollectorTask - -- Saved Commits = 1
+2019-02-18 11:56:23,435 INFO  c.c.d.collector.CollectorTask - Repo Count              1        0s
+2019-02-18 11:56:23,435 INFO  c.c.d.collector.CollectorTask - New Commits             1        0s
+2019-02-18 11:56:23,436 INFO  c.c.d.collector.CollectorTask - New Pulls               0        0s
+2019-02-18 11:56:23,436 INFO  c.c.d.collector.CollectorTask - New Issues              0        0s
+2019-02-18 11:56:23,437 INFO  c.c.d.collector.CollectorTask - Finished                         0s
+2019-02-18 11:56:23,456 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 11:56:23,456 INFO  c.c.d.collector.CollectorTask - Starting...
+2019-02-18 11:56:23,457 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 11:56:23,459 INFO  c.c.d.collector.GitHubCollectorTask - Starting collection: 1 of 1: http://current/tree/null
+2019-02-18 11:56:23,460 INFO  c.c.d.collector.GitHubCollectorTask - Remaining 100 of limit 0 resetTime 1970-01-01 05:30:00.00AM
+2019-02-18 11:56:23,466 INFO  c.c.d.collector.GitHubCollectorTask - -- Saved Commits = 1
+2019-02-18 11:56:23,467 INFO  c.c.d.collector.CollectorTask - Repo Count              1        0s
+2019-02-18 11:56:23,467 INFO  c.c.d.collector.CollectorTask - New Commits             1        0s
+2019-02-18 11:56:23,467 INFO  c.c.d.collector.CollectorTask - New Pulls               0        0s
+2019-02-18 11:56:23,467 INFO  c.c.d.collector.CollectorTask - New Issues              0        0s
+2019-02-18 11:56:23,467 INFO  c.c.d.collector.CollectorTask - Finished                         0s
+2019-02-18 11:56:23,469 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 11:56:23,470 INFO  c.c.d.collector.CollectorTask - Starting...
+2019-02-18 11:56:23,470 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 11:56:23,470 INFO  c.c.d.collector.GitHubCollectorTask - Starting collection: 1 of 1: http://current/tree/null
+2019-02-18 11:56:23,470 INFO  c.c.d.collector.GitHubCollectorTask - Remaining 100 of limit 0 resetTime 1970-01-01 05:30:00.00AM
+2019-02-18 11:56:23,471 INFO  c.c.d.collector.GitHubCollectorTask - -- Saved Commits = 1
+2019-02-18 11:56:23,484 INFO  c.c.d.collector.GitHubCollectorTask - -- Saved issue:1
+2019-02-18 11:56:23,485 INFO  c.c.d.collector.CollectorTask - Repo Count              1        0s
+2019-02-18 11:56:23,485 INFO  c.c.d.collector.CollectorTask - New Commits             1        0s
+2019-02-18 11:56:23,485 INFO  c.c.d.collector.CollectorTask - New Pulls               0        0s
+2019-02-18 11:56:23,486 INFO  c.c.d.collector.CollectorTask - New Issues              1        0s
+2019-02-18 11:56:23,486 INFO  c.c.d.collector.CollectorTask - Finished                         0s
+2019-02-18 11:56:23,489 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 11:56:23,489 INFO  c.c.d.collector.CollectorTask - Starting...
+2019-02-18 11:56:23,489 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 11:56:23,490 INFO  c.c.d.collector.GitHubCollectorTask - Starting collection: 1 of 1: http://current/tree/null
+2019-02-18 11:56:23,491 INFO  c.c.d.collector.GitHubCollectorTask - Remaining 100 of limit 0 resetTime 1970-01-01 05:30:00.00AM
+2019-02-18 11:56:23,492 INFO  c.c.d.collector.GitHubCollectorTask - -- Saved Commits = 1
+2019-02-18 11:56:23,492 INFO  c.c.d.collector.CollectorTask - Repo Count              1        0s
+2019-02-18 11:56:23,493 INFO  c.c.d.collector.CollectorTask - New Commits             1        0s
+2019-02-18 11:56:23,493 INFO  c.c.d.collector.CollectorTask - New Pulls               0        0s
+2019-02-18 11:56:23,493 INFO  c.c.d.collector.CollectorTask - New Issues              0        0s
+2019-02-18 11:56:23,493 INFO  c.c.d.collector.CollectorTask - Finished                         0s
+2019-02-18 11:56:23,549 ERROR c.c.d.collector.DefaultGitHubClient - null
+2019-02-18 12:29:32,083 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 12:29:32,165 INFO  c.c.d.collector.CollectorTask - Starting...
+2019-02-18 12:29:32,165 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 12:29:32,228 INFO  c.c.d.collector.GitHubCollectorTask - Starting collection: 1 of 1: http://current/tree/null
+2019-02-18 12:29:32,423 INFO  c.c.d.collector.GitHubCollectorTask - Remaining 100 of limit 0 resetTime 1970-01-01 05:30:00.00AM
+2019-02-18 12:29:32,446 INFO  c.c.d.collector.GitHubCollectorTask - -- Saved Commits = 1
+2019-02-18 12:29:32,463 INFO  c.c.d.collector.CollectorTask - Repo Count              1        0s
+2019-02-18 12:29:32,463 INFO  c.c.d.collector.CollectorTask - New Commits             1        0s
+2019-02-18 12:29:32,464 INFO  c.c.d.collector.CollectorTask - New Pulls               0        0s
+2019-02-18 12:29:32,464 INFO  c.c.d.collector.CollectorTask - New Issues              0        0s
+2019-02-18 12:29:32,464 INFO  c.c.d.collector.CollectorTask - Finished                         0s
+2019-02-18 12:29:32,521 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 12:29:32,521 INFO  c.c.d.collector.CollectorTask - Starting...
+2019-02-18 12:29:32,521 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 12:29:32,522 INFO  c.c.d.collector.GitHubCollectorTask - Starting collection: 1 of 1: http://current/tree/null
+2019-02-18 12:29:32,522 INFO  c.c.d.collector.GitHubCollectorTask - Remaining 100 of limit 0 resetTime 1970-01-01 05:30:00.00AM
+2019-02-18 12:29:32,523 INFO  c.c.d.collector.GitHubCollectorTask - -- Saved Commits = 1
+2019-02-18 12:29:32,523 INFO  c.c.d.collector.CollectorTask - Repo Count              1        0s
+2019-02-18 12:29:32,523 INFO  c.c.d.collector.CollectorTask - New Commits             1        0s
+2019-02-18 12:29:32,523 INFO  c.c.d.collector.CollectorTask - New Pulls               0        0s
+2019-02-18 12:29:32,523 INFO  c.c.d.collector.CollectorTask - New Issues              0        0s
+2019-02-18 12:29:32,523 INFO  c.c.d.collector.CollectorTask - Finished                         0s
+2019-02-18 12:29:32,540 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 12:29:32,541 INFO  c.c.d.collector.CollectorTask - Starting...
+2019-02-18 12:29:32,541 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 12:29:32,542 INFO  c.c.d.collector.GitHubCollectorTask - Starting collection: 1 of 1: http://current/tree/null
+2019-02-18 12:29:32,542 INFO  c.c.d.collector.GitHubCollectorTask - Remaining 100 of limit 0 resetTime 1970-01-01 05:30:00.00AM
+2019-02-18 12:29:32,543 INFO  c.c.d.collector.GitHubCollectorTask - -- Saved Commits = 1
+2019-02-18 12:29:32,552 INFO  c.c.d.collector.GitHubCollectorTask - -- Saved issue:1
+2019-02-18 12:29:32,555 INFO  c.c.d.collector.CollectorTask - Repo Count              1        0s
+2019-02-18 12:29:32,558 INFO  c.c.d.collector.CollectorTask - New Commits             1        0s
+2019-02-18 12:29:32,559 INFO  c.c.d.collector.CollectorTask - New Pulls               0        0s
+2019-02-18 12:29:32,560 INFO  c.c.d.collector.CollectorTask - New Issues              1        0s
+2019-02-18 12:29:32,561 INFO  c.c.d.collector.CollectorTask - Finished                         0s
+2019-02-18 12:29:32,575 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 12:29:32,576 INFO  c.c.d.collector.CollectorTask - Starting...
+2019-02-18 12:29:32,576 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 12:29:32,577 INFO  c.c.d.collector.GitHubCollectorTask - Starting collection: 1 of 1: http://current/tree/null
+2019-02-18 12:29:32,580 INFO  c.c.d.collector.GitHubCollectorTask - Remaining 100 of limit 0 resetTime 1970-01-01 05:30:00.00AM
+2019-02-18 12:29:32,582 INFO  c.c.d.collector.GitHubCollectorTask - -- Saved Commits = 1
+2019-02-18 12:29:32,583 INFO  c.c.d.collector.CollectorTask - Repo Count              1        0s
+2019-02-18 12:29:32,585 INFO  c.c.d.collector.CollectorTask - New Commits             1        0s
+2019-02-18 12:29:32,586 INFO  c.c.d.collector.CollectorTask - New Pulls               0        0s
+2019-02-18 12:29:32,586 INFO  c.c.d.collector.CollectorTask - New Issues              0        0s
+2019-02-18 12:29:32,586 INFO  c.c.d.collector.CollectorTask - Finished                         0s
+2019-02-18 12:29:32,794 ERROR c.c.d.collector.DefaultGitHubClient - null

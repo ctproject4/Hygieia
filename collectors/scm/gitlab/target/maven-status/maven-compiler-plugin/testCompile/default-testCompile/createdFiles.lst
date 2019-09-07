@@ -1,0 +1,5 @@
+com/capitalone/dashboard/collector/GitlabCommitsResponseMapperTest.class
+com/capitalone/dashboard/collector/GitlabGitCollectorTaskTest.class
+com/capitalone/dashboard/collector/DefaultGitlabGitClientTest.class
+com/capitalone/dashboard/collector/GitlabUrlUtilityTest.class
+com/capitalone/dashboard/model/GitlabGitRepoTest.class

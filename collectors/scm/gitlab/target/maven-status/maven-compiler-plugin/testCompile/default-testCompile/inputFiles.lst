@@ -1,0 +1,5 @@
+/home/Devops/Hygieia/collectors/scm/gitlab/src/test/java/com/capitalone/dashboard/collector/GitlabCommitsResponseMapperTest.java
+/home/Devops/Hygieia/collectors/scm/gitlab/src/test/java/com/capitalone/dashboard/collector/GitlabUrlUtilityTest.java
+/home/Devops/Hygieia/collectors/scm/gitlab/src/test/java/com/capitalone/dashboard/model/GitlabGitRepoTest.java
+/home/Devops/Hygieia/collectors/scm/gitlab/src/test/java/com/capitalone/dashboard/collector/GitlabGitCollectorTaskTest.java
+/home/Devops/Hygieia/collectors/scm/gitlab/src/test/java/com/capitalone/dashboard/collector/DefaultGitlabGitClientTest.java

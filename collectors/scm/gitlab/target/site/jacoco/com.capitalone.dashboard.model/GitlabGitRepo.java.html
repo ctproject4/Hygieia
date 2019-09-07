@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GitlabGitRepo.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:gitlab-scm-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.model</a> &gt; <span class="el_source">GitlabGitRepo.java</span></div><h1>GitlabGitRepo.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.model;
+
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import java.util.Date;
+
+/**
+ * Created by benathmane on 20/06/16.
+ */
+
+/**
+ * CollectorItem extension to store the gitlab repo url
+ */
+<span class="fc" id="L15">public class GitlabGitRepo extends  CollectorItem {</span>
+    public static final String REPO_URL = &quot;url&quot;;
+    public static final String BRANCH = &quot;branch&quot;;
+    public static final String USER_ID = &quot;userID&quot;;
+    public static final String PASSWORD = &quot;password&quot;;
+    public static final String LAST_UPDATE_TIME = &quot;lastUpdate&quot;;
+
+    public String getUserId() {
+<span class="fc" id="L23">        return (String) getOptions().get(USER_ID);</span>
+    }
+
+    public void setUserId(String userId) {
+<span class="nc" id="L27">        getOptions().put(USER_ID, userId);</span>
+<span class="nc" id="L28">    }</span>
+
+    public String getPassword() {
+<span class="fc" id="L31">        return (String) getOptions().get(PASSWORD);</span>
+    }
+
+    public void setPassword(String password) {
+<span class="nc" id="L35">        getOptions().put(PASSWORD, password);</span>
+<span class="nc" id="L36">    }</span>
+
+
+    public String getRepoUrl() {
+<span class="fc" id="L40">        return (String) getOptions().get(REPO_URL);</span>
+    }
+
+    public void setRepoUrl(String instanceUrl) {
+<span class="fc" id="L44">        getOptions().put(REPO_URL, instanceUrl);</span>
+<span class="fc" id="L45">    }</span>
+
+    public String getBranch() {
+<span class="fc" id="L48">        return (String) getOptions().get(BRANCH);</span>
+    }
+
+    public void setBranch(String branch) {
+<span class="nc" id="L52">        getOptions().put(BRANCH, branch);</span>
+<span class="nc" id="L53">    }</span>
+
+
+    public Date getLastUpdateTime() {
+<span class="nc" id="L57">        Object latest = getOptions().get(LAST_UPDATE_TIME);</span>
+<span class="nc" id="L58">        return (Date) latest;</span>
+    }
+
+    public void setLastUpdateTime(Date date) {
+<span class="nc" id="L62">        getOptions().put(LAST_UPDATE_TIME, date);</span>
+<span class="nc" id="L63">    }</span>
+
+    public void removeLastUpdateDate() {
+<span class="nc" id="L66">        getOptions().remove(LAST_UPDATE_TIME);</span>
+<span class="nc" id="L67">    }</span>
+    
+	@Override
+	public boolean equals(Object obj) {
+<span class="fc bfc" id="L71" title="All 2 branches covered.">		if (obj == null) {</span>
+<span class="fc" id="L72">			return false;</span>
+		}
+<span class="fc bfc" id="L74" title="All 2 branches covered.">		if (obj == this) {</span>
+<span class="fc" id="L75">			return true;</span>
+		}
+<span class="fc bfc" id="L77" title="All 2 branches covered.">		if (obj.getClass() != getClass()) {</span>
+<span class="fc" id="L78">			return false;</span>
+		}
+<span class="fc" id="L80">		GitlabGitRepo rhs = (GitlabGitRepo) obj;</span>
+<span class="fc" id="L81">		return new EqualsBuilder()</span>
+<span class="fc" id="L82">				.append(getRepoUrl(), rhs.getRepoUrl())</span>
+<span class="fc" id="L83">				.append(getBranch(), rhs.getBranch())</span>
+<span class="fc" id="L84">				.append(getUserId(), rhs.getUserId())</span>
+<span class="fc" id="L85">				.append(getPassword(), rhs.getPassword())</span>
+<span class="fc" id="L86">				.isEquals();</span>
+	}
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L91">        return new HashCodeBuilder(11, 17)</span>
+<span class="fc" id="L92">        		.append(getRepoUrl())</span>
+<span class="fc" id="L93">        		.append(getBranch())</span>
+<span class="fc" id="L94">        		.append(getUserId())</span>
+<span class="fc" id="L95">        		.append(getPassword())</span>
+<span class="fc" id="L96">        		.toHashCode();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

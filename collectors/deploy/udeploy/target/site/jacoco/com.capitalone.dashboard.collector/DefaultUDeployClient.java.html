@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DefaultUDeployClient.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:udeploy-deployment-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">DefaultUDeployClient.java</span></div><h1>DefaultUDeployClient.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+import com.capitalone.dashboard.model.Environment;
+import com.capitalone.dashboard.model.EnvironmentComponent;
+import com.capitalone.dashboard.model.UDeployApplication;
+import com.capitalone.dashboard.model.UDeployEnvResCompData;
+import com.capitalone.dashboard.util.Supplier;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestOperations;
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+@Component
+public class DefaultUDeployClient implements UDeployClient {
+<span class="fc" id="L36">    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultUDeployClient.class);</span>
+
+    private final UDeploySettings uDeploySettings;
+    private final RestOperations restOperations;
+
+    @Autowired
+    public DefaultUDeployClient(UDeploySettings uDeploySettings,
+<span class="fc" id="L43">                                Supplier&lt;RestOperations&gt; restOperationsSupplier) {</span>
+<span class="fc" id="L44">        this.uDeploySettings = uDeploySettings;</span>
+<span class="fc" id="L45">        this.restOperations = restOperationsSupplier.get();</span>
+<span class="fc" id="L46">    }</span>
+
+    @Override
+    public List&lt;UDeployApplication&gt; getApplications(String instanceUrl) {
+<span class="fc" id="L50">        List&lt;UDeployApplication&gt; applications = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        for (Object item : paresAsArray(makeRestCall(instanceUrl,</span>
+                &quot;deploy/application&quot;))) {
+<span class="fc" id="L54">            JSONObject jsonObject = (JSONObject) item;</span>
+<span class="fc" id="L55">            UDeployApplication application = new UDeployApplication();</span>
+<span class="fc" id="L56">            application.setInstanceUrl(instanceUrl);</span>
+<span class="fc" id="L57">            application.setApplicationName(str(jsonObject, &quot;name&quot;));</span>
+<span class="fc" id="L58">            application.setApplicationId(str(jsonObject, &quot;id&quot;));</span>
+<span class="fc" id="L59">            applications.add(application);</span>
+<span class="fc" id="L60">        }</span>
+<span class="fc" id="L61">        return applications;</span>
+    }
+
+    @Override
+    public List&lt;Environment&gt; getEnvironments(UDeployApplication application) {
+<span class="fc" id="L66">        List&lt;Environment&gt; environments = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L67">        String url = &quot;deploy/application/&quot; + application.getApplicationId()</span>
+                + &quot;/environments/false&quot;;
+
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        for (Object item : paresAsArray(makeRestCall(</span>
+<span class="fc" id="L71">                application.getInstanceUrl(), url))) {</span>
+<span class="fc" id="L72">            JSONObject jsonObject = (JSONObject) item;</span>
+<span class="fc" id="L73">            environments.add(new Environment(str(jsonObject, &quot;id&quot;), str(</span>
+                    jsonObject, &quot;name&quot;)));
+<span class="fc" id="L75">        }</span>
+
+<span class="fc" id="L77">        return environments;</span>
+    }
+
+    @SuppressWarnings(&quot;PMD.AvoidCatchingNPE&quot;)
+    @Override
+    public List&lt;EnvironmentComponent&gt; getEnvironmentComponents(
+            UDeployApplication application, Environment environment) {
+<span class="nc" id="L84">        List&lt;EnvironmentComponent&gt; components = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L85">        String url = &quot;deploy/environment/&quot; + environment.getId()</span>
+                + &quot;/latestDesiredInventory&quot;;
+        try {
+<span class="nc bnc" id="L88" title="All 2 branches missed.">            for (Object item : paresAsArray(makeRestCall(</span>
+<span class="nc" id="L89">                    application.getInstanceUrl(), url))) {</span>
+<span class="nc" id="L90">                JSONObject jsonObject = (JSONObject) item;</span>
+
+<span class="nc" id="L92">                JSONObject versionObject = (JSONObject) jsonObject</span>
+<span class="nc" id="L93">                        .get(&quot;version&quot;);</span>
+<span class="nc" id="L94">                JSONObject componentObject = (JSONObject) jsonObject</span>
+<span class="nc" id="L95">                        .get(&quot;component&quot;);</span>
+<span class="nc" id="L96">                JSONObject complianceObject = (JSONObject) jsonObject</span>
+<span class="nc" id="L97">                        .get(&quot;compliancy&quot;);</span>
+
+<span class="nc" id="L99">                EnvironmentComponent component = new EnvironmentComponent();</span>
+<span class="nc" id="L100">                component.setEnvironmentID(environment.getId());</span>
+<span class="nc" id="L101">                component.setEnvironmentName(environment.getName());</span>
+<span class="nc" id="L102">                component.setEnvironmentUrl(normalizeUrl(</span>
+<span class="nc" id="L103">                        application.getInstanceUrl(), &quot;/#environment/&quot;</span>
+<span class="nc" id="L104">                                + environment.getId()));</span>
+<span class="nc" id="L105">                component.setComponentID(str(componentObject, &quot;id&quot;));</span>
+<span class="nc" id="L106">                component.setComponentName(str(componentObject, &quot;name&quot;));</span>
+<span class="nc" id="L107">                component.setComponentVersion(str(versionObject, &quot;name&quot;));</span>
+<span class="nc" id="L108">                component.setDeployed(complianceObject.get(&quot;correctCount&quot;)</span>
+<span class="nc" id="L109">                        .equals(complianceObject.get(&quot;desiredCount&quot;)));</span>
+<span class="nc" id="L110">                component.setAsOfDate(date(jsonObject, &quot;date&quot;));</span>
+<span class="nc" id="L111">                components.add(component);</span>
+<span class="nc" id="L112">            }</span>
+<span class="nc" id="L113">        } catch (NullPointerException npe) {</span>
+<span class="nc" id="L114">            LOGGER.info(&quot;No Environment data found, No components deployed&quot;);</span>
+<span class="nc" id="L115">        }</span>
+
+<span class="nc" id="L117">        return components;</span>
+    }
+
+    // Called by DefaultEnvironmentStatusUpdater
+//    @SuppressWarnings(&quot;PMD.AvoidDeeplyNestedIfStmts&quot;) // agreed, this method needs refactoring.
+    @Override
+    public List&lt;UDeployEnvResCompData&gt; getEnvironmentResourceStatusData(
+            UDeployApplication application, Environment environment) {
+
+<span class="fc" id="L126">        List&lt;UDeployEnvResCompData&gt; environmentStatuses = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L127">		String urlInventory = &quot;deploy/environment/&quot; + environment.getId() + &quot;/latestDesiredInventory&quot;;</span>
+
+<span class="fc" id="L129">		ResponseEntity&lt;String&gt; inventoryResponse = makeRestCall(application.getInstanceUrl(), urlInventory);</span>
+
+<span class="fc" id="L131">		JSONArray inventoryJSON = paresAsArray(inventoryResponse);</span>
+
+<span class="fc" id="L133">		String urlAllResources = &quot;deploy/environment/&quot; + environment.getId() + &quot;/resources&quot;;</span>
+
+<span class="fc" id="L135">		ResponseEntity&lt;String&gt; allResourceResponse = makeRestCall(application.getInstanceUrl(), urlAllResources);</span>
+
+<span class="fc" id="L137">        JSONArray allResourceJSON = paresAsArray(allResourceResponse);</span>
+/**
+ * New logic - Dec16/2015
+ * json has generic parent-&gt;children relationship that can be N deep where N can be anything.
+ * Logic should be to get each parentobject, get to the the lowest leaf children and process each child.
+ * How to get to the lowest leaf? Leaf child has '&quot;hasChildren&quot;: false'
+ *
+ * For resource json, the structure is this: top-&gt;agent (agent) -&gt; domain (subresource) -&gt; component
+ * For nonCompliance resources, the path is: top -&gt; children -&gt; version -&gt; component
+ * 1. Write a method to return the lowest leaf children as jsonArray and then process.
+ * 2. From resources json, if version is empty, it is not a component to deploy. if version if non-empty, those are the actual compnent
+ * 3. From nonCompliance resource, it will have entries that were failed in depolyment.
+ */
+        
+<span class="pc bpc" id="L151" title="2 of 4 branches missed.">        if(inventoryJSON != null &amp;&amp; inventoryJSON.size() &gt; 0)</span>
+        {
+	        // Failed to deploy list:
+<span class="fc" id="L154">			Set&lt;String&gt; failedComponents = getFailedComponents(inventoryJSON);</span>
+<span class="fc" id="L155">	        Map&lt;String, List&lt;String&gt;&gt; versionFileMap = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">	        for (Object item : allResourceJSON) {</span>
+<span class="fc" id="L157">	            JSONObject jsonObject = (JSONObject) item;</span>
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">	            if (jsonObject == null) continue;</span>
+<span class="fc" id="L159">				JSONArray childArray = getResourceComponent(application, jsonObject, new JSONArray());</span>
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">	            if (childArray.isEmpty()) continue;</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">	            for (Object child : childArray) {</span>
+<span class="fc" id="L162">	                JSONObject childObject = (JSONObject) child;</span>
+<span class="fc" id="L163">	                JSONArray jsonVersions = (JSONArray) childObject.get(&quot;versions&quot;);</span>
+<span class="pc bpc" id="L164" title="2 of 4 branches missed.">	                if (jsonVersions == null || jsonVersions.size() == 0) continue;</span>
+<span class="fc" id="L165">	                JSONObject versionObject = (JSONObject) jsonVersions.get(0);</span>
+	                // get version fileTree and build data.
+<span class="fc" id="L167">	                List&lt;String&gt; physicalFileNames = versionFileMap.get(str(versionObject, &quot;id&quot;));</span>
+<span class="pc bpc" id="L168" title="1 of 2 branches missed.">	                if (CollectionUtils.isEmpty(physicalFileNames)) {</span>
+<span class="fc" id="L169">	                    physicalFileNames = getPhysicalFileList(application, versionObject);</span>
+<span class="fc" id="L170">	                    versionFileMap.put(str(versionObject, &quot;id&quot;), physicalFileNames);</span>
+	                }
+<span class="fc bfc" id="L172" title="All 2 branches covered.">	                for (String fileName : physicalFileNames) {</span>
+<span class="fc" id="L173">	                    environmentStatuses.add(buildUdeployEnvResCompData(environment, application, versionObject, fileName, childObject, failedComponents));</span>
+<span class="fc" id="L174">	                }</span>
+<span class="fc" id="L175">	            }</span>
+<span class="fc" id="L176">	        }</span>
+        }
+<span class="fc" id="L178">        return environmentStatuses;</span>
+	}
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	private JSONArray getResourceComponent(UDeployApplication application, JSONObject topParent,
+			JSONArray returnArray) {
+
+<span class="fc" id="L185">		JSONObject resourceRole = (JSONObject) topParent.get(&quot;role&quot;);</span>
+
+<span class="fc" id="L187">		String resourceSpecialType = null;</span>
+
+<span class="fc bfc" id="L189" title="All 2 branches covered.">		if (resourceRole != null) {</span>
+<span class="fc" id="L190">			resourceSpecialType = str(resourceRole, &quot;specialType&quot;);</span>
+		}
+
+<span class="pc bpc" id="L193" title="1 of 4 branches missed.">		if (resourceSpecialType != null &amp;&amp; resourceSpecialType.equalsIgnoreCase(&quot;COMPONENT&quot;)) {</span>
+<span class="fc" id="L194">			JSONArray jsonVersions = (JSONArray) topParent.get(&quot;versions&quot;);</span>
+
+<span class="pc bpc" id="L196" title="2 of 4 branches missed.">			if (jsonVersions != null &amp;&amp; jsonVersions.size() &gt; 0) {</span>
+<span class="fc" id="L197">				returnArray.add(topParent);</span>
+			}
+<span class="fc" id="L199">		} else {</span>
+<span class="fc" id="L200">			String hasChildren = str(topParent, &quot;hasChildren&quot;);</span>
+
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">			if ( &quot;true&quot;.equalsIgnoreCase(hasChildren)) {</span>
+<span class="fc" id="L203">				String resourceId = str(topParent, &quot;id&quot;);</span>
+
+<span class="fc" id="L205">				String urlResources = &quot;resource/resource/&quot; + resourceId + &quot;/resources&quot;;</span>
+
+<span class="fc" id="L207">				ResponseEntity&lt;String&gt; resourceResponse = makeRestCall(application.getInstanceUrl(), urlResources);</span>
+
+<span class="fc" id="L209">				JSONArray resourceListJSON = paresAsArray(resourceResponse);</span>
+
+<span class="fc bfc" id="L211" title="All 2 branches covered.">				for (Object resourceObject : resourceListJSON) {</span>
+<span class="fc" id="L212">					JSONObject childJSON = (JSONObject) resourceObject;</span>
+
+<span class="fc" id="L214">					getResourceComponent(application, childJSON, returnArray);</span>
+<span class="fc" id="L215">				}</span>
+			}
+		}
+
+<span class="fc" id="L219">		return returnArray;</span>
+	}
+    private List&lt;String&gt; getPhysicalFileList(UDeployApplication application, JSONObject versionObject) {
+<span class="fc" id="L222">        List&lt;String&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L223">        String fileTreeUrl = &quot;deploy/version/&quot; + str(versionObject, &quot;id&quot;) + &quot;/fileTree&quot;;</span>
+<span class="fc" id="L224">        ResponseEntity&lt;String&gt; fileTreeResponse = makeRestCall(</span>
+<span class="fc" id="L225">                application.getInstanceUrl(), fileTreeUrl);</span>
+<span class="fc" id="L226">        JSONArray fileTreeJson = paresAsArray(fileTreeResponse);</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">        for (Object f : fileTreeJson) {</span>
+<span class="fc" id="L228">            JSONObject fileJson = (JSONObject) f;</span>
+<span class="fc" id="L229">            list.add(cleanFileName(str(fileJson, &quot;name&quot;), str(versionObject, &quot;name&quot;)));</span>
+<span class="fc" id="L230">        }</span>
+<span class="fc" id="L231">        return list;</span>
+    }
+
+	private Set&lt;String&gt; getFailedComponents(JSONArray environmentInventoryJSON) {
+<span class="fc" id="L235">		HashSet&lt;String&gt; failedComponents = new HashSet&lt;&gt;();</span>
+
+<span class="fc bfc" id="L237" title="All 2 branches covered.">		for (Object inventory : environmentInventoryJSON) {</span>
+<span class="fc" id="L238">			JSONObject inventoryObject = (JSONObject) inventory;</span>
+<span class="fc" id="L239">			JSONObject compliancyObject = (JSONObject) inventoryObject.get(&quot;compliancy&quot;);</span>
+
+<span class="pc bpc" id="L241" title="1 of 2 branches missed.">			if (compliancyObject == null)</span>
+<span class="nc" id="L242">				continue;</span>
+
+<span class="fc" id="L244">			long correctCount = date(compliancyObject, &quot;correctCount&quot;);</span>
+<span class="fc" id="L245">			long desiredCount = date(compliancyObject, &quot;desiredCount&quot;);</span>
+
+<span class="fc bfc" id="L247" title="All 2 branches covered.">			if (correctCount &lt; desiredCount) {</span>
+<span class="fc" id="L248">				JSONObject componentObject = (JSONObject) inventoryObject.get(&quot;component&quot;);</span>
+<span class="pc bpc" id="L249" title="1 of 2 branches missed.">				if (componentObject != null) {</span>
+<span class="fc" id="L250">					failedComponents.add(str(componentObject, &quot;name&quot;));</span>
+				}
+			}
+<span class="fc" id="L253">		}</span>
+
+<span class="fc" id="L255">		return failedComponents;</span>
+	}
+
+    private String cleanFileName(String fileName, String version) {
+<span class="pc bpc" id="L259" title="1 of 2 branches missed.">        if (fileName.contains(&quot;-&quot; + version))</span>
+<span class="nc" id="L260">            return fileName.replace(&quot;-&quot; + version, &quot;&quot;);</span>
+<span class="pc bpc" id="L261" title="1 of 2 branches missed.">        if (fileName.contains(version))</span>
+<span class="nc" id="L262">            return fileName.replace(version, &quot;&quot;);</span>
+<span class="fc" id="L263">        return fileName;</span>
+    }
+
+    private UDeployEnvResCompData buildUdeployEnvResCompData(Environment environment, UDeployApplication application, JSONObject versionObject, String fileName, JSONObject childObject, Set&lt;String&gt; failedComponents) {
+<span class="fc" id="L267">        UDeployEnvResCompData data = new UDeployEnvResCompData();</span>
+<span class="fc" id="L268">        data.setEnvironmentName(environment.getName());</span>
+<span class="fc" id="L269">        data.setCollectorItemId(application.getId());</span>
+<span class="fc" id="L270">        data.setComponentVersion(str(versionObject, &quot;name&quot;));</span>
+<span class="fc" id="L271">        data.setAsOfDate(date(versionObject, &quot;created&quot;));</span>
+        
+<span class="fc" id="L273">        JSONObject childRole = (JSONObject) childObject.get(&quot;role&quot;);</span>
+<span class="fc" id="L274">        String childRoleName = str(childRole, &quot;name&quot;);</span>
+        
+<span class="fc bfc" id="L276" title="All 2 branches covered.">        data.setDeployed(!failedComponents.contains(childRoleName));</span>
+<span class="fc" id="L277">        data.setComponentName(fileName);</span>
+<span class="fc" id="L278">        data.setOnline(&quot;ONLINE&quot;.equalsIgnoreCase(str(</span>
+                childObject, &quot;status&quot;)));
+<span class="fc" id="L280">		JSONObject resource = getParentAgent(childObject);</span>
+<span class="pc bpc" id="L281" title="1 of 2 branches missed.">        if (resource != null) {</span>
+<span class="fc" id="L282">            data.setResourceName(str(resource, &quot;name&quot;));</span>
+        }
+<span class="fc" id="L284">        return data;</span>
+    }
+
+	public JSONObject getParentAgent(JSONObject childObject) {
+<span class="fc" id="L288">		JSONObject parentAgent = null;</span>
+<span class="fc" id="L289">		String resourceType = null;</span>
+<span class="fc" id="L290">		String hasAgent = null;</span>
+
+<span class="fc" id="L292">		JSONObject parentObject = (JSONObject) childObject.get(&quot;parent&quot;);</span>
+
+<span class="pc bpc" id="L294" title="1 of 2 branches missed.">		if (parentObject != null) {</span>
+<span class="fc" id="L295">			resourceType = str(parentObject, &quot;type&quot;);</span>
+<span class="fc" id="L296">			hasAgent = str(parentObject, &quot;hasAgent&quot;);</span>
+
+<span class="pc bpc" id="L298" title="1 of 4 branches missed.">			if (resourceType != null &amp;&amp; resourceType.equalsIgnoreCase(&quot;agent&quot;)) {</span>
+<span class="fc" id="L299">				parentAgent = parentObject;</span>
+			} else {
+<span class="pc bpc" id="L301" title="1 of 2 branches missed.">				if (&quot;true&quot;.equalsIgnoreCase(hasAgent)) {</span>
+<span class="fc" id="L302">					parentAgent = getParentAgent(parentObject);</span>
+				}
+			}
+		}
+
+<span class="fc" id="L307">		return parentAgent;</span>
+	}
+    // ////// Helpers
+
+    private ResponseEntity&lt;String&gt; makeRestCall(String instanceUrl,
+                                                String endpoint) {
+<span class="fc" id="L313">        String url = normalizeUrl(instanceUrl, &quot;/rest/&quot; + endpoint);</span>
+<span class="fc" id="L314">        ResponseEntity&lt;String&gt; response = null;</span>
+        try {
+<span class="fc" id="L316">            response = restOperations.exchange(url, HttpMethod.GET,</span>
+<span class="fc" id="L317">                    new HttpEntity&lt;&gt;(createHeaders()), String.class);</span>
+
+<span class="nc" id="L319">        } catch (RestClientException re) {</span>
+<span class="nc" id="L320">            LOGGER.error(&quot;Error with REST url: &quot; + url);</span>
+<span class="nc" id="L321">            LOGGER.error(re.getMessage());</span>
+<span class="fc" id="L322">        }</span>
+<span class="fc" id="L323">        return response;</span>
+    }
+
+    private String normalizeUrl(String instanceUrl, String remainder) {
+<span class="fc" id="L327">        return StringUtils.removeEnd(instanceUrl, &quot;/&quot;) + remainder;</span>
+    }
+
+    protected HttpHeaders createHeaders() {
+<span class="fc" id="L331">        String authHeader = null;</span>
+<span class="fc" id="L332">        String token = uDeploySettings.getToken();</span>
+<span class="pc bpc" id="L333" title="1 of 2 branches missed.">        if (StringUtils.isEmpty(token)) {</span>
+<span class="fc" id="L334">            String auth = uDeploySettings.getUsername() + &quot;:&quot;</span>
+<span class="fc" id="L335">                    + uDeploySettings.getPassword();</span>
+<span class="fc" id="L336">            byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(</span>
+                    StandardCharsets.US_ASCII));
+<span class="fc" id="L338">            authHeader = &quot;Basic &quot; + new String(encodedAuth);</span>
+<span class="fc" id="L339">        } else {</span>
+<span class="nc" id="L340">            String passwordIsAuthToken = &quot;PasswordIsAuthToken:{\&quot;token\&quot;:\&quot;&quot; + token + &quot;\&quot;}&quot;;</span>
+<span class="nc" id="L341">            byte[] encodedAuth = Base64.encodeBase64(passwordIsAuthToken.getBytes(</span>
+                    StandardCharsets.US_ASCII));
+<span class="nc" id="L343">            authHeader = &quot;Basic &quot; + new String(encodedAuth);</span>
+        }
+
+<span class="fc" id="L346">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L347">        headers.set(&quot;Authorization&quot;, authHeader);</span>
+<span class="fc" id="L348">        return headers;</span>
+    }
+
+    private JSONArray paresAsArray(ResponseEntity&lt;String&gt; response) {
+<span class="pc bpc" id="L352" title="1 of 2 branches missed.">        if (response == null)</span>
+<span class="nc" id="L353">            return new JSONArray();</span>
+        try {
+<span class="fc" id="L355">            return (JSONArray) new JSONParser().parse(response.getBody());</span>
+<span class="nc" id="L356">        } catch (ParseException pe) {</span>
+<span class="nc" id="L357">            LOGGER.debug(response.getBody());</span>
+<span class="nc" id="L358">            LOGGER.error(pe.getMessage());</span>
+        }
+<span class="nc" id="L360">        return new JSONArray();</span>
+    }
+
+    private String str(JSONObject json, String key) {
+<span class="fc" id="L364">        Object value = json.get(key);</span>
+<span class="pc bpc" id="L365" title="1 of 2 branches missed.">        return value == null ? null : value.toString();</span>
+    }
+
+    private long date(JSONObject jsonObject, String key) {
+<span class="fc" id="L369">        Object value = jsonObject.get(key);</span>
+<span class="pc bpc" id="L370" title="1 of 2 branches missed.">        return value == null ? 0 : (long) value;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

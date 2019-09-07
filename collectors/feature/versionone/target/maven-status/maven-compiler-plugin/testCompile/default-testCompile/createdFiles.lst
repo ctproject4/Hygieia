@@ -1,0 +1,3 @@
+com/capitalone/dashboard/client/BaseClientTest.class
+com/capitalone/dashboard/util/DateUtilTest.class
+com/capitalone/dashboard/datafactory/versionone/test/VersionOneDataFactoryImplTest.class

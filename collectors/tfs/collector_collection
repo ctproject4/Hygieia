@@ -1,0 +1,14 @@
+{ "_class" : "com.capitalone.dashboard.model.TfsCollector",
+"buildServers" : [ "http://tfsserver" ],
+"niceNames" : [ ],
+"environments" : [ ],
+"name" : "TFS",
+"collectorType" : "Build",
+"enabled" : true,
+"online" : true,
+"errors" : [ ],
+"uniqueFields" : { "jobName" : "", "jobUrl" : "" }, "allFields" : { "jobName" : "", "jobUrl" : "", "instanceUrl" : "" },
+"lastExecuted" : NumberLong("LASTEXECUTEDTIME"),
+"searchFields" : [ "options.jobName", "niceName" ] 
+}
+

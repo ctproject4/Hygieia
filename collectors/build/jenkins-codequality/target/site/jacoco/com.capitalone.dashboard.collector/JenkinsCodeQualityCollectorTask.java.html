@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>JenkinsCodeQualityCollectorTask.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:jenkins-codequality</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">JenkinsCodeQualityCollectorTask.java</span></div><h1>JenkinsCodeQualityCollectorTask.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+import com.capitalone.dashboard.jenkins.JenkinsJob;
+import com.capitalone.dashboard.jenkins.JenkinsPredicate;
+import com.capitalone.dashboard.jenkins.JenkinsSettings;
+import com.capitalone.dashboard.jenkins.model.JenkinsCodeQualityJob;
+import com.capitalone.dashboard.model.quality.*;
+import com.capitalone.dashboard.repository.JenkinsCodeQualityCollectorRepository;
+import com.capitalone.dashboard.repository.JenkinsCodeQualityJobRepository;
+import com.capitalone.dashboard.utils.CodeQualityService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+@Component
+public class JenkinsCodeQualityCollectorTask extends CollectorTask&lt;JenkinsCodeQualityCollector&gt; {
+
+    private static final String DESCRIPTION_FORMAT = &quot;%s (%s)&quot;;
+
+    private JenkinsCodeQualityCollectorRepository collectorRepository;
+    private JenkinsCodeQualityJobRepository jobRepository;
+    private JenkinsSettings settings;
+    private JenkinsClient jenkinsClient;
+    private CodeQualityService codeQualityService;
+
+    @Autowired
+    public JenkinsCodeQualityCollectorTask(TaskScheduler taskScheduler, JenkinsCodeQualityCollectorRepository repository,
+                                           JenkinsCodeQualityJobRepository jobRepository, JenkinsSettings settings,
+                                           JenkinsClient jenkinsClient, CodeQualityService codeQualityService) {
+<span class="fc" id="L38">        super(taskScheduler, &quot;JenkinsCodeQuality&quot;);</span>
+<span class="fc" id="L39">        this.collectorRepository = repository;</span>
+<span class="fc" id="L40">        this.jobRepository = jobRepository;</span>
+<span class="fc" id="L41">        this.settings = settings;</span>
+<span class="fc" id="L42">        this.jenkinsClient = jenkinsClient;</span>
+<span class="fc" id="L43">        this.codeQualityService = codeQualityService;</span>
+<span class="fc" id="L44">    }</span>
+
+    public JenkinsCodeQualityCollector getCollector() {
+<span class="fc" id="L47">        return JenkinsCodeQualityCollector.prototype(this.settings.getServers());</span>
+    }
+
+    @Override
+    public JenkinsCodeQualityCollectorRepository getCollectorRepository() {
+<span class="fc" id="L52">        return this.collectorRepository;</span>
+    }
+
+    @Override
+    public String getCron() {
+<span class="fc" id="L57">        return this.settings.getCron();</span>
+    }
+
+    @Override
+    public void collect(JenkinsCodeQualityCollector collector) {
+<span class="fc" id="L62">        final List&lt;String&gt; buildServers = collector.getBuildServers();</span>
+<span class="fc" id="L63">        final List&lt;JenkinsJob&gt; jobs = this.jenkinsClient.getJobs(buildServers);</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (null == jobs) {</span>
+<span class="fc" id="L65">            return;</span>
+        }
+
+<span class="fc" id="L68">        List&lt;JenkinsJob&gt; allJobsOnServer = jobs.stream().flatMap(JenkinsJob::streamJobs).collect(Collectors.toList());</span>
+<span class="fc" id="L69">        this.cleanupPreviousJobsFromRepo(collector, allJobsOnServer);</span>
+
+
+<span class="fc" id="L72">        List&lt;Pattern&gt; matchingJobPatterns = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L73">        Map&lt;ArtifactType, Pattern&gt; artifactTypePatternMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L74">        this.settings.getArtifactRegex().forEach(</span>
+<span class="fc" id="L75">                (key, uncompiledPatternList) -&gt; uncompiledPatternList.stream().forEach(</span>
+                        unCompiledPattern -&gt; {
+<span class="fc" id="L77">                            Pattern compiledPattern = Pattern.compile(unCompiledPattern);</span>
+<span class="fc" id="L78">                            matchingJobPatterns.add(compiledPattern);</span>
+<span class="fc" id="L79">                            artifactTypePatternMap.put(key, compiledPattern);</span>
+<span class="fc" id="L80">                        }</span>
+                )
+        );
+
+<span class="fc" id="L84">        List&lt;JenkinsJob&gt; interestingJobs = jobs.stream().flatMap(JenkinsJob::streamJobs).filter(JenkinsPredicate.artifactInJobContaining(matchingJobPatterns)).collect(Collectors.toList());</span>
+
+<span class="fc" id="L86">        this.createAnyNewJobs(collector, interestingJobs);</span>
+
+<span class="fc" id="L88">        List&lt;JenkinsCodeQualityJob&gt; allJobs = this.jobRepository.findAllByCollectorId(collector.getId());</span>
+<span class="fc" id="L89">        int storedJobs =0;</span>
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">        if (null != allJobs) {</span>
+<span class="fc" id="L91">            final Map&lt;String, JenkinsCodeQualityJob&gt; jenkinsCodeQualityJobMap = allJobs.stream().collect(Collectors.toMap(JenkinsCodeQualityJob::getJenkinsServer, Function.identity()));</span>
+
+<span class="fc bfc" id="L93" title="All 2 branches covered.">            for (JenkinsJob job : interestingJobs) {</span>
+<span class="fc" id="L94">                List&lt;CodeQualityVisitee&gt; allTypes = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L95">                artifactTypePatternMap.forEach((type, pattern) -&gt; {</span>
+<span class="pc bpc" id="L96" title="1 of 6 branches missed.">                            switch (type) {</span>
+                                case junit:
+<span class="fc" id="L98">                                    allTypes.addAll(this.jenkinsClient.getLatestArtifacts(JunitXmlReport.class, job, pattern));</span>
+<span class="fc" id="L99">                                    break;</span>
+                                case findbugs:
+<span class="fc" id="L101">                                    allTypes.addAll(this.jenkinsClient.getLatestArtifacts(FindBugsXmlReport.class, job, pattern));</span>
+<span class="fc" id="L102">                                    break;</span>
+                                case jacoco:
+<span class="fc" id="L104">                                    allTypes.addAll(this.jenkinsClient.getLatestArtifacts(JacocoXmlReport.class,job,pattern));</span>
+<span class="fc" id="L105">                                    break;</span>
+                                case pmd:
+<span class="fc" id="L107">                                    allTypes.addAll(this.jenkinsClient.getLatestArtifacts(PmdReport.class,job,pattern));</span>
+<span class="fc" id="L108">                                    break;</span>
+                                case checkstyle:
+<span class="fc" id="L110">                                    allTypes.addAll(this.jenkinsClient.getLatestArtifacts(CheckstyleReport.class,job,pattern));</span>
+<span class="fc" id="L111">                                    break;</span>
+                                default:
+<span class="nc" id="L113">                                    this.log(&quot;not collecting data for &quot;+type+ &quot; yet&quot;);</span>
+                                    break;
+                            }
+<span class="fc" id="L116">                        }</span>
+                );
+<span class="fc" id="L118">                boolean stored = this.codeQualityService.storeJob(job, jenkinsCodeQualityJobMap.get(job.getUrl()), allTypes);</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">                if (stored) {</span>
+<span class="nc" id="L120">                    storedJobs++;</span>
+                }
+<span class="fc" id="L122">            }</span>
+        }
+
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">        log(&quot;examined jobs&quot;,System.currentTimeMillis(),null==allJobs?0:allJobs.size());</span>
+<span class="fc" id="L126">        log(&quot;new data&quot;,System.currentTimeMillis(),storedJobs);</span>
+<span class="fc" id="L127">        log(&quot;Finished&quot;,System.currentTimeMillis());</span>
+
+<span class="fc" id="L129">    }</span>
+
+    private void cleanupPreviousJobsFromRepo(JenkinsCodeQualityCollector collector, List&lt;JenkinsJob&gt; jobs) {
+<span class="fc" id="L132">        List&lt;String&gt; configuredServers = jobs.stream().map(job -&gt; job.getUrl()).collect(Collectors.toList());</span>
+<span class="fc" id="L133">        List&lt;JenkinsCodeQualityJob&gt; allRepoJobs = new ArrayList(this.jobRepository.findAllByCollectorId(collector.getId()));</span>
+<span class="fc" id="L134">        List&lt;JenkinsCodeQualityJob&gt; jobsToKeep = allRepoJobs.stream().filter(</span>
+            job -&gt;
+<span class="fc" id="L136">                configuredServers.contains(job.getJenkinsServer())</span>
+<span class="fc" id="L137">        ).collect(Collectors.toList());</span>
+<span class="fc" id="L138">        allRepoJobs.removeAll(jobsToKeep);</span>
+<span class="fc" id="L139">        allRepoJobs.forEach(job -&gt; {</span>
+<span class="fc" id="L140">            this.jobRepository.delete(job);</span>
+<span class="fc" id="L141">        });</span>
+<span class="fc" id="L142">    }</span>
+
+    private void createAnyNewJobs(JenkinsCodeQualityCollector collector, List&lt;JenkinsJob&gt; buildServerJobs) {
+<span class="fc" id="L145">        List&lt;JenkinsCodeQualityJob&gt; allRepoJobs = new ArrayList&lt;&gt;(this.jobRepository.findAllByCollectorId(collector.getId()));</span>
+
+<span class="fc" id="L147">        List&lt;JenkinsJob&gt; newJobs = new ArrayList&lt;&gt;(buildServerJobs).stream().filter(jenkinsJob -&gt;</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">                !allRepoJobs.stream().anyMatch(</span>
+                        repoJob -&gt;
+<span class="fc" id="L150">                                repoJob.getJenkinsServer().equals(jenkinsJob.getUrl())</span>
+                )
+<span class="fc" id="L152">        ).collect(Collectors.toList());</span>
+
+<span class="fc" id="L154">        newJobs.forEach(job -&gt; {</span>
+<span class="fc" id="L155">            JenkinsCodeQualityJob newJob = JenkinsCodeQualityJob.newBuilder().</span>
+<span class="fc" id="L156">                    collectorId(collector.getId()).jobName(job.getName()).jenkinsServer(job.getUrl()).</span>
+<span class="fc" id="L157">                    description(String.format(DESCRIPTION_FORMAT, job.getName(), job.getUrl())).build();</span>
+<span class="fc" id="L158">            this.jobRepository.save(newJob);</span>
+<span class="fc" id="L159">        });</span>
+<span class="fc" id="L160">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

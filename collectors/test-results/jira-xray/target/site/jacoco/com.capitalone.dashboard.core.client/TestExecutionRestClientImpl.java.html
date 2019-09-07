@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>TestExecutionRestClientImpl.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:jira-xray-testresult-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.core.client</a> &gt; <span class="el_source">TestExecutionRestClientImpl.java</span></div><h1>TestExecutionRestClientImpl.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.core.client;
+
+import com.atlassian.httpclient.api.HttpClient;
+import com.atlassian.jira.rest.client.api.SearchRestClient;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.SearchResult;
+import com.atlassian.jira.rest.client.internal.async.AbstractAsynchronousRestClient;
+import com.atlassian.jira.rest.client.internal.async.AsynchronousSearchRestClient;
+import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
+import com.atlassian.util.concurrent.Promise;
+import com.capitalone.dashboard.api.TestExecutionRestClient;
+import com.capitalone.dashboard.api.domain.TestExecution;
+import com.capitalone.dashboard.core.PluginConstants;
+import com.capitalone.dashboard.core.json.TestArrayJsonParser;
+import com.google.common.base.Function;
+
+import javax.annotation.Nullable;
+import javax.ws.rs.core.UriBuilder;
+import java.net.URI;
+import java.util.ArrayList;
+
+/**
+ * This is the implementation class for TestExecutionRestClient
+ */
+public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient implements TestExecutionRestClient {
+    private URI baseUri;
+<span class="nc" id="L27">    private final TestArrayJsonParser testsParser=new TestArrayJsonParser();</span>
+<span class="nc" id="L28">    private SearchRestClient searchRestClient=null;</span>
+
+    protected TestExecutionRestClientImpl(HttpClient client) {
+<span class="nc" id="L31">        super(client);</span>
+<span class="nc" id="L32">    }</span>
+
+    public TestExecutionRestClientImpl(URI serverUri, DisposableHttpClient httpClient){
+<span class="nc" id="L35">        super(httpClient);</span>
+<span class="nc" id="L36">        baseUri = UriBuilder.fromUri(serverUri).path(&quot;/rest/raven/{restVersion}/api/&quot;).build(PluginConstants.XRAY_REST_VERSION);</span>
+<span class="nc" id="L37">        searchRestClient=new AsynchronousSearchRestClient(UriBuilder.fromUri(serverUri).path(&quot;rest/api/latest/&quot;).build(),httpClient);</span>
+<span class="nc" id="L38">    }</span>
+
+    public Promise&lt;Iterable&lt;TestExecution.Test&gt;&gt; getTests(TestExecution testExecution) {
+<span class="nc" id="L41">        UriBuilder uriBuilder=UriBuilder.fromUri(baseUri);</span>
+<span class="nc" id="L42">        uriBuilder.path(&quot;testexec&quot;).path(&quot;{isssue-key}&quot;).path(&quot;test&quot;);</span>
+<span class="nc" id="L43">        return this.getAndParse(uriBuilder.build(testExecution.getKey()),this.testsParser);</span>
+    }
+
+    @Override
+    public Promise&lt;Void&gt; setTests(TestExecution testExec) {
+<span class="nc" id="L48">        return null;</span>
+    }
+
+    /**
+     * Removes a test from the test execution identified by his test key
+     * @param testExecKey
+     * @param testKey
+     * @return
+     */
+    public Promise&lt;Void&gt; removeTest(TestExecution testExecKey, TestExecution.Test testKey) {
+<span class="nc" id="L58">        UriBuilder uriBuilder=UriBuilder.fromUri(baseUri);</span>
+<span class="nc" id="L59">        uriBuilder.path(&quot;testexec&quot;).path(&quot;{isssue-key}&quot;).path(&quot;test&quot;).path(&quot;{ŧest-key&quot;);</span>
+<span class="nc" id="L60">        return this.delete(uriBuilder.build(testExecKey.getKey(),testKey.getKey()));</span>
+    }
+
+    /**
+     * Method who queries the JQL testTestExecution() from the X-RAY plugin. Returning the test-executions related to this test identified by his key.
+     * @param test Test containin the test key to search for.
+     * @return A list of test execution promises which runs this test.
+     */
+    // TODO: MOVE THIS METHOD TO A BOUNDARY
+    public Promise&lt;Iterable&lt;TestExecution&gt;&gt; get(TestExecution.Test test){
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if(test.getKey()==null){</span>
+<span class="nc" id="L71">            throw new IllegalArgumentException(&quot;KEY NOT SET&quot;);</span>
+        }
+<span class="nc" id="L73">        Promise&lt;SearchResult&gt; searchResultPromise= searchRestClient.searchJql(&quot;issue in testTestExecutions(\&quot;&quot;+test.getKey()+&quot;\&quot;) &quot;);</span>
+<span class="nc" id="L74">        return searchResultPromise.map(new Function&lt;SearchResult, Iterable&lt;TestExecution&gt;&gt;() {</span>
+            public Iterable&lt;TestExecution&gt; apply(@Nullable SearchResult searchResult) {
+<span class="nc" id="L76">                ArrayList&lt;TestExecution&gt; testExceList=new ArrayList&lt;TestExecution&gt;();</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">                for(Issue testExcecIssue : searchResult.getIssues()){</span>
+<span class="nc" id="L78">                    testExceList.add(new TestExecution(testExcecIssue.getSelf(),testExcecIssue.getKey(),testExcecIssue.getId()));</span>
+<span class="nc" id="L79">                }</span>
+<span class="nc" id="L80">                return testExceList;</span>
+            }
+        });
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

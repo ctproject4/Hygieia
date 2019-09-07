@@ -1,0 +1,6 @@
+MongoDB shell version v3.4.19
+connecting to: mongodb://127.0.0.1:27017
+MongoDB server version: 3.4.19
+switched to db dashboarddb
+{ "_id" : ObjectId("5c89fb780acf2f6ca211845a"), "_class" : "com.capitalone.dashboard.model.CollectorItem", "description" : "test", "enabled" : true, "errors" : [ ], "pushed" : false, "collectorId" : ObjectId("5c89fb780acf2f6ca2118438"), "lastUpdated" : NumberLong("1548660765000"), "options" : { "jobName" : "test", "jobUrl" : "TFSURL/test/", "instanceUrl" : "TFSURL" } }
+bye

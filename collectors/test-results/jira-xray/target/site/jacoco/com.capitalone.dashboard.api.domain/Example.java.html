@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Example.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:jira-xray-testresult-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.api.domain</a> &gt; <span class="el_source">Example.java</span></div><h1>Example.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.api.domain;
+
+import com.atlassian.jira.rest.client.api.domain.BasicIssue;
+
+import java.net.URI;
+import java.util.List;
+
+/**
+ * This class will get the details from example section
+ */
+public class Example extends BasicIssue {
+    private Long id;
+    private Integer rank;
+    private List&lt;Object&gt; values;
+    private Status status;
+
+    public Example(URI self, String key, Long id){
+<span class="nc" id="L18">        super(self, key, id);</span>
+<span class="nc" id="L19">    }</span>
+
+    public Example(URI self, String key, Long id, Integer rank, List&lt;Object&gt; values, Status status){
+<span class="nc" id="L22">        super(self,key,id);</span>
+<span class="nc" id="L23">        this.rank=rank;</span>
+<span class="nc" id="L24">        this.values=values;</span>
+<span class="nc" id="L25">        this.status=status;</span>
+<span class="nc" id="L26">    }</span>
+
+    public Long getId() {
+<span class="nc" id="L29">        return id;</span>
+    }
+
+
+    public void setId(Long id) {
+<span class="nc" id="L34">        this.id = id;</span>
+
+<span class="nc" id="L36">    }</span>
+
+    public Integer getRank() {
+<span class="nc" id="L39">        return rank;</span>
+    }
+
+    public void setRank(Integer rank) {
+<span class="nc" id="L43">        this.rank = rank;</span>
+<span class="nc" id="L44">    }</span>
+
+    public List&lt;Object&gt; getValues() {
+<span class="nc" id="L47">        return values;</span>
+    }
+
+    public void setValues(List&lt;Object&gt; values) {
+<span class="nc" id="L51">        this.values = values;</span>
+<span class="nc" id="L52">    }</span>
+
+    public Status getStatus() {
+<span class="nc" id="L55">        return status;</span>
+    }
+
+    public void setStatus(Status status) {
+<span class="nc" id="L59">        this.status = status;</span>
+<span class="nc" id="L60">    }</span>
+
+<span class="nc" id="L62">    public enum Status{TODO,FAIL,PASS}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

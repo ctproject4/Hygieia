@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GitHubParsed.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:github-scm-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.model</a> &gt; <span class="el_source">GitHubParsed.java</span></div><h1>GitHubParsed.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.model;
+
+import com.capitalone.dashboard.misc.HygieiaException;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+
+public class GitHubParsed {
+    private String url;
+    private String host;
+    private String apiUrl;
+    private String orgName;
+    private String repoName;
+
+    private static final String SEGMENT_API = &quot;/api/v3/repos&quot;;
+    private static final String PUBLIC_GITHUB_REPO_HOST = &quot;api.github.com/repos&quot;;
+    private static final String PUBLIC_GITHUB_HOST_NAME = &quot;github.com&quot;;
+
+
+<span class="nc" id="L20">    public GitHubParsed(String url) throws MalformedURLException, HygieiaException {</span>
+<span class="nc" id="L21">        this.url = url;</span>
+<span class="nc" id="L22">        parse();</span>
+<span class="nc" id="L23">    }</span>
+
+    private void parse() throws MalformedURLException, HygieiaException {
+<span class="nc bnc" id="L26" title="All 2 branches missed.">        if (url.endsWith(&quot;.git&quot;)) {</span>
+<span class="nc" id="L27">            url = url.substring(0, url.lastIndexOf(&quot;.git&quot;));</span>
+        }
+<span class="nc" id="L29">        URL u = new URL(url);</span>
+<span class="nc" id="L30">        host = u.getHost();</span>
+<span class="nc" id="L31">        String protocol = u.getProtocol();</span>
+<span class="nc" id="L32">        String path = u.getPath();</span>
+<span class="nc" id="L33">        String[] parts = path.split(&quot;/&quot;);</span>
+<span class="nc bnc" id="L34" title="All 4 branches missed.">        if ((parts == null) || (parts.length &lt; 3)) {</span>
+<span class="nc" id="L35">            throw new HygieiaException(&quot;Bad github repo URL: &quot; + url, HygieiaException.BAD_DATA);</span>
+        }
+<span class="nc" id="L37">        orgName = parts[1];</span>
+<span class="nc" id="L38">        repoName = parts[2];</span>
+<span class="nc bnc" id="L39" title="All 2 branches missed.">        if (host.startsWith(PUBLIC_GITHUB_HOST_NAME)) {</span>
+<span class="nc" id="L40">            apiUrl = protocol + &quot;://&quot; + PUBLIC_GITHUB_REPO_HOST + path;</span>
+        } else {
+<span class="nc" id="L42">            apiUrl = protocol + &quot;://&quot; + host + SEGMENT_API + path;</span>
+        }
+<span class="nc" id="L44">    }</span>
+
+    public String getUrl() {
+<span class="nc" id="L47">        return url;</span>
+    }
+
+    public void setUrl(String url) {
+<span class="nc" id="L51">        this.url = url;</span>
+<span class="nc" id="L52">    }</span>
+
+    public String getHost() {
+<span class="nc" id="L55">        return host;</span>
+    }
+
+    public void setHost(String host) {
+<span class="nc" id="L59">        this.host = host;</span>
+<span class="nc" id="L60">    }</span>
+
+    public String getApiUrl() {
+<span class="nc" id="L63">        return apiUrl;</span>
+    }
+
+    public void setApiUrl(String apiUrl) {
+<span class="nc" id="L67">        this.apiUrl = apiUrl;</span>
+<span class="nc" id="L68">    }</span>
+
+    public String getOrgName() {
+<span class="nc" id="L71">        return orgName;</span>
+    }
+
+    public void setOrgName(String orgName) {
+<span class="nc" id="L75">        this.orgName = orgName;</span>
+<span class="nc" id="L76">    }</span>
+
+    public String getRepoName() {
+<span class="nc" id="L79">        return repoName;</span>
+    }
+
+    public void setRepoName(String repoName) {
+<span class="nc" id="L83">        this.repoName = repoName;</span>
+<span class="nc" id="L84">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>BaseClient.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:versionone-feature-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">BaseClient.java</span></div><h1>BaseClient.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+import com.capitalone.dashboard.datafactory.versionone.VersionOneDataFactoryImpl;
+import com.capitalone.dashboard.misc.HygieiaException;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
+import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroupDir;
+
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public abstract class BaseClient {
+
+<span class="fc" id="L23">    private static final Logger LOGGER = LoggerFactory.getLogger(StoryDataClient.class);</span>
+    private final VersionOneDataFactoryImpl vOneApi;
+    private final FeatureSettings featureSettings;
+
+<span class="nc" id="L27">    protected BaseClient(VersionOneDataFactoryImpl vOneApi, FeatureSettings featureSettings) {</span>
+<span class="nc" id="L28">        this.vOneApi = vOneApi;</span>
+<span class="nc" id="L29">        this.featureSettings = featureSettings;</span>
+<span class="nc" id="L30">    }</span>
+
+    protected String getJSONString(JSONObject obj, String field) {
+<span class="nc" id="L33">        return sanitizeResponse((String) obj.get(field));</span>
+    }
+
+
+    public void updateObjectInformation(String query) throws HygieiaException {
+<span class="nc" id="L38">        long start = System.nanoTime();</span>
+<span class="nc" id="L39">        int pageIndex = 0;</span>
+<span class="nc" id="L40">        int pageSize = this.featureSettings.getPageSize();</span>
+<span class="nc" id="L41">        vOneApi.setPageSize(pageSize);</span>
+<span class="nc" id="L42">        vOneApi.setBasicQuery(query);</span>
+<span class="nc" id="L43">        vOneApi.buildPagingQuery(0);</span>
+<span class="nc" id="L44">        JSONArray outPutMainArray = vOneApi.getPagingQueryResponse();</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        if (CollectionUtils.isEmpty(outPutMainArray))</span>
+<span class="nc" id="L46">            throw new HygieiaException(</span>
+                    &quot;FAILED: FAILED: VersionOne response included unexpected JSON format&quot;,
+                    HygieiaException.JSON_FORMAT_ERROR);
+
+<span class="nc" id="L50">        JSONArray tmpDetailArray = (JSONArray) outPutMainArray.get(0);</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">        while (!CollectionUtils.isEmpty(tmpDetailArray)) {</span>
+<span class="nc" id="L52">            LOGGER.debug(&quot;pageIndex = &quot; + pageIndex + &quot; pageSize = &quot; + pageSize + &quot; tmpDetailArray = &quot; + tmpDetailArray.size());</span>
+<span class="nc" id="L53">            updateMongoInfo(tmpDetailArray);</span>
+<span class="nc" id="L54">            pageIndex = pageIndex + pageSize;</span>
+<span class="nc" id="L55">            vOneApi.buildPagingQuery(pageIndex);</span>
+<span class="nc" id="L56">            outPutMainArray = vOneApi.getPagingQueryResponse();</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">            if (outPutMainArray == null) {</span>
+<span class="nc" id="L58">                LOGGER.info(&quot;FAILED: Script Completed with Error&quot;);</span>
+<span class="nc" id="L59">                throw new HygieiaException(</span>
+                        &quot;FAILED: Nothing to update from VersionOne's response&quot;,
+                        HygieiaException.NOTHING_TO_UPDATE);
+            }
+<span class="nc" id="L63">            tmpDetailArray = (JSONArray) outPutMainArray.get(0);</span>
+        }
+<span class="nc" id="L65">        double elapsedTime = (System.nanoTime() - start) / 1000000000.0;</span>
+<span class="nc" id="L66">        LOGGER.info(&quot;Process took :&quot; + elapsedTime + &quot; seconds to update&quot;);</span>
+<span class="nc" id="L67">    }</span>
+
+    protected abstract void updateMongoInfo(JSONArray tmpDetailArray);
+
+    protected abstract String getMaxChangeDate();
+
+    public VersionOneDataFactoryImpl getvOneApi() {
+<span class="nc" id="L74">        return vOneApi;</span>
+    }
+
+    public FeatureSettings getFeatureSettings() {
+<span class="nc" id="L78">        return featureSettings;</span>
+    }
+
+    /**
+     * Utility method used to sanitize / canonicalize a String-based response
+     * artifact from a source system. This will return a valid UTF-8 strings, or
+     * a &quot;&quot; (blank) response for any of the following cases:
+     * &quot;NULL&quot;;&quot;Null&quot;;&quot;null&quot;;null;&quot;&quot;
+     *
+     * @param nativeRs The string response artifact retrieved from the source system
+     *                 to be sanitized
+     * @return A UTF-8 sanitized response
+     */
+    public static String sanitizeResponse(String nativeRs) {
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (StringUtils.isEmpty(nativeRs)) return &quot;&quot;;</span>
+
+        byte[] utf8Bytes;
+<span class="fc" id="L95">        CharsetDecoder cs = StandardCharsets.UTF_8.newDecoder();</span>
+
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        if (&quot;null&quot;.equalsIgnoreCase(nativeRs)) return &quot;&quot;;</span>
+<span class="fc" id="L98">        utf8Bytes = nativeRs.getBytes(StandardCharsets.UTF_8);</span>
+        try {
+<span class="fc" id="L100">            cs.decode(ByteBuffer.wrap(utf8Bytes));</span>
+<span class="fc" id="L101">            return new String(utf8Bytes, StandardCharsets.UTF_8);</span>
+<span class="nc" id="L102">        } catch (CharacterCodingException e) {</span>
+<span class="nc" id="L103">            return &quot;[INVALID NON UTF-8 ENCODING]&quot;;</span>
+        }
+    }
+
+
+    /**
+     * Canonicalizes a given JSONArray to a basic List object to avoid the use of JSON parsers.
+     *
+     * @param list A given JSONArray object response from the source system
+     * @return The sanitized, canonical List&lt;String&gt;
+     */
+    public static List&lt;String&gt; toCanonicalList(List&lt;String&gt; list) {
+<span class="nc" id="L115">        return list.stream().map(BaseClient::sanitizeResponse).collect(Collectors.toList());</span>
+    }
+
+
+    /**
+     * Retrieves source system queries based on the query name (without the file
+     * type) and a specified change date parameter.
+     *
+     * @param changeDatePara
+     *            The change date specified from which to pull data with a given
+     *            query template.
+     * @param queryName
+     *            The source system query name (without the file type).
+     * @return A given source system query, in String format.
+     */
+    public String getQuery(String changeDatePara, String queryName) {
+<span class="nc" id="L131">        ST st = (new STGroupDir(featureSettings.getQueryFolder(), '$', '$')).getInstanceOf(queryName);</span>
+<span class="nc" id="L132">        st.add(&quot;changeDate&quot;, changeDatePara);</span>
+<span class="nc" id="L133">        return st.render();</span>
+    }
+
+    /**
+     * Retrieves source system history/trending queries based on the query name
+     * (without the file type) and other parameters.
+     *
+     * @param sprintStartDate
+     *            The sprint start data in ISO format.
+     * @param sprintEndDate
+     *            The sprint end data in ISO format.
+     * @param sprintDeltaDate
+     *            The delta date in ISO format.
+     * @param queryName
+     *            The source system query name (without the file type).
+     * @return A given historical source system query, in String format.
+     */
+    public String getTrendingQuery(String sprintStartDate,
+                                   String sprintEndDate, String sprintDeltaDate, String queryName) {
+<span class="nc" id="L152">        ST st = (new STGroupDir(featureSettings.getQueryFolder(), '$', '$')).getInstanceOf(queryName);</span>
+<span class="nc" id="L153">        st.add(&quot;sprintStartDate&quot;, sprintStartDate);</span>
+<span class="nc" id="L154">        st.add(&quot;sprintEndDate&quot;, sprintEndDate);</span>
+<span class="nc" id="L155">        st.add(&quot;sprintDeltaDate&quot;, sprintDeltaDate);</span>
+
+<span class="nc" id="L157">        return st.render();</span>
+    }
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GitlabUriUtility.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:gitlab-feature-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.gitlab</a> &gt; <span class="el_source">GitlabUriUtility.java</span></div><h1>GitlabUriUtility.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.gitlab;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import com.capitalone.dashboard.collector.FeatureSettings;
+import com.capitalone.dashboard.model.Project;
+
+@Component
+public class GitlabUriUtility {
+	
+	private static final String DEFAULT_PROTOCOL = &quot;http&quot;;
+	private static final String DEFAULT_HOST = &quot;gitlab.com&quot;;
+	private static final String API_PATH_SEGMENT = &quot;api&quot;;
+    private static final String V3 = &quot;v3&quot;;
+    private static final String V4 = &quot;v4&quot;;
+	private static final String ISSUES_PATH_SEGMENT = &quot;issues&quot;;
+	private static final String BOARDS_PATH_SEGMENT = &quot;boards&quot;;
+	private static final String PROJECTS_PATH_SEGMENT = &quot;projects&quot;;
+	private static final String GROUPS_PATH_SEGMENT = &quot;groups&quot;;
+	private static final String PAGE_QUERY_PARAM_KEY = &quot;page&quot;;
+	private static final String RESULT_PER_PAGE_QUERY_PARAM_KEY = &quot;per_page&quot;;
+	private static final String RESULTS_PER_PAGE = &quot;100&quot;;
+	private static final String PRIVATE_TOKEN_HEADER_KEY = &quot;PRIVATE-TOKEN&quot;;
+	
+	private final FeatureSettings settings;
+	
+	@Autowired
+<span class="fc" id="L38">	public GitlabUriUtility(FeatureSettings settings) {</span>
+<span class="fc" id="L39">		this.settings = settings;</span>
+<span class="fc" id="L40">	}</span>
+	
+	public URI updatePage(URI uri, String page) {
+<span class="fc" id="L43">		return UriComponentsBuilder.fromUri(uri).queryParam(PAGE_QUERY_PARAM_KEY, page).build(true).toUri();</span>
+	}
+	
+    public URI buildProjectsForTeamUri(String teamName) {
+<span class="fc" id="L47">        UriComponentsBuilder builder = buildApiUri();</span>
+<span class="fc" id="L48">        URI uri = builder.pathSegment(GROUPS_PATH_SEGMENT).pathSegment(urlEncode(teamName)).pathSegment(PROJECTS_PATH_SEGMENT).build(true).toUri();</span>
+<span class="fc" id="L49">        return uri;</span>
+    }
+	
+	public URI buildBoardsUri(Project project) {
+<span class="fc" id="L53">		UriComponentsBuilder builder = buildApiUri();</span>
+<span class="fc" id="L54">		URI uri = builder.pathSegment(PROJECTS_PATH_SEGMENT).pathSegment(buildGitlabProjectId(project)).pathSegment(BOARDS_PATH_SEGMENT).build(true).toUri();</span>
+<span class="fc" id="L55">		return uri;</span>
+	}
+	
+    public URI buildIssuesForProjectUri(Project project) {
+<span class="fc" id="L59">		UriComponentsBuilder builder = buildApiUri();</span>
+<span class="fc" id="L60">		URI uri = builder.pathSegment(PROJECTS_PATH_SEGMENT).pathSegment(buildGitlabProjectId(project)).pathSegment(ISSUES_PATH_SEGMENT).build(true).toUri();</span>
+<span class="fc" id="L61">		return uri;</span>
+	}
+	
+	public HttpEntity&lt;String&gt; buildAuthenticationHeader() {
+<span class="fc" id="L65">		HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L66">		headers.set(PRIVATE_TOKEN_HEADER_KEY, settings.getApiToken());</span>
+<span class="fc" id="L67">		HttpEntity&lt;String&gt; headersEntity = new HttpEntity&lt;&gt;(headers);</span>
+<span class="fc" id="L68">		return headersEntity;</span>
+	}
+
+	private UriComponentsBuilder buildApiUri() {
+<span class="fc" id="L72">		String protocol = getProtocol();</span>
+<span class="fc" id="L73">		String host = getHost();</span>
+<span class="fc" id="L74">		String apiVersion = getApiVersion();</span>
+		
+<span class="fc" id="L76">		UriComponentsBuilder builder = UriComponentsBuilder.newInstance();</span>
+		
+<span class="fc bfc" id="L78" title="All 2 branches covered.">		if(StringUtils.isNotBlank(settings.getPort())) {</span>
+<span class="fc" id="L79">			builder.port(settings.getPort());</span>
+		}
+		
+<span class="fc" id="L82">		return builder.scheme(protocol)</span>
+<span class="fc" id="L83">				.host(host)</span>
+<span class="fc" id="L84">				.path(settings.getPath())</span>
+<span class="fc" id="L85">				.pathSegment(API_PATH_SEGMENT)</span>
+<span class="fc" id="L86">				.pathSegment(apiVersion)</span>
+<span class="fc" id="L87">				.queryParam(RESULT_PER_PAGE_QUERY_PARAM_KEY, RESULTS_PER_PAGE);</span>
+	}
+
+    private String getApiVersion() {
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        return settings.getApiVersion() == 3 ? V3 : V4;</span>
+    }
+
+    private String getHost() {
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        return StringUtils.isBlank(settings.getHost()) ? DEFAULT_HOST : settings.getHost();</span>
+    }
+
+    private String getProtocol() {
+<span class="fc bfc" id="L99" title="All 2 branches covered.">        return StringUtils.isBlank(settings.getProtocol()) ? DEFAULT_PROTOCOL : settings.getProtocol();</span>
+    }
+    
+    private String buildGitlabProjectId(Project project) {
+<span class="fc" id="L103">        String projectId = project.getTeamId() + &quot;/&quot; + project.getProjectId();</span>
+        String result;
+<span class="fc" id="L105">        result = urlEncode(projectId);</span>
+        
+<span class="fc" id="L107">        return result;</span>
+    }
+
+    private String urlEncode(String stringToEncode) {
+        try {
+<span class="fc" id="L112">            return URLEncoder.encode(stringToEncode, StandardCharsets.UTF_8.toString());</span>
+<span class="nc" id="L113">        } catch (UnsupportedEncodingException e) {</span>
+<span class="nc" id="L114">            return StringUtils.replace(stringToEncode, &quot;/&quot;, &quot;%2F&quot;); </span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

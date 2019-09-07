@@ -1,0 +1,11 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+com.capitalone.dashboard:versionone-feature-collector,com.capitalone.dashboard,Application,8,0,0,0,3,0,2,0,2,0
+com.capitalone.dashboard:versionone-feature-collector,com.capitalone.dashboard.collector,FeatureSettings,143,0,0,0,61,0,41,0,41,0
+com.capitalone.dashboard:versionone-feature-collector,com.capitalone.dashboard.collector,TeamDataClient,252,0,26,0,67,0,24,0,11,0
+com.capitalone.dashboard:versionone-feature-collector,com.capitalone.dashboard.collector,ProjectDataClient,252,0,20,0,60,0,16,0,6,0
+com.capitalone.dashboard:versionone-feature-collector,com.capitalone.dashboard.collector,FeatureCollectorTask,150,0,4,0,32,0,9,0,7,0
+com.capitalone.dashboard:versionone-feature-collector,com.capitalone.dashboard.collector,StoryDataClient,556,0,26,0,121,0,19,0,6,0
+com.capitalone.dashboard:versionone-feature-collector,com.capitalone.dashboard.collector,BaseClient,194,33,6,4,41,7,11,4,8,2
+com.capitalone.dashboard:versionone-feature-collector,com.capitalone.dashboard.datafactory.versionone,VersionOneDataFactoryImpl,209,76,10,0,46,22,11,11,6,11
+com.capitalone.dashboard:versionone-feature-collector,com.capitalone.dashboard.model,FeatureCollector,24,0,0,0,8,0,2,0,2,0
+com.capitalone.dashboard:versionone-feature-collector,com.capitalone.dashboard.util,DateUtil,87,132,8,8,21,23,10,7,5,4

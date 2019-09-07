@@ -1,0 +1,7 @@
+com/capitalone/dashboard/collector/AWSCloudCollectorTask.class
+com/capitalone/dashboard/collector/AWSCloudCollector.class
+com/capitalone/dashboard/repository/AWSConfigRepository.class
+com/capitalone/dashboard/collector/DefaultAWSCloudClient.class
+com/capitalone/dashboard/collector/AWSCloudSettings.class
+com/capitalone/dashboard/Application.class
+com/capitalone/dashboard/collector/AWSCloudClient.class

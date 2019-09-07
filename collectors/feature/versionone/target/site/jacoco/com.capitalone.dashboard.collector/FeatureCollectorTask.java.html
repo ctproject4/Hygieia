@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>FeatureCollectorTask.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:versionone-feature-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">FeatureCollectorTask.java</span></div><h1>FeatureCollectorTask.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+import com.capitalone.dashboard.datafactory.versionone.VersionOneDataFactoryImpl;
+import com.capitalone.dashboard.misc.HygieiaException;
+import com.capitalone.dashboard.model.FeatureCollector;
+import com.capitalone.dashboard.repository.BaseCollectorRepository;
+import com.capitalone.dashboard.repository.FeatureCollectorRepository;
+import com.capitalone.dashboard.repository.FeatureRepository;
+import com.capitalone.dashboard.repository.ScopeRepository;
+import com.capitalone.dashboard.repository.TeamRepository;
+import com.capitalone.dashboard.util.FeatureCollectorConstants;
+
+import org.codehaus.plexus.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Collects {@link FeatureCollector} data from feature content source system.
+ */
+@Component
+public class FeatureCollectorTask extends CollectorTask&lt;FeatureCollector&gt; {
+<span class="nc" id="L28">    private static final Logger LOGGER = LoggerFactory.getLogger(FeatureCollectorTask.class);</span>
+
+    private final FeatureRepository featureRepository;
+    private final TeamRepository teamRepository;
+    private final ScopeRepository projectRepository;
+    private final FeatureCollectorRepository featureCollectorRepository;
+    private final FeatureSettings featureSettings;
+    private final VersionOneDataFactoryImpl v1Connection;
+
+    /**
+     * Default constructor for the collector task. This will construct this
+     * collector task with all repository, scheduling, and settings
+     * configurations custom to this collector.
+     *
+     * @param taskScheduler   A task scheduler artifact
+     * @param teamRepository  The repository being use for feature collection
+     * @param featureSettings The settings being used for feature collection from the source
+     *                        system
+     * @throws HygieiaException
+     */
+    @Autowired
+    public FeatureCollectorTask(TaskScheduler taskScheduler, FeatureRepository featureRepository,
+                                TeamRepository teamRepository, ScopeRepository projectRepository,
+                                FeatureCollectorRepository featureCollectorRepository, FeatureSettings featureSettings)
+            throws HygieiaException {
+<span class="nc" id="L53">        super(taskScheduler, FeatureCollectorConstants.VERSIONONE);</span>
+<span class="nc" id="L54">        this.featureCollectorRepository = featureCollectorRepository;</span>
+<span class="nc" id="L55">        this.teamRepository = teamRepository;</span>
+<span class="nc" id="L56">        this.projectRepository = projectRepository;</span>
+<span class="nc" id="L57">        this.featureRepository = featureRepository;</span>
+<span class="nc" id="L58">        this.featureSettings = featureSettings;</span>
+<span class="nc" id="L59">        this.v1Connection = connectToPersistentClient();</span>
+<span class="nc" id="L60">    }</span>
+
+    /**
+     * Accessor method for the collector prototype object
+     */
+    @Override
+    public FeatureCollector getCollector() {
+<span class="nc" id="L67">        return FeatureCollector.prototype();</span>
+    }
+
+    /**
+     * Accessor method for the collector repository
+     */
+    @Override
+    public BaseCollectorRepository&lt;FeatureCollector&gt; getCollectorRepository() {
+<span class="nc" id="L75">        return featureCollectorRepository;</span>
+    }
+
+    /**
+     * Accessor method for the current chronology setting, for the scheduler
+     */
+    @Override
+    public String getCron() {
+<span class="nc" id="L83">        return featureSettings.getCron();</span>
+    }
+
+    /**
+     * The collection action. This is the task which will run on a schedule to
+     * gather data from the feature content source system and update the
+     * repository with retrieved data.
+     */
+    @Override
+    public void collect(FeatureCollector collector) {
+<span class="nc" id="L93">        LOGGER.info(&quot;Starting Feature collection...&quot;);</span>
+
+        try {
+<span class="nc" id="L96">            TeamDataClient teamData = new TeamDataClient(this.featureCollectorRepository,</span>
+                    this.featureSettings, this.teamRepository, this.v1Connection);
+
+<span class="nc" id="L99">            teamData.updateTeamInformation();</span>
+
+<span class="nc" id="L101">            ProjectDataClient projectData = new ProjectDataClient(this.featureSettings,</span>
+                    this.projectRepository, this.featureCollectorRepository, this.v1Connection);
+<span class="nc" id="L103">            projectData.updateProjectInformation();</span>
+
+<span class="nc" id="L105">            StoryDataClient storyData = new StoryDataClient(this.featureSettings,</span>
+                    this.featureRepository, this.featureCollectorRepository, this.v1Connection);
+<span class="nc" id="L107">            storyData.updateStoryInformation();</span>
+<span class="nc" id="L108">        } catch (HygieiaException he) {</span>
+<span class="nc" id="L109">            LOGGER.error(&quot;Error in collecting Version One Data: [&quot; + he.getErrorCode() + &quot;] &quot;</span>
+<span class="nc" id="L110">                    + he.getMessage());</span>
+<span class="nc" id="L111">        }</span>
+
+<span class="nc" id="L113">        LOGGER.info(&quot;Feature Data Collection Finished&quot;);</span>
+
+<span class="nc" id="L115">    }</span>
+
+    private VersionOneDataFactoryImpl connectToPersistentClient() throws HygieiaException {
+<span class="nc" id="L118">        Map&lt;String, String&gt; auth = new HashMap&lt;&gt;();</span>
+
+<span class="nc bnc" id="L120" title="All 4 branches missed.">        if (StringUtils.isEmpty(featureSettings.getVersionOneAccessToken()) || StringUtils.isEmpty(featureSettings.getVersionOneBaseUri()))</span>
+<span class="nc" id="L121">            throw new HygieiaException(&quot;FAILED: VersionOne connection properties are not valid&quot;,</span>
+                    HygieiaException.INVALID_CONFIGURATION);
+
+<span class="nc" id="L124">        auth.put(&quot;v1ProxyUrl&quot;, this.featureSettings.getVersionOneProxyUrl());</span>
+<span class="nc" id="L125">        auth.put(&quot;v1BaseUri&quot;, this.featureSettings.getVersionOneBaseUri());</span>
+<span class="nc" id="L126">        auth.put(&quot;v1AccessToken&quot;, this.featureSettings.getVersionOneAccessToken());</span>
+
+<span class="nc" id="L128">        return new VersionOneDataFactoryImpl(auth);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

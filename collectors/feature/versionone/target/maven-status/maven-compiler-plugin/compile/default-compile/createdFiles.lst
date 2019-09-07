@@ -1,0 +1,12 @@
+com/capitalone/dashboard/collector/BaseClient.class
+com/capitalone/dashboard/Application.class
+com/capitalone/dashboard/model/FeatureCollector.class
+com/capitalone/dashboard/repository/FeatureCollectorRepository.class
+com/capitalone/dashboard/collector/FeatureSettings.class
+com/capitalone/dashboard/collector/TeamDataClient.class
+com/capitalone/dashboard/util/DateUtil.class
+com/capitalone/dashboard/datafactory/versionone/VersionOneDataFactory.class
+com/capitalone/dashboard/collector/StoryDataClient.class
+com/capitalone/dashboard/collector/ProjectDataClient.class
+com/capitalone/dashboard/collector/FeatureCollectorTask.class
+com/capitalone/dashboard/datafactory/versionone/VersionOneDataFactoryImpl.class

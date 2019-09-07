@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ArtifactUtil.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:artifactory-artifact-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.util</a> &gt; <span class="el_source">ArtifactUtil.java</span></div><h1>ArtifactUtil.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.util;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import com.capitalone.dashboard.model.BinaryArtifact;
+
+<span class="nc" id="L8">public class ArtifactUtil {</span>
+	private static final String ORG_REGEX_GROUP = &quot;group&quot;;
+	private static final String MODULE_REGEX_GROUP = &quot;module&quot;;
+	private static final String ARTIFACT_REGEX_GROUP = &quot;artifact&quot;;
+	private static final String VERSION_REGEX_GROUP = &quot;version&quot;;
+	private static final String CLASSIFIER_REGEX_GROUP = &quot;classifier&quot;;
+	private static final String EXT_REGEX_GROUP = &quot;ext&quot;;
+
+	public static final BinaryArtifact parse(Pattern pattern, String path) {
+<span class="fc" id="L17">		Matcher matcher = pattern.matcher(path);</span>
+		
+<span class="fc bfc" id="L19" title="All 2 branches covered.">		if (matcher.matches()) {</span>
+<span class="fc" id="L20">			String org = null;</span>
+<span class="fc" id="L21">			String module = null;</span>
+<span class="fc" id="L22">			String version = null;</span>
+<span class="fc" id="L23">			String artifact = null;</span>
+<span class="fc" id="L24">			String classifier = null;</span>
+<span class="fc" id="L25">			String ext = null;</span>
+			
+<span class="pc bpc" id="L27" title="1 of 2 branches missed.">			if (pattern.pattern().contains(&quot;&lt;&quot; + ORG_REGEX_GROUP + &quot;&gt;&quot;)) {</span>
+<span class="fc" id="L28">				org = matcher.group(ORG_REGEX_GROUP);</span>
+				
+<span class="fc" id="L30">				org = org.replace('/', '.');</span>
+			}
+			
+<span class="fc bfc" id="L33" title="All 2 branches covered.">			if (pattern.pattern().contains(&quot;&lt;&quot; + MODULE_REGEX_GROUP + &quot;&gt;&quot;)) {</span>
+<span class="fc" id="L34">				module = matcher.group(MODULE_REGEX_GROUP);</span>
+			}
+			
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">			if (pattern.pattern().contains(&quot;&lt;&quot; + VERSION_REGEX_GROUP + &quot;&gt;&quot;)) {</span>
+<span class="fc" id="L38">				version = matcher.group(VERSION_REGEX_GROUP);</span>
+			}
+			
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">			if (pattern.pattern().contains(&quot;&lt;&quot; + ARTIFACT_REGEX_GROUP + &quot;&gt;&quot;)) {</span>
+<span class="fc" id="L42">				artifact = matcher.group(ARTIFACT_REGEX_GROUP);</span>
+			}
+			
+<span class="fc bfc" id="L45" title="All 2 branches covered.">			if (pattern.pattern().contains(&quot;&lt;&quot; + CLASSIFIER_REGEX_GROUP + &quot;&gt;&quot;)) {</span>
+<span class="fc" id="L46">				classifier = matcher.group(CLASSIFIER_REGEX_GROUP);</span>
+			}
+			
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">			if (pattern.pattern().contains(&quot;&lt;&quot; + EXT_REGEX_GROUP + &quot;&gt;&quot;)) {</span>
+<span class="fc" id="L50">				ext = matcher.group(EXT_REGEX_GROUP);</span>
+			}
+			
+<span class="fc" id="L53">			BinaryArtifact ba = new BinaryArtifact();</span>
+<span class="fc" id="L54">			ba.setArtifactGroupId(org);</span>
+<span class="fc" id="L55">			ba.setArtifactModule(module);</span>
+<span class="fc" id="L56">			ba.setArtifactVersion(version);</span>
+<span class="fc" id="L57">			ba.setArtifactName(artifact);</span>
+<span class="fc" id="L58">			ba.setArtifactClassifier(classifier);</span>
+<span class="fc" id="L59">			ba.setArtifactExtension(ext);</span>
+			
+<span class="fc" id="L61">			return ba;</span>
+		} else {
+<span class="fc" id="L63">			return null;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

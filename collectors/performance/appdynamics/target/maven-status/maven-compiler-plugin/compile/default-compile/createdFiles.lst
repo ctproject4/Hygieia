@@ -1,0 +1,10 @@
+com/capitalone/dashboard/repository/AppdynamicsCollectorRepository.class
+com/capitalone/dashboard/repository/AppDynamicsApplicationRepository.class
+com/capitalone/dashboard/model/AppdynamicsCollector.class
+com/capitalone/dashboard/collector/AppdynamicsClient.class
+com/capitalone/dashboard/collector/DefaultAppdynamicsClient.class
+com/capitalone/dashboard/model/AppdynamicsApplication.class
+com/capitalone/dashboard/collector/AppdynamicsCollectorTask.class
+com/capitalone/dashboard/Application.class
+com/capitalone/dashboard/collector/AppdynamicsSettings.class
+com/capitalone/dashboard/collector/RestOperationsSupplier.class

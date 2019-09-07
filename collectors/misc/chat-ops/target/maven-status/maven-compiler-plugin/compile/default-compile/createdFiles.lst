@@ -1,0 +1,8 @@
+com/capitalone/dashboard/repository/ChatOpsRepository.class
+com/capitalone/dashboard/collector/ChatOpsClient.class
+com/capitalone/dashboard/collector/DefaultChatOpsClient.class
+com/capitalone/dashboard/Application.class
+com/capitalone/dashboard/collector/ChatOpsSettings.class
+com/capitalone/dashboard/collector/ChatOpsCollectorTask.class
+com/capitalone/dashboard/model/ChatOpsRepo.class
+com/capitalone/dashboard/collector/RestOperationsSupplier.class

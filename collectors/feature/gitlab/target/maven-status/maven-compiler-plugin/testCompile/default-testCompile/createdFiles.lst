@@ -1,0 +1,7 @@
+com/capitalone/dashboard/ApplicationConfigTest.class
+com/capitalone/dashboard/gitlab/GitlabUriUtilityTest.class
+com/capitalone/dashboard/collector/FeatureServiceTest.class
+com/capitalone/dashboard/gitlab/DefaultGitlabClientTest.class
+com/capitalone/dashboard/collector/FeatureCollectorTaskTest.class
+com/capitalone/dashboard/data/DefaultFeatureDataClientTest.class
+com/capitalone/dashboard/data/FeatureDataMapperTest.class

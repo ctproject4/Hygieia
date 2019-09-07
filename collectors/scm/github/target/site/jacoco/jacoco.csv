@@ -1,0 +1,8 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+com.capitalone.dashboard:github-scm-collector,com.capitalone.dashboard,Application,8,0,0,0,3,0,2,0,2,0
+com.capitalone.dashboard:github-scm-collector,com.capitalone.dashboard.collector,GitHubCollectorTask,321,468,35,31,58,93,30,17,6,8
+com.capitalone.dashboard:github-scm-collector,com.capitalone.dashboard.collector,DefaultGitHubClient,1773,0,156,0,386,0,101,0,23,0
+com.capitalone.dashboard:github-scm-collector,com.capitalone.dashboard.collector,RestOperationsSupplier,18,0,0,0,5,0,2,0,2,0
+com.capitalone.dashboard:github-scm-collector,com.capitalone.dashboard.collector,GitHubSettings,59,0,0,0,25,0,17,0,17,0
+com.capitalone.dashboard:github-scm-collector,com.capitalone.dashboard.model,GitHubRepo,61,64,3,3,18,14,13,8,10,8
+com.capitalone.dashboard:github-scm-collector,com.capitalone.dashboard.model,GitHubParsed,146,0,8,0,34,0,16,0,12,0

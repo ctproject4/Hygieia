@@ -1,0 +1,16 @@
+com/capitalone/dashboard/collector/GitHubCollectorTask.class
+com/capitalone/dashboard/collector/DefaultGitHubClient.class
+com/capitalone/dashboard/model/GitHubGraphQLQuery.class
+com/capitalone/dashboard/Application.class
+com/capitalone/dashboard/model/GitHubParsed.class
+com/capitalone/dashboard/collector/RestOperationsSupplier.class
+com/capitalone/dashboard/model/CollectionMode.class
+com/capitalone/dashboard/model/GitHubPaging.class
+com/capitalone/dashboard/collector/GitHubSettings.class
+com/capitalone/dashboard/model/MergeEvent.class
+com/capitalone/dashboard/model/GitHubRepo.class
+com/capitalone/dashboard/repository/GitHubRepoRepository.class
+com/capitalone/dashboard/collector/CommitPullMatcher.class
+com/capitalone/dashboard/collector/GitHubClient.class
+com/capitalone/dashboard/collector/DefaultGitHubClient$1.class
+com/capitalone/dashboard/model/GitHubRateLimit.class

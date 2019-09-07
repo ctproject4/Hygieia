@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>TestExecUpdateJsonGenerator.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:jira-xray-testresult-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.core.json.gen</a> &gt; <span class="el_source">TestExecUpdateJsonGenerator.java</span></div><h1>TestExecUpdateJsonGenerator.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.core.json.gen;
+
+import com.atlassian.jira.rest.client.internal.json.gen.JsonGenerator;
+import com.capitalone.dashboard.api.domain.TestExecution;
+import com.google.common.collect.Iterables;
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+/**
+ * Generate JSON object payload for the server rest implementation.
+ */
+<span class="nc" id="L16">public class TestExecUpdateJsonGenerator implements JsonGenerator&lt;TestExecution&gt; {</span>
+    private final static String KEY_ADD=&quot;add&quot;;
+    private final static String KEY_REMOVE=&quot;remove&quot;;
+
+    public JSONObject generate(TestExecution testExecution) throws JSONException {
+<span class="nc" id="L21">        ArrayList&lt;String&gt; adds=new ArrayList&lt;String&gt;();</span>
+<span class="nc" id="L22">        ArrayList&lt;String&gt; removes=new ArrayList&lt;String&gt;();</span>
+
+<span class="nc bnc" id="L24" title="All 2 branches missed.">        if(testExecution.getVersion()!=0){</span>
+<span class="nc" id="L25">            Collection&lt;TestExecution.Test&gt; allTests=new ArrayList&lt;TestExecution.Test&gt;();</span>
+
+<span class="nc bnc" id="L27" title="All 2 branches missed.">            if(testExecution.getTests()!=null){</span>
+<span class="nc bnc" id="L28" title="All 2 branches missed.">                if(testExecution.getOldVersion().getTests()!=null) {</span>
+<span class="nc" id="L29">                    Iterables.addAll(allTests, Iterables.concat(testExecution.getTests(),testExecution.getOldVersion().getTests()));</span>
+                }
+                else {
+<span class="nc" id="L32">                    Iterables.addAll(allTests,testExecution.getTests());</span>
+                }
+            }
+
+<span class="nc bnc" id="L36" title="All 2 branches missed.">            for(TestExecution.Test t: allTests){</span>
+<span class="nc bnc" id="L37" title="All 2 branches missed.">                if(testExecution.getOldVersion().getTests()!=null){</span>
+<span class="nc bnc" id="L38" title="All 4 branches missed.">                if(Iterables.contains(testExecution.getOldVersion().getTests(),t) &amp;&amp; !Iterables.contains(testExecution.getTests(),t))</span>
+                {
+<span class="nc" id="L40">                    removes.add(t.getKey());</span>
+
+                }
+<span class="nc bnc" id="L43" title="All 4 branches missed.">                if(!Iterables.contains(testExecution.getOldVersion().getTests(),t) &amp;&amp; Iterables.contains(testExecution.getOldVersion().getTests(),t))</span>
+                {
+<span class="nc" id="L45">                    adds.add(t.getKey());</span>
+                }
+                }else{
+<span class="nc" id="L48">                    adds.add(t.getKey());</span>
+                }
+<span class="nc" id="L50">            }</span>
+        }
+<span class="nc" id="L52">        JSONObject ex=new JSONObject();</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">        if(!adds.isEmpty()){</span>
+<span class="nc" id="L54">            ex.put(KEY_ADD,new JSONArray(adds));</span>
+        }
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        if(!removes.isEmpty()){</span>
+<span class="nc" id="L57">            ex.put(KEY_REMOVE,new JSONArray(removes));</span>
+        }
+<span class="nc" id="L59">        return ex;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

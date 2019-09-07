@@ -1,0 +1,54 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.client,JiraXRayRestClientFactory,37,0,0,0,6,0,4,0,4,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.client,TestExecutionRestClientImpl,139,0,2,0,19,0,7,0,6,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.client,TestRunRestClientImpl.new JsonObjectParser() {...},8,0,0,0,2,0,2,0,2,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.client,TestRunRestClientImpl.new Function() {...},9,0,0,0,2,0,2,0,2,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.client,TestRunRestClientImpl.new Function() {...},45,0,2,0,8,0,3,0,2,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.client,TestRunRestClientImpl,179,0,0,0,22,0,8,0,8,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.client,JiraXRayRestClientSupplier.new Authenticator() {...},21,0,0,0,2,0,2,0,2,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.client,JiraXRayRestClientSupplier,272,0,20,0,65,0,15,0,5,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.client,JiraXRayRestClientImpl.new TestExecutionRestClientImpl() {...},10,0,0,0,2,0,2,0,2,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.client,JiraXRayRestClientImpl,44,0,0,0,12,0,5,0,5,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.client,TestExecutionRestClientImpl.new Function() {...},36,0,2,0,6,0,3,0,2,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json.util,XrayJiraDateFormatter,166,0,2,0,34,0,4,0,3,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json.util,RendereableItemImpl,23,0,0,0,10,0,5,0,5,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.api.domain,TestStep,113,0,2,0,41,0,22,0,21,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.api.domain,TestRun.Status,9,69,0,0,0,1,2,2,2,2
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.api.domain,VersionableIssue,16,12,2,0,6,4,4,1,3,1
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.api.domain,TestRun,165,159,2,2,52,44,29,11,27,11
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.api.domain,TestExecution,69,6,6,0,15,2,6,1,3,1
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.api.domain,Example,49,0,0,0,19,0,10,0,10,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.api.domain,Evidence,70,0,0,0,29,0,15,0,15,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.api.domain,Example.Status,48,0,0,0,1,0,4,0,4,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.api.domain,TestStep.Status,78,0,0,0,1,0,4,0,4,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.api.domain,Comment,42,0,0,0,15,0,7,0,7,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.api.domain,TestSet,8,0,0,0,3,0,2,0,2,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.api.domain,Defect,46,0,0,0,13,0,7,0,7,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.api.domain,TestExecution.Test,32,12,4,0,8,4,4,1,2,1
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json.gen,TestExecUpdateJsonGenerator,128,0,22,0,23,0,13,0,2,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json.gen,TestStepJsonGenerator,438,12,64,0,88,3,38,2,6,2
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json.gen,TestStepUpdateJsonGenerator,334,8,60,0,64,2,34,2,4,2
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json.gen,EvidenceJsonGenerator,28,3,0,0,6,1,1,1,1,1
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json.gen,TestExecJsonGenerator,5,0,0,0,2,0,2,0,2,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json.gen,DefectJSONGenerator,20,3,0,0,4,1,1,1,1,1
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json.gen,TestRunUpdateJsonGenerator,193,8,32,0,38,2,17,2,1,2
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json.gen,RendereableItemJsonGenerator,18,3,0,0,4,1,1,1,1,1
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json.gen,TestRunJsonGenerator,294,20,32,0,55,5,22,2,6,2
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json,RendereableItemJsonParser,10,3,0,0,1,1,1,1,1,1
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json,StatusJsonParser,8,0,0,0,2,0,2,0,2,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json,TestStepJsonParser,91,8,10,0,21,2,7,2,2,2
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json,TestArrayJsonParser,22,8,2,0,4,2,2,2,1,2
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json,DefectJsonParser,34,3,0,0,7,1,1,1,1,1
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json,EvidenceJsonParser,59,0,0,0,16,0,3,0,3,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json,TestJsonParser,24,3,0,0,5,1,1,1,1,1
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json,TestRunJsonParser,181,15,20,0,42,5,13,2,3,2
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json,ExampleJsonParser,58,0,2,0,14,0,5,0,4,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.json,TestExecJsonParser,5,0,0,0,2,0,2,0,2,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard,Application,8,0,0,0,3,0,2,0,2,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard,TestResultSettings,129,0,0,0,55,0,37,0,37,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.collector,TestResultCollectorTask,88,0,0,0,25,0,6,0,6,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.model,TestResultCollector,24,0,0,0,8,0,2,0,2,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.client.testexecution,TestExecutionClientImpl.TEST_STEP_STATUS_COUNT_ATTRIBUTES,58,0,0,0,2,0,4,0,4,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.client.testexecution,TestExecutionClientImpl,1015,0,78,0,219,0,59,0,20,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core.client.testexecution,TestExecutionClientImpl.TEST_STATUS_COUNT_ATTRIBUTES,58,0,0,0,2,0,4,0,4,0
+com.capitalone.dashboard:jira-xray-testresult-collector,com.capitalone.dashboard.core,PluginConstants,3,0,0,0,2,0,1,0,1,0

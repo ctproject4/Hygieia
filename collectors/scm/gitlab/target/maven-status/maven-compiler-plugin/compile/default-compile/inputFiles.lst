@@ -1,0 +1,11 @@
+/home/Devops/Hygieia/collectors/scm/gitlab/src/main/java/com/capitalone/dashboard/gitlab/DefaultGitlabGitClient.java
+/home/Devops/Hygieia/collectors/scm/gitlab/src/main/java/com/capitalone/dashboard/collector/RestOperationsSupplier.java
+/home/Devops/Hygieia/collectors/scm/gitlab/src/main/java/com/capitalone/dashboard/collector/GitlabGitCollectorTask.java
+/home/Devops/Hygieia/collectors/scm/gitlab/src/main/java/com/capitalone/dashboard/collector/GitlabSettings.java
+/home/Devops/Hygieia/collectors/scm/gitlab/src/main/java/com/capitalone/dashboard/gitlab/GitlabGitClient.java
+/home/Devops/Hygieia/collectors/scm/gitlab/src/main/java/com/capitalone/dashboard/Application.java
+/home/Devops/Hygieia/collectors/scm/gitlab/src/main/java/com/capitalone/dashboard/gitlab/model/GitlabCommit.java
+/home/Devops/Hygieia/collectors/scm/gitlab/src/main/java/com/capitalone/dashboard/model/GitlabGitRepo.java
+/home/Devops/Hygieia/collectors/scm/gitlab/src/main/java/com/capitalone/dashboard/repository/GitlabGitCollectorRepository.java
+/home/Devops/Hygieia/collectors/scm/gitlab/src/main/java/com/capitalone/dashboard/gitlab/GitlabCommitsResponseMapper.java
+/home/Devops/Hygieia/collectors/scm/gitlab/src/main/java/com/capitalone/dashboard/gitlab/GitlabUrlUtility.java

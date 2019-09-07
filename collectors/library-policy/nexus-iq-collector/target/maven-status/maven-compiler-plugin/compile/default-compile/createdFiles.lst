@@ -1,0 +1,11 @@
+com/capitalone/dashboard/model/NexusIQCollector.class
+com/capitalone/dashboard/collector/DefaultNexusIQClient.class
+com/capitalone/dashboard/Application.class
+com/capitalone/dashboard/collector/RestOperationsSupplier.class
+com/capitalone/dashboard/collector/NexusIQSettings.class
+com/capitalone/dashboard/collector/NexusIQCollectorTask.class
+com/capitalone/dashboard/repository/NexusIQApplicationRepository.class
+com/capitalone/dashboard/collector/NexusIQClient.class
+com/capitalone/dashboard/repository/NexusIQCollectorRepository.class
+com/capitalone/dashboard/model/LibraryPolicyReport.class
+com/capitalone/dashboard/model/NexusIQApplication.class

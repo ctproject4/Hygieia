@@ -1,0 +1,9 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+com.capitalone.dashboard:rally-collector,com.capitalone.dashboard,Application,8,0,0,0,3,0,2,0,2,0
+com.capitalone.dashboard:rally-collector,com.capitalone.dashboard.collector,DefaultRallyClient,1278,18,80,0,264,6,59,2,19,2
+com.capitalone.dashboard:rally-collector,com.capitalone.dashboard.collector,RallyCollectorTask,821,112,83,7,155,29,56,5,12,4
+com.capitalone.dashboard:rally-collector,com.capitalone.dashboard.collector,RestOperationsSupplier,18,0,0,0,5,0,2,0,2,0
+com.capitalone.dashboard:rally-collector,com.capitalone.dashboard.collector,RallySettings,56,3,0,0,24,1,16,1,16,1
+com.capitalone.dashboard:rally-collector,com.capitalone.dashboard.model,RallyProject,10,79,5,5,0,17,4,10,0,9
+com.capitalone.dashboard:rally-collector,com.capitalone.dashboard.model,RallyIteration,89,0,10,0,17,0,14,0,9,0
+com.capitalone.dashboard:rally-collector,com.capitalone.dashboard.model,RallyCollector,23,11,0,0,7,3,1,2,1,2

@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>FeatureSettings.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:versionone-feature-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">FeatureSettings.java</span></div><h1>FeatureSettings.java</h1><pre class="source lang-java linenums">/*************************DA-BOARD-LICENSE-START*********************************
+ * Copyright 2014 CapitalOne, LLC.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *************************DA-BOARD-LICENSE-END*********************************/
+
+package com.capitalone.dashboard.collector;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+/**
+ * Bean to hold settings specific to the Feature collector.
+ * 
+ * @author KFK884
+ */
+@Component
+@ConfigurationProperties(prefix = &quot;feature&quot;)
+<span class="nc" id="L29">public class FeatureSettings {</span>
+	private String cron;
+	private int pageSize;
+	private String deltaStartDate;
+	private String deltaCollectorItemStartDate;
+	private String masterStartDate;
+	private String queryFolder;
+	private String storyQuery;
+	private String epicQuery;
+	private String projectQuery;
+	private String memberQuery;
+	private String sprintQuery;
+	private String teamQuery;
+	private String trendingQuery;
+	private int sprintDays;
+	private int sprintEndPrior;
+	private int scheduledPriorMin;
+	private String versionOneProxyUrl;
+	private String versionOneBaseUri;
+	private String versionOneAccessToken;
+	private int maxKanbanIterationLength;
+
+	public String getCron() {
+<span class="nc" id="L52">		return cron;</span>
+	}
+
+	public void setCron(String cron) {
+<span class="nc" id="L56">		this.cron = cron;</span>
+<span class="nc" id="L57">	}</span>
+
+	public int getPageSize() {
+<span class="nc" id="L60">		return pageSize;</span>
+	}
+
+	public void setPageSize(int pageSize) {
+<span class="nc" id="L64">		this.pageSize = pageSize;</span>
+<span class="nc" id="L65">	}</span>
+
+	public String getDeltaStartDate() {
+<span class="nc" id="L68">		return deltaStartDate;</span>
+	}
+
+	public void setDeltaStartDate(String deltaStartDate) {
+<span class="nc" id="L72">		this.deltaStartDate = deltaStartDate;</span>
+<span class="nc" id="L73">	}</span>
+
+	public void setDeltaCollectorItemStartDate(
+			String deltaCollectorItemStartDate) {
+<span class="nc" id="L77">		this.deltaCollectorItemStartDate = deltaCollectorItemStartDate;</span>
+<span class="nc" id="L78">	}</span>
+
+	public String getDeltaCollectorItemStartDate() {
+<span class="nc" id="L81">		return this.deltaCollectorItemStartDate;</span>
+	}
+
+	public String getMasterStartDate() {
+<span class="nc" id="L85">		return masterStartDate;</span>
+	}
+
+	public void setMasterStartDate(String masterStartDate) {
+<span class="nc" id="L89">		this.masterStartDate = masterStartDate;</span>
+<span class="nc" id="L90">	}</span>
+
+	public String getQueryFolder() {
+<span class="nc" id="L93">		return queryFolder;</span>
+	}
+
+	public void setQueryFolder(String queryFolder) {
+<span class="nc" id="L97">		this.queryFolder = queryFolder;</span>
+<span class="nc" id="L98">	}</span>
+
+	public String getStoryQuery() {
+<span class="nc" id="L101">		return storyQuery;</span>
+	}
+
+	public void setStoryQuery(String storyQuery) {
+<span class="nc" id="L105">		this.storyQuery = storyQuery;</span>
+<span class="nc" id="L106">	}</span>
+
+	public String getEpicQuery() {
+<span class="nc" id="L109">		return epicQuery;</span>
+	}
+
+	public void setEpicQuery(String epicQuery) {
+<span class="nc" id="L113">		this.epicQuery = epicQuery;</span>
+<span class="nc" id="L114">	}</span>
+
+	public String getProjectQuery() {
+<span class="nc" id="L117">		return projectQuery;</span>
+	}
+
+	public void setProjectQuery(String projectQuery) {
+<span class="nc" id="L121">		this.projectQuery = projectQuery;</span>
+<span class="nc" id="L122">	}</span>
+
+	public String getMemberQuery() {
+<span class="nc" id="L125">		return memberQuery;</span>
+	}
+
+	public void setMemberQuery(String memberQuery) {
+<span class="nc" id="L129">		this.memberQuery = memberQuery;</span>
+<span class="nc" id="L130">	}</span>
+
+	public String getSprintQuery() {
+<span class="nc" id="L133">		return sprintQuery;</span>
+	}
+
+	public void setSprintQuery(String sprintQuery) {
+<span class="nc" id="L137">		this.sprintQuery = sprintQuery;</span>
+<span class="nc" id="L138">	}</span>
+
+	public String getTeamQuery() {
+<span class="nc" id="L141">		return teamQuery;</span>
+	}
+
+	public void setTeamQuery(String teamQuery) {
+<span class="nc" id="L145">		this.teamQuery = teamQuery;</span>
+<span class="nc" id="L146">	}</span>
+
+	public String getTrendingQuery() {
+<span class="nc" id="L149">		return trendingQuery;</span>
+	}
+
+	public void setTrendingQuery(String trendingQuery) {
+<span class="nc" id="L153">		this.trendingQuery = trendingQuery;</span>
+<span class="nc" id="L154">	}</span>
+
+	public int getSprintDays() {
+<span class="nc" id="L157">		return sprintDays;</span>
+	}
+
+	public void setSprintDays(int sprintDays) {
+<span class="nc" id="L161">		this.sprintDays = sprintDays;</span>
+<span class="nc" id="L162">	}</span>
+
+	public int getSprintEndPrior() {
+<span class="nc" id="L165">		return sprintEndPrior;</span>
+	}
+
+	public void setSprintEndPrior(int sprintEndPrior) {
+<span class="nc" id="L169">		this.sprintEndPrior = sprintEndPrior;</span>
+<span class="nc" id="L170">	}</span>
+
+	public int getScheduledPriorMin() {
+<span class="nc" id="L173">		return scheduledPriorMin;</span>
+	}
+
+	public void setScheduledPriorMin(int scheduledPriorMin) {
+<span class="nc" id="L177">		this.scheduledPriorMin = scheduledPriorMin;</span>
+<span class="nc" id="L178">	}</span>
+
+	public String getVersionOneProxyUrl() {
+<span class="nc" id="L181">		return this.versionOneProxyUrl;</span>
+	}
+
+	public String getVersionOneBaseUri() {
+<span class="nc" id="L185">		return this.versionOneBaseUri;</span>
+	}
+
+	public String getVersionOneAccessToken() {
+<span class="nc" id="L189">		return this.versionOneAccessToken;</span>
+	}
+
+	public void setVersionOneProxyUrl(String versionOneProxyUrl) {
+<span class="nc" id="L193">		this.versionOneProxyUrl = versionOneProxyUrl;</span>
+<span class="nc" id="L194">	}</span>
+
+	public void setVersionOneBaseUri(String versionOneBaseUri) {
+<span class="nc" id="L197">		this.versionOneBaseUri = versionOneBaseUri;</span>
+<span class="nc" id="L198">	}</span>
+
+	public void setVersionOneAccessToken(String versionOneAccessToken) {
+<span class="nc" id="L201">		this.versionOneAccessToken = versionOneAccessToken;</span>
+<span class="nc" id="L202">	}</span>
+
+	public int getMaxKanbanIterationLength() {
+<span class="nc" id="L205">		return maxKanbanIterationLength;</span>
+	}
+
+	public void setMaxKanbanIterationLength(int maxKanbanIterationLength) {
+<span class="nc" id="L209">		this.maxKanbanIterationLength = maxKanbanIterationLength;</span>
+<span class="nc" id="L210">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

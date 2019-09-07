@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ArtifactoryCollectorTask.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:artifactory-artifact-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">ArtifactoryCollectorTask.java</span></div><h1>ArtifactoryCollectorTask.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+
+import com.capitalone.dashboard.model.ArtifactItem;
+import com.capitalone.dashboard.model.ArtifactoryCollector;
+import com.capitalone.dashboard.model.ArtifactoryRepo;
+import com.capitalone.dashboard.model.BaseArtifact;
+import com.capitalone.dashboard.model.BinaryArtifact;
+import com.capitalone.dashboard.model.RepoAndPattern;
+import com.capitalone.dashboard.repository.ArtifactItemRepository;
+import com.capitalone.dashboard.repository.ArtifactoryCollectorRepository;
+import com.capitalone.dashboard.repository.ArtifactoryRepoRepository;
+import com.capitalone.dashboard.repository.BaseCollectorRepository;
+import com.capitalone.dashboard.repository.BinaryArtifactRepository;
+import com.google.common.collect.Iterables;
+import org.apache.commons.collections.map.HashedMap;
+import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+<span class="nc bnc" id="L33" title="All 2 branches missed.">@Component</span>
+public class ArtifactoryCollectorTask extends CollectorTask&lt;ArtifactoryCollector&gt;{
+<span class="nc" id="L35">	private static final Logger LOGGER = LoggerFactory.getLogger(ArtifactoryCollectorTask.class);</span>
+
+	private final ArtifactoryCollectorRepository artifactoryCollectorRepository;
+	private final ArtifactoryRepoRepository artifactoryRepoRepository;
+	private final ArtifactItemRepository artifactItemRepository;
+	private final ArtifactoryClient artifactoryClient;
+	private final ArtifactorySettings artifactorySettings;
+	private final BinaryArtifactRepository binaryArtifactRepository;
+
+	@Autowired
+	public ArtifactoryCollectorTask(TaskScheduler taskScheduler,
+									ArtifactoryCollectorRepository artifactoryCollectorRepository,
+									ArtifactoryRepoRepository artifactoryRepoRepository,
+									ArtifactItemRepository artifactItemRepository, BinaryArtifactRepository binaryArtifactRepository,
+									ArtifactoryClient artifactoryClient,
+									ArtifactorySettings artifactorySettings) {
+<span class="nc" id="L51">		super(taskScheduler, &quot;Artifactory&quot;);</span>
+<span class="nc" id="L52">		this.artifactoryCollectorRepository = artifactoryCollectorRepository;</span>
+<span class="nc" id="L53">		this.artifactoryRepoRepository = artifactoryRepoRepository;</span>
+<span class="nc" id="L54">		this.artifactItemRepository = artifactItemRepository;</span>
+<span class="nc" id="L55">		this.binaryArtifactRepository = binaryArtifactRepository;</span>
+<span class="nc" id="L56">		this.artifactoryClient = artifactoryClient;</span>
+<span class="nc" id="L57">		this.artifactorySettings = artifactorySettings;</span>
+<span class="nc" id="L58">	}</span>
+
+	@Override
+	public ArtifactoryCollector getCollector() {
+<span class="nc" id="L62">		return ArtifactoryCollector.prototype(artifactorySettings);</span>
+	}
+
+	@Override
+	public BaseCollectorRepository&lt;ArtifactoryCollector&gt; getCollectorRepository() {
+<span class="nc" id="L67">		return artifactoryCollectorRepository;</span>
+	}
+
+	@Override
+	public String getCron() {
+<span class="nc" id="L72">		return artifactorySettings.getCron();</span>
+	}
+
+	@Override
+	public void collect(ArtifactoryCollector collector) {
+<span class="nc bnc" id="L77" title="All 3 branches missed.">		switch (artifactorySettings.getMode()) {</span>
+			case REPO_BASED:
+<span class="nc" id="L79">				collectRepoBased(collector);</span>
+<span class="nc" id="L80">				break;</span>
+			case ARTIFACT_BASED:
+<span class="nc" id="L82">				collectArtifactBased(collector);</span>
+<span class="nc" id="L83">				break;</span>
+			default:
+<span class="nc" id="L85">				LOGGER.error(&quot;Error with collection mode. Valid modes are REPO_BASED or ARTIFACT_BASED to be set as properties.&quot;);</span>
+				break;
+		}
+
+<span class="nc" id="L89">	}</span>
+
+
+	protected void collectRepoBased(ArtifactoryCollector collector) {
+<span class="nc" id="L93">		Set&lt;ObjectId&gt; udId = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L94">		udId.add(collector.getId());</span>
+<span class="nc" id="L95">		List&lt;ArtifactoryRepo&gt; existingRepos = artifactoryRepoRepository.findByCollectorIdIn(udId);</span>
+<span class="nc" id="L96">		List&lt;ArtifactoryRepo&gt; activeRepos = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L97">		clean(collector, existingRepos);</span>
+<span class="nc" id="L98">		List&lt;String&gt; instanceUrls = collector.getArtifactoryServers();</span>
+<span class="nc" id="L99">		instanceUrls.forEach(instanceUrl -&gt; {</span>
+<span class="nc" id="L100">			long start = System.currentTimeMillis();</span>
+<span class="nc" id="L101">			logBanner(instanceUrl);</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">			if (instanceUrl.lastIndexOf('/') == instanceUrl.length()-1) {</span>
+<span class="nc" id="L103">				List&lt;ArtifactoryRepo&gt; repos = artifactoryClient.getRepos(instanceUrl);</span>
+<span class="nc" id="L104">				log(&quot;Fetched repos&quot;, start);</span>
+<span class="nc" id="L105">				activeRepos.addAll(repos);</span>
+<span class="nc" id="L106">				addNewRepos(repos, existingRepos, collector);</span>
+<span class="nc" id="L107">				addNewArtifacts(enabledRepos(collector, instanceUrl));</span>
+<span class="nc" id="L108">			} else {</span>
+<span class="nc" id="L109">				LOGGER.error(&quot;Error with artifactory url: &quot; + instanceUrl + &quot;. Url does not end with '/'&quot;);</span>
+			}
+<span class="nc" id="L111">			log(&quot;Finished&quot;, start);</span>
+<span class="nc" id="L112">		});</span>
+<span class="nc" id="L113">	}</span>
+
+
+	protected void collectArtifactBased(ArtifactoryCollector collector) {
+<span class="nc" id="L117">		Set&lt;ObjectId&gt; udId = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L118">		udId.add(collector.getId());</span>
+<span class="nc" id="L119">		List&lt;ArtifactItem&gt; existingItems = artifactItemRepository.findByCollectorIdIn(udId);</span>
+
+<span class="nc" id="L121">		List&lt;String&gt; instanceUrls = collector.getArtifactoryServers();</span>
+<span class="nc" id="L122">		instanceUrls.forEach(instanceUrl -&gt; {</span>
+<span class="nc" id="L123">			long start = System.currentTimeMillis();</span>
+<span class="nc" id="L124">			logBanner(instanceUrl);</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">			if (instanceUrl.lastIndexOf('/') == instanceUrl.length() - 1) {</span>
+<span class="nc" id="L126">				getRepos().forEach(repo-&gt;{</span>
+<span class="nc" id="L127">					long lastUpdated = getLastUpdated(existingItems);</span>
+<span class="nc" id="L128">					String pattern = (getPatterns().get(repo)).get(0);</span>
+<span class="nc" id="L129">                    List&lt;BaseArtifact&gt; baseArtifacts = artifactoryClient.getArtifactItems(instanceUrl,repo,pattern,lastUpdated);</span>
+<span class="nc" id="L130">                    log(&quot;Collecting repository ====&gt;&gt;&gt; &quot;+ repo);</span>
+<span class="nc" id="L131">					addNewArtifactsItems(baseArtifacts,existingItems,collector);</span>
+<span class="nc" id="L132">                });</span>
+<span class="nc" id="L133">                log(&quot;Fetched repos&quot;, start,getRepos().size());</span>
+			} else {
+<span class="nc" id="L135">				LOGGER.error(&quot;Error with artifactory url: &quot; + instanceUrl + &quot;. Url does not end with '/'&quot;);</span>
+			}
+<span class="nc" id="L137">			log(&quot;Finished&quot;, start);</span>
+<span class="nc" id="L138">		});</span>
+<span class="nc" id="L139">	}</span>
+
+
+	/**
+	 * Clean up unused artifactory collector items
+	 *
+	 * @param collector the {@link ArtifactoryCollector}
+	 */
+	private void clean(ArtifactoryCollector collector, List&lt;ArtifactoryRepo&gt; existingRepos) {
+		// find the server url's to collect from
+<span class="nc" id="L149">		Set&lt;String&gt; serversToBeCollected = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L150">		serversToBeCollected.addAll(collector.getArtifactoryServers());</span>
+
+		// find the repos to collect from each server url above
+<span class="nc" id="L153">		List&lt;Set&lt;String&gt;&gt; repoNamesToBeCollected = new ArrayList&lt;Set&lt;String&gt;&gt;();</span>
+<span class="nc" id="L154">		List&lt;String[]&gt; allRepos = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L155">		artifactorySettings.getServers().forEach(serverSetting -&gt; {</span>
+<span class="nc" id="L156">			allRepos.add((String[]) getRepoAndPatternsForServ(serverSetting.getRepoAndPatterns()).keySet().toArray());</span>
+<span class="nc" id="L157">		});</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">		for (int i = 0; i &lt; allRepos.size(); i++) {</span>
+<span class="nc" id="L159">			Set&lt;String&gt; reposSet = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">			if (allRepos.get(i) != null) {</span>
+<span class="nc" id="L161">				reposSet.addAll(Arrays.asList(allRepos.get(i)));</span>
+			}
+<span class="nc" id="L163">			repoNamesToBeCollected.add(reposSet);</span>
+		}
+
+<span class="nc bnc" id="L166" title="All 4 branches missed.">		assert (serversToBeCollected.size() == repoNamesToBeCollected.size());</span>
+
+<span class="nc" id="L168">		List&lt;ArtifactoryRepo&gt; stateChangeRepoList = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">		for (ArtifactoryRepo repo : existingRepos) {</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">			if (isRepoEnabledAndNotCollected(collector, serversToBeCollected, repoNamesToBeCollected, repo) ||  // if it was enabled but not to be collected</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">					isRepoDisabledAndToBeCollected(collector, serversToBeCollected, repoNamesToBeCollected, repo)) { // OR it was disabled and now is to be collected</span>
+<span class="nc" id="L172">				repo.setEnabled(isRepoCollected(collector, serversToBeCollected, repoNamesToBeCollected, repo));</span>
+<span class="nc" id="L173">				stateChangeRepoList.add(repo);</span>
+			}
+<span class="nc" id="L175">		}</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">		if (!CollectionUtils.isEmpty(stateChangeRepoList)) {</span>
+<span class="nc" id="L177">			artifactoryRepoRepository.save(stateChangeRepoList);</span>
+		}
+<span class="nc" id="L179">	}</span>
+
+	private boolean isRepoCollected(ArtifactoryCollector collector, Set&lt;String&gt; serversToBeCollected, List&lt;Set&lt;String&gt;&gt; repoNamesToBeCollected, ArtifactoryRepo repo) {
+<span class="nc bnc" id="L182" title="All 2 branches missed.">		return collector.getId().equals(repo.getCollectorId())</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">				&amp;&amp; serversToBeCollected.contains(repo.getInstanceUrl())</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">				&amp;&amp; repoNamesToBeCollected.get(collector.getArtifactoryServers().indexOf(repo.getInstanceUrl())).contains(repo.getRepoName());</span>
+	}
+
+	private boolean isRepoDisabledAndToBeCollected(ArtifactoryCollector collector, Set&lt;String&gt; serversToBeCollected, List&lt;Set&lt;String&gt;&gt; repoNamesToBeCollected, ArtifactoryRepo repo) {
+<span class="nc bnc" id="L188" title="All 4 branches missed.">		return !repo.isEnabled() &amp;&amp; (isRepoCollected(collector, serversToBeCollected, repoNamesToBeCollected, repo));</span>
+	}
+
+	private boolean isRepoEnabledAndNotCollected(ArtifactoryCollector collector, Set&lt;String&gt; serversToBeCollected, List&lt;Set&lt;String&gt;&gt; repoNamesToBeCollected, ArtifactoryRepo repo) {
+<span class="nc bnc" id="L192" title="All 4 branches missed.">		return repo.isEnabled() &amp;&amp; (!collector.getId().equals(repo.getCollectorId())</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">				|| !serversToBeCollected.contains(repo.getInstanceUrl())</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">				|| !repoNamesToBeCollected.get(collector.getArtifactoryServers().indexOf(repo.getInstanceUrl())).contains(repo.getRepoName()));</span>
+	}
+
+
+	/**
+	 * Add any new {@link ArtifactoryRepo}s.
+	 *
+	 * @param repos					list of {@link ArtifactoryRepo}s
+	 * @param existingRepos			list of existing {@link ArtifactoryRepo}s
+	 * @param collector    			the {@link ArtifactoryCollector}
+	 */
+	private void addNewRepos(List&lt;ArtifactoryRepo&gt; repos, List&lt;ArtifactoryRepo&gt; existingRepos, ArtifactoryCollector collector) {
+<span class="nc" id="L206">		long start = System.currentTimeMillis();</span>
+<span class="nc" id="L207">		int count = 0;</span>
+
+<span class="nc" id="L209">        List&lt;ArtifactoryRepo&gt; newRepos = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">        for (ArtifactoryRepo repo : repos) {</span>
+<span class="nc" id="L211">        	ArtifactoryRepo existing = null;</span>
+<span class="nc bnc" id="L212" title="All 4 branches missed.">            if (!CollectionUtils.isEmpty(existingRepos) &amp;&amp; (existingRepos.contains(repo))) {</span>
+<span class="nc" id="L213">                existing = existingRepos.get(existingRepos.indexOf(repo));</span>
+            }
+
+<span class="nc bnc" id="L216" title="All 2 branches missed.">            if (existing == null) {</span>
+<span class="nc" id="L217">                repo.setCollectorId(collector.getId());</span>
+<span class="nc" id="L218">                repo.setEnabled(false); // Do not enable for collection. Will be enabled later</span>
+<span class="nc" id="L219">                repo.setDescription(repo.getRepoName());</span>
+<span class="nc" id="L220">                newRepos.add(repo);</span>
+<span class="nc" id="L221">                count++;</span>
+            }
+<span class="nc" id="L223">        }</span>
+        //save all in one shot
+<span class="nc bnc" id="L225" title="All 2 branches missed.">        if (!CollectionUtils.isEmpty(newRepos)) {</span>
+<span class="nc" id="L226">        	artifactoryRepoRepository.save(newRepos);</span>
+        }
+<span class="nc" id="L228">        log(&quot;New repos&quot;, start, count);</span>
+<span class="nc" id="L229">    }</span>
+
+    /**
+     * Add any new {@link BinaryArtifact}s
+     *
+     * @param enabledRepos			list of enabled {@link ArtifactoryRepo}s
+     */
+    private void addNewArtifacts(List&lt;ArtifactoryRepo&gt; enabledRepos) {
+<span class="nc" id="L237">		long start = System.currentTimeMillis();</span>
+
+<span class="nc" id="L239">		int count = 0;</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">		for (ArtifactoryRepo repo : enabledRepos) {</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">			for (BinaryArtifact artifact : nullSafe(artifactoryClient.getArtifacts(repo.getInstanceUrl(), repo.getRepoName(), repo.getLastUpdated()))) {</span>
+<span class="nc bnc" id="L242" title="All 4 branches missed.">				if (artifact != null &amp;&amp; isNewArtifact(repo, artifact)) {</span>
+<span class="nc" id="L243">					artifact.setCollectorItemId(repo.getId());</span>
+<span class="nc" id="L244">					binaryArtifactRepository.save(artifact);</span>
+<span class="nc" id="L245">					count++;</span>
+				}
+<span class="nc" id="L247">			}</span>
+<span class="nc" id="L248">		}</span>
+
+		// Iterate through list of repos and update the lastUpdated timestamp
+<span class="nc bnc" id="L251" title="All 2 branches missed.">		for (ArtifactoryRepo repo : enabledRepos) {</span>
+<span class="nc" id="L252">			repo.setLastUpdated(start);</span>
+<span class="nc" id="L253">		}</span>
+		// We set the last update time so need to save it
+<span class="nc" id="L255">		artifactoryRepoRepository.save(enabledRepos);</span>
+<span class="nc" id="L256">		log(&quot;New artifacts&quot;, start, count);</span>
+<span class="nc" id="L257">	}</span>
+
+
+	/**
+	 * Add any new {@link ArtifactItem}s
+	 *
+	 */
+
+       private void addNewArtifactsItems(List&lt;BaseArtifact&gt; baseArtifacts, List&lt;ArtifactItem&gt; existingArtifactItems,ArtifactoryCollector collector) {
+<span class="nc" id="L266">        long start = System.currentTimeMillis();</span>
+<span class="nc" id="L267">        List&lt;BinaryArtifact&gt; binaryArtifacts = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L268">        int count = 0;</span>
+<span class="nc" id="L269">        Set&lt;ArtifactItem&gt; existingSet = new HashSet&lt;&gt;(existingArtifactItems);</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">        for (BaseArtifact baseArtifact : baseArtifacts) {</span>
+<span class="nc" id="L271">        	ArtifactItem newArtifactItem = baseArtifact.getArtifactItem();</span>
+<span class="nc bnc" id="L272" title="All 4 branches missed.">        	if(newArtifactItem!=null &amp;&amp; !existingSet.contains(newArtifactItem)){</span>
+<span class="nc" id="L273">					newArtifactItem.setLastUpdated(System.currentTimeMillis());</span>
+<span class="nc" id="L274">					newArtifactItem.setCollectorId(collector.getId());</span>
+<span class="nc" id="L275">					newArtifactItem.setEnabled(true);</span>
+<span class="nc" id="L276">					newArtifactItem = artifactItemRepository.save(newArtifactItem);</span>
+<span class="nc" id="L277">					existingSet.add(newArtifactItem);</span>
+<span class="nc" id="L278">					BinaryArtifact binaryArtifact = baseArtifact.getBinaryArtifact();</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">					if(binaryArtifact!=null){</span>
+<span class="nc" id="L280">						binaryArtifact.setCollectorItemId(newArtifactItem.getId());</span>
+<span class="nc" id="L281">						binaryArtifacts.add(binaryArtifact);</span>
+					}
+<span class="nc" id="L283">					count++;</span>
+			}
+<span class="nc" id="L285">        }</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">        if(!binaryArtifacts.isEmpty()){</span>
+<span class="nc" id="L287">        	binaryArtifactRepository.save(binaryArtifacts);</span>
+		}
+<span class="nc" id="L289">        log(&quot;New artifacts&quot;, start, count);</span>
+<span class="nc" id="L290">    }</span>
+
+    private List&lt;BinaryArtifact&gt; nullSafe(List&lt;BinaryArtifact&gt; builds) {
+<span class="nc bnc" id="L293" title="All 2 branches missed.">        return builds == null ? new ArrayList&lt;BinaryArtifact&gt;() : builds;</span>
+    }
+
+
+    private List&lt;ArtifactoryRepo&gt; enabledRepos(ArtifactoryCollector collector, String instanceUrl) {
+<span class="nc" id="L298">		return artifactoryRepoRepository.findEnabledArtifactoryRepos(collector.getId(), instanceUrl);</span>
+	}
+
+    private boolean isNewArtifact(ArtifactoryRepo repo, BinaryArtifact artifact) {
+<span class="nc bnc" id="L302" title="All 2 branches missed.">        return Iterables.size(binaryArtifactRepository.findByAttributes(repo.getId(),</span>
+<span class="nc" id="L303">        		artifact.getArtifactGroupId(), artifact.getArtifactModule(), artifact.getArtifactVersion(), artifact.getArtifactName(),</span>
+<span class="nc" id="L304">        		artifact.getArtifactClassifier(), artifact.getArtifactExtension())) == 0;</span>
+    }
+
+	private List&lt;String&gt; getRepos() {
+<span class="nc" id="L308">       	List&lt;String&gt; repos = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L309">		artifactorySettings.getServers().forEach(serverSetting -&gt; {</span>
+<span class="nc" id="L310">			repos.addAll(getRepoAndPatternsForServ(serverSetting.getRepoAndPatterns()).keySet());</span>
+<span class="nc" id="L311">		});</span>
+<span class="nc" id="L312">  		return  repos;</span>
+	}
+
+	private Map&lt;String,List&lt;String&gt;&gt; getPatterns() {
+<span class="nc" id="L316">		Map&lt;String,List&lt;String&gt;&gt; patterns = new HashedMap();</span>
+<span class="nc" id="L317">		artifactorySettings.getServers().forEach(serverSetting -&gt; {</span>
+<span class="nc" id="L318">			patterns.putAll(getRepoAndPatternsForServ(serverSetting.getRepoAndPatterns()));</span>
+<span class="nc" id="L319">		});</span>
+<span class="nc" id="L320">		return patterns;</span>
+	}
+
+	private static Map&lt;String,List&lt;String&gt;&gt; getRepoAndPatternsForServ(List&lt;RepoAndPattern&gt; repoAndPatterns){
+<span class="nc" id="L324">		return repoAndPatterns.stream().collect(Collectors.toMap(RepoAndPattern::getRepo,RepoAndPattern::getPatterns ));</span>
+	}
+
+	private long getLastUpdated(List&lt;ArtifactItem&gt; existingItems) {
+<span class="nc" id="L328">		long lastUpdated=0;</span>
+<span class="nc bnc" id="L329" title="All 2 branches missed.">		if(!CollectionUtils.isEmpty(existingItems)) {</span>
+<span class="nc" id="L330">			lastUpdated = existingItems.get(0).getLastUpdated();</span>
+<span class="nc bnc" id="L331" title="All 2 branches missed.">		}else if(lastUpdated==0){</span>
+<span class="nc" id="L332">			lastUpdated = System.currentTimeMillis() - artifactorySettings.getOffSet();</span>
+		}
+<span class="nc" id="L334">		return lastUpdated;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

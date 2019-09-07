@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DefaultRallyClient.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:rally-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">DefaultRallyClient.java</span></div><h1>DefaultRallyClient.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+import java.nio.charset.Charset;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
+import javax.annotation.Nonnull;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestOperations;
+
+import com.capitalone.dashboard.model.RallyBurnDownData;
+import com.capitalone.dashboard.model.RallyFeature;
+import com.capitalone.dashboard.model.RallyProject;
+import com.capitalone.dashboard.model.RallyStoryStages;
+import com.capitalone.dashboard.model.UserStory;
+import com.capitalone.dashboard.repository.RallyProjectRepository;
+import com.capitalone.dashboard.util.Supplier;
+
+@Component
+public class DefaultRallyClient implements RallyClient {
+	
+<span class="fc" id="L44">	private static final Log LOG = LogFactory.getLog(DefaultRallyClient.class);</span>
+
+	private static final String URL_PROJECTS = &quot;/slm/webservice/v2.0/project/&quot;;
+	
+	private static final String ID = &quot;_ref&quot;;
+	private static final String NAME = &quot;_refObjectName&quot;;
+
+	private static final String PLANESTIMATE = &quot;PlanEstimate&quot;;
+	private static final String PLANNEDVELOCITY = &quot;PlannedVelocity&quot;;
+	private static final String STATE = &quot;State&quot;;
+	private static final String TASKACTUALTOTAL = &quot;TaskActualTotal&quot;;
+	private static final String TASKESTIMATETOTAL = &quot;TaskEstimateTotal&quot;;
+	private static final String TASKREMAININGTOTAL = &quot;TaskRemainingTotal&quot;;
+	private final RallyProjectRepository rallyProjectRepository;
+	private final RestOperations rest;
+	private final RallySettings rallySettings;
+
+	@Autowired
+	public DefaultRallyClient(Supplier&lt;RestOperations&gt; restOperationsSupplier,
+<span class="fc" id="L63">			RallyProjectRepository rallyProjectRepository, RallySettings rallySettings) {</span>
+<span class="fc" id="L64">		this.rest = restOperationsSupplier.get();</span>
+<span class="fc" id="L65">		this.rallyProjectRepository = rallyProjectRepository;</span>
+<span class="fc" id="L66">		this.rallySettings = rallySettings;</span>
+<span class="fc" id="L67">	}</span>
+
+	@Override
+	public List&lt;RallyProject&gt; getProjects(String instanceUrl) throws ParseException {
+<span class="nc" id="L71">		List&lt;RallyProject&gt; projects = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L72">		String url = instanceUrl + URL_PROJECTS</span>
+				+ &quot;?query=(Iterations.ObjectID != null)&amp;start=1&amp;pagesize=2000&amp;fetch=iterations&quot;;
+<span class="nc" id="L74">		JSONObject object = parseAsObject(url);</span>
+<span class="nc" id="L75">		JSONObject queryResult = (JSONObject) object.get(&quot;QueryResult&quot;);</span>
+<span class="nc" id="L76">		JSONArray projectArray = (JSONArray) queryResult.get(&quot;Results&quot;);</span>
+
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		for (Object obj : projectArray) {</span>
+<span class="nc" id="L79">			JSONObject prjData = (JSONObject) obj;</span>
+<span class="nc" id="L80">			JSONObject iterationData = (JSONObject) prjData.get(&quot;Iterations&quot;);</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">			if (Integer.parseInt(iterationData.get(&quot;Count&quot;).toString()) &gt; 0) {</span>
+<span class="nc" id="L82">				RallyProject project = new RallyProject();</span>
+<span class="nc" id="L83">				project.setInstanceUrl(instanceUrl);</span>
+<span class="nc" id="L84">				project.setProjectId(str(prjData, ID).substring(str(prjData, ID).lastIndexOf(&quot;/&quot;) + 1));</span>
+<span class="nc" id="L85">				project.setProjectName(str(prjData, NAME));</span>
+<span class="nc" id="L86">				projects.add(project);</span>
+			}
+<span class="nc" id="L88">		}</span>
+<span class="nc" id="L89">		return projects;</span>
+	}
+
+	@Override
+	public List&lt;RallyFeature&gt; getRallyIterations(RallyProject project) throws RestClientException {
+<span class="nc" id="L94">		String rallyProjectId = project.getProjectId();</span>
+<span class="nc" id="L95">		String rallyProjectInstanceUrl = project.getInstanceUrl();</span>
+<span class="nc" id="L96">		String rallyProjectName = project.getProjectName();</span>
+<span class="nc" id="L97">		List&lt;RallyFeature&gt; iterations = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L98">		Date dte = new Date();</span>
+		Date iterationEndDate;
+<span class="nc" id="L100">		long milliSeconds = dte.getTime();</span>
+<span class="nc" id="L101">		RallyFeature iteration = null;</span>
+<span class="nc" id="L102">		Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L103">		Calendar calendar = Calendar.getInstance();</span>
+<span class="nc" id="L104">		cal.add(Calendar.HOUR, 0);</span>
+<span class="nc" id="L105">		SimpleDateFormat s = new SimpleDateFormat(&quot;yyyy-MM-dd HH&quot;);</span>
+<span class="nc" id="L106">		SimpleDateFormat format = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;);</span>
+
+<span class="nc" id="L108">		String result = s.format(cal.getTime());</span>
+
+<span class="nc" id="L110">		String urlPro = rallyProjectInstanceUrl + URL_PROJECTS + rallyProjectId + &quot;?start=1&amp;pagesize=2000&quot;;</span>
+		try {
+<span class="nc" id="L112">			JSONObject specIterationObject = parseAsObject(urlPro);</span>
+<span class="nc" id="L113">			JSONObject specIterationProject = (JSONObject) specIterationObject.get(&quot;Project&quot;);</span>
+<span class="nc" id="L114">			JSONObject specIterationResult = (JSONObject) specIterationProject.get(&quot;Iterations&quot;);</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">			if (Integer.parseInt(specIterationResult.get(&quot;Count&quot;).toString()) &gt; 0) {</span>
+<span class="nc" id="L116">				JSONObject iterationListDetails = parseAsObject(specIterationResult.get(&quot;_ref&quot;)</span>
+						+ &quot;?query=((StartDate &lt;= \&quot;today\&quot;) AND (EndDate &gt;= \&quot;today\&quot;))&amp;fetch=true&amp;start=1&amp;pagesize=2000&quot;
+<span class="nc" id="L118">								.toString());</span>
+
+<span class="nc" id="L120">				JSONObject queryResult = (JSONObject) iterationListDetails.get(&quot;QueryResult&quot;);</span>
+<span class="nc" id="L121">				JSONArray iterationArray = (JSONArray) queryResult.get(&quot;Results&quot;);</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">				for (Object obj : iterationArray) {</span>
+<span class="nc" id="L123">					iteration = new RallyFeature();</span>
+<span class="nc" id="L124">					JSONObject itrData = (JSONObject) obj;</span>
+<span class="nc" id="L125">					iteration.setCollectorItemId(project.getId());</span>
+<span class="nc" id="L126">					iteration.setProjectId(rallyProjectId);</span>
+<span class="nc" id="L127">					iteration.setProjectName(rallyProjectName);</span>
+<span class="nc" id="L128">					iteration.setInstanceUrl(itrData.get(&quot;_ref&quot;).toString());</span>
+<span class="nc" id="L129">					iteration.setIterationId(itrData.get(&quot;ObjectID&quot;).toString());</span>
+<span class="nc" id="L130">					iteration.setIterationName(itrData.get(&quot;_refObjectName&quot;).toString());</span>
+<span class="nc" id="L131">					iteration.setPlanEstimate(str(itrData, PLANESTIMATE));</span>
+<span class="nc" id="L132">					iteration.setPlannedVelocity(str(itrData, PLANNEDVELOCITY));</span>
+<span class="nc" id="L133">					iteration.setState(str(itrData, STATE));</span>
+<span class="nc" id="L134">					iteration.setTaskActualTotal(str(itrData, TASKACTUALTOTAL));</span>
+<span class="nc" id="L135">					iteration.setTaskEstimateTotal(str(itrData, TASKESTIMATETOTAL));</span>
+<span class="nc" id="L136">					iteration.setTaskRemainingTotal(str(itrData, TASKREMAININGTOTAL));</span>
+<span class="nc" id="L137">					iteration.setStartDate(itrData.get(&quot;StartDate&quot;).toString().substring(0, 10));</span>
+<span class="nc" id="L138">					iterationEndDate = format.parse(itrData.get(&quot;EndDate&quot;).toString().substring(0, 10));</span>
+<span class="nc" id="L139">					calendar.setTime(iterationEndDate);</span>
+<span class="nc" id="L140">					calendar.add(Calendar.DATE, -1);</span>
+<span class="nc" id="L141">					iteration.setEndDate(format.format(calendar.getTime()));</span>
+					try {
+<span class="nc" id="L143">						iteration</span>
+<span class="nc" id="L144">								.setRemainingDays(getRemainingDays(itrData.get(&quot;StartDate&quot;).toString().substring(0, 10),</span>
+<span class="nc" id="L145">										itrData.get(&quot;EndDate&quot;).toString().substring(0, 10), dte));</span>
+<span class="nc" id="L146">					} catch (java.text.ParseException e) {</span>
+<span class="nc" id="L147">						LOG.info(&quot;parse exception is : &quot; + e.getMessage());</span>
+<span class="nc" id="L148">					}</span>
+<span class="nc" id="L149">					iteration.setLastUpdated(milliSeconds);</span>
+<span class="nc" id="L150">					iteration.setLastExecuted(result);</span>
+<span class="nc" id="L151">					iteration.setStoryStages(iteration.getStoryStages());</span>
+<span class="nc" id="L152">					iteration.setUserListCount(getIterationUserCount(itrData.get(&quot;ObjectID&quot;).toString()));</span>
+<span class="nc" id="L153">					iteration.setTimestamp(milliSeconds);</span>
+<span class="nc" id="L154">					iteration.setCollectorItemId(project.getId());</span>
+					
+<span class="nc" id="L156">					iterations.add(iteration);</span>
+<span class="nc" id="L157">				}</span>
+			}
+
+<span class="nc" id="L160">		} catch (ParseException e) {</span>
+<span class="nc" id="L161">			LOG.error(&quot;Could not parse response from: &quot; + urlPro, e);</span>
+<span class="nc" id="L162">		} catch (java.text.ParseException e) {</span>
+<span class="nc" id="L163">			LOG.error(&quot;Could not parse date &quot;);</span>
+<span class="nc" id="L164">		}</span>
+
+<span class="nc" id="L166">		return iterations;</span>
+	}
+
+	@Override
+	public JSONArray getIterationStories(RallyFeature iteration) throws ParseException, RestClientException {
+
+<span class="nc" id="L172">		String rpn = &quot;\&quot;&quot; + iteration.getProjectName() + &quot;\&quot;&quot;;</span>
+<span class="nc" id="L173">		String itn = &quot;\&quot;&quot; + iteration.getIterationName() + &quot;\&quot;&quot;;</span>
+<span class="nc" id="L174">		String baseURL = &quot;https://rally1.rallydev.com/slm/webservice/v2.0/&quot;;</span>
+<span class="nc" id="L175">		String suffixURL = &quot;?query=((Project.Name = &quot; + rpn + &quot;) and (Iteration.Name = &quot; + itn</span>
+				+ &quot;))&amp;fetch=true&amp;start=1&amp;pagesize=2000&quot;;
+<span class="nc" id="L177">		String userStoryPath = &quot;hierarchicalrequirement.js&quot;;</span>
+<span class="nc" id="L178">		String defectPath = &quot;defect.js&quot;;</span>
+
+<span class="nc" id="L180">		String storyStagesUrl = baseURL + userStoryPath + suffixURL;</span>
+<span class="nc" id="L181">		String defectsUrl = baseURL + defectPath + suffixURL;</span>
+<span class="nc" id="L182">		JSONObject specIterationObject = parseAsObject(storyStagesUrl);</span>
+<span class="nc" id="L183">		JSONObject queryResult = (JSONObject) specIterationObject.get(&quot;QueryResult&quot;);</span>
+<span class="nc" id="L184">		JSONArray iterationArray = (JSONArray) queryResult.get(&quot;Results&quot;);</span>
+
+<span class="nc" id="L186">		JSONObject defects = parseAsObject(defectsUrl);</span>
+<span class="nc" id="L187">		JSONObject defectQueryResult = (JSONObject) defects.get(&quot;QueryResult&quot;);</span>
+<span class="nc" id="L188">		JSONArray defectResults = (JSONArray) defectQueryResult.get(&quot;Results&quot;);</span>
+
+<span class="nc" id="L190">		iterationArray.addAll(defectResults);</span>
+
+<span class="nc" id="L192">		return iterationArray;</span>
+	}
+
+	private String getIterationUserCount(String iterationId) {
+
+<span class="nc" id="L197">		String userCapacityUrl = &quot;https://rally1.rallydev.com/slm/webservice/v2.0/Iteration/&quot; + iterationId</span>
+				+ &quot;/UserIterationCapacities?fetch=true&amp;start=1&amp;pagesize=2000&quot;;
+<span class="nc" id="L199">		String userCount = &quot;&quot;;</span>
+		try {
+<span class="nc" id="L201">			JSONObject userIterationObject = parseAsObject(userCapacityUrl);</span>
+<span class="nc" id="L202">			JSONObject queryResult = (JSONObject) userIterationObject.get(&quot;QueryResult&quot;);</span>
+<span class="nc" id="L203">			userCount = queryResult.get(&quot;TotalResultCount&quot;).toString();</span>
+<span class="nc" id="L204">		} catch (ParseException pe) {</span>
+<span class="nc" id="L205">			LOG.error(&quot;Could not parse response from: &quot; + userCapacityUrl, pe);</span>
+<span class="nc" id="L206">		}</span>
+
+<span class="nc" id="L208">		return userCount;</span>
+
+	}
+
+	@Override
+	public RallyStoryStages getStoryStages(String rallyProjectId, JSONArray iterationArray) {
+<span class="nc" id="L214">		List&lt;UserStory&gt; userStories = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L215">		UserStory userStory = null;</span>
+<span class="nc" id="L216">		SimpleDateFormat format = new SimpleDateFormat(&quot;yyyy-MM-dd'T'HH:mm:ss.SSS'Z'&quot;);</span>
+<span class="nc" id="L217">		String buildStoryUrl = &quot;https://rally1.rallydev.com/#/&quot;;</span>
+<span class="nc" id="L218">		Date date = new Date();</span>
+
+<span class="nc" id="L220">		int accepted = 0;</span>
+<span class="nc" id="L221">		int backlog = 0;</span>
+<span class="nc" id="L222">		int completed = 0;</span>
+<span class="nc" id="L223">		int defined = 0;</span>
+<span class="nc" id="L224">		int inProgress = 0;</span>
+<span class="nc" id="L225">		int defects = 0;</span>
+
+<span class="nc" id="L227">		RallyStoryStages rs = new RallyStoryStages();</span>
+
+<span class="nc bnc" id="L229" title="All 2 branches missed.">		for (int i = 0; i &lt; iterationArray.size(); i++) {</span>
+<span class="nc" id="L230">			userStory = new UserStory();</span>
+<span class="nc" id="L231">			JSONObject stgResult = (JSONObject) iterationArray.get(i);</span>
+<span class="nc" id="L232">			JSONObject owner = (JSONObject) stgResult.get(&quot;Owner&quot;);</span>
+			try {
+<span class="nc" id="L234">				date = (Date) format.parse(stgResult.get(&quot;LastUpdateDate&quot;).toString());</span>
+<span class="nc" id="L235">				userStory.setLastUpdateDate(date.getTime());</span>
+<span class="nc" id="L236">			} catch (java.text.ParseException e) {</span>
+<span class="nc" id="L237">				LOG.error(&quot;Parse exception &quot; + e);</span>
+<span class="nc" id="L238">			}</span>
+
+<span class="nc bnc" id="L240" title="All 2 branches missed.">			if (owner != null) {</span>
+<span class="nc" id="L241">				userStory.setOwnerName(owner.get(&quot;_refObjectName&quot;).toString());</span>
+			} else {
+<span class="nc" id="L243">				userStory.setOwnerName(&quot;-&quot;);</span>
+			}
+<span class="nc bnc" id="L245" title="All 4 branches missed.">			if (stgResult.get(&quot;_refObjectName&quot;) != null &amp;&amp; (!stgResult.get(&quot;_refObjectName&quot;).equals(&quot;&quot;))) {</span>
+<span class="nc" id="L246">				userStory.setStoryName(stgResult.get(&quot;_refObjectName&quot;).toString());</span>
+			} else {
+<span class="nc" id="L248">				userStory.setStoryName(&quot;-&quot;);</span>
+			}
+<span class="nc" id="L250">			userStory.setStoryId(stgResult.get(&quot;FormattedID&quot;).toString());</span>
+<span class="nc" id="L251">			String rallyStoryUrl = buildStoryUrl + rallyProjectId + &quot;d/detail/userstory/&quot;</span>
+<span class="nc" id="L252">					+ stgResult.get(&quot;ObjectID&quot;).toString();</span>
+<span class="nc" id="L253">			userStory.setStoryUrl(rallyStoryUrl);</span>
+
+<span class="nc bnc" id="L255" title="All 2 branches missed.">			if (stgResult.get(&quot;ScheduleStatePrefix&quot;).equals(&quot;B&quot;)) {</span>
+<span class="nc" id="L256">				backlog = backlog + 1;</span>
+<span class="nc" id="L257">				userStory.setState(&quot;Backlog&quot;);</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">			} else if (stgResult.get(&quot;ScheduleStatePrefix&quot;).equals(&quot;D&quot;)) {</span>
+<span class="nc" id="L259">				defined = defined + 1;</span>
+<span class="nc" id="L260">				userStory.setState(&quot;Defined&quot;);</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">			} else if (stgResult.get(&quot;ScheduleStatePrefix&quot;).equals(&quot;P&quot;)) {</span>
+<span class="nc" id="L262">				inProgress = inProgress + 1;</span>
+<span class="nc" id="L263">				userStory.setState(&quot;In Progress&quot;);</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">			} else if (stgResult.get(&quot;ScheduleStatePrefix&quot;).equals(&quot;C&quot;)) {</span>
+<span class="nc" id="L265">				completed = completed + 1;</span>
+<span class="nc" id="L266">				userStory.setState(&quot;Completed&quot;);</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">			} else if (stgResult.get(&quot;ScheduleStatePrefix&quot;).equals(&quot;A&quot;)) {</span>
+<span class="nc" id="L268">				accepted = accepted + 1;</span>
+<span class="nc" id="L269">				userStory.setState(&quot;Accepted&quot;);</span>
+
+			}
+
+<span class="nc" id="L273">			userStories.add(userStory);</span>
+		}
+<span class="nc" id="L275">		rs.setAccepted(Integer.toString(accepted));</span>
+<span class="nc" id="L276">		rs.setBacklog(Integer.toString(backlog));</span>
+<span class="nc" id="L277">		rs.setCompleted(Integer.toString(completed));</span>
+<span class="nc" id="L278">		rs.setDefined(Integer.toString(defined));</span>
+<span class="nc" id="L279">		rs.setInProgress(Integer.toString(inProgress));</span>
+<span class="nc" id="L280">		rs.setDefects(Integer.toString(defects));</span>
+<span class="nc" id="L281">		rs.setUserStories(userStories);</span>
+
+<span class="nc" id="L283">		return rs;</span>
+
+	}
+
+	@Override
+	public RallyBurnDownData getBurnDownData(RallyFeature iteration, JSONArray iterationArray,
+			RallyBurnDownData existingBurnDownData) {
+<span class="nc" id="L290">		RallyBurnDownData rallyBurnDownData = new RallyBurnDownData();</span>
+<span class="nc" id="L291">		DateFormat dateFormat = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;);</span>
+<span class="nc" id="L292">		Date currentDate = new Date();</span>
+<span class="nc" id="L293">		List&lt;String&gt; dates = getIterationPeriodRange(iteration.getStartDate().toString(),</span>
+<span class="nc" id="L294">				iteration.getEndDate().toString());</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">			if (existingBurnDownData!=null &amp;&amp; existingBurnDownData.getTotalEstimate() &lt; Double</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">					.parseDouble(iteration.getTaskEstimateTotal())) {</span>
+<span class="nc" id="L297">				rallyBurnDownData.setTotalEstimate(Double.parseDouble(iteration.getTaskEstimateTotal()));</span>
+			}
+			
+<span class="nc bnc" id="L300" title="All 2 branches missed.">			if(iteration.getTaskEstimateTotal()==null) {</span>
+<span class="nc" id="L301">				iteration.setTaskActualTotal(&quot;0&quot;);</span>
+<span class="nc" id="L302">				iteration.setTaskRemainingTotal(&quot;0&quot;);</span>
+			}
+			
+		try {
+<span class="nc" id="L306">			Map&lt;String, String&gt; burnDownDetails = null;</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">			for (String iterationDate : dates) {</span>
+<span class="nc" id="L308">				burnDownDetails = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L309">				burnDownDetails.put(RallyBurnDownData.ITERATION_DATE, iterationDate);</span>
+				//To generate the Burn down data from the metrics provided by the Rally API.
+<span class="nc bnc" id="L311" title="All 2 branches missed.">				if (dateFormat.format(dateFormat.parse(iterationDate)).equals(dateFormat.format(currentDate))) {</span>
+<span class="nc" id="L312">					double taskEstimate = arrayToStream(iterationArray).map(JSONObject.class::cast)</span>
+<span class="nc bnc" id="L313" title="All 4 branches missed.">							.filter(obj -&gt; obj.get(&quot;PlanEstimate&quot;) != null &amp;&amp; obj.get(&quot;AcceptedDate&quot;) != null)</span>
+<span class="nc" id="L314">							.mapToDouble(obj -&gt; (Double) obj.get(&quot;PlanEstimate&quot;)).sum();</span>
+<span class="nc" id="L315">					burnDownDetails.put(RallyBurnDownData.ACCEPTED_POINTS, Double.toString(taskEstimate));</span>
+<span class="nc" id="L316">					burnDownDetails.put(RallyBurnDownData.ITERATION_TO_DO_HOURS, iteration.getTaskRemainingTotal());</span>
+<span class="nc" id="L317">					rallyBurnDownData.setTotalEstimate(Double.parseDouble(iteration.getTaskEstimateTotal()));</span>
+<span class="nc bnc" id="L318" title="All 2 branches missed.">				} else if (existingBurnDownData != null</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">						&amp;&amp; dateFormat.parse(iterationDate).before(dateFormat.parse(dateFormat.format(currentDate)))) {</span>
+<span class="nc" id="L320">					rallyBurnDownData.setId(existingBurnDownData.getId());</span>
+<span class="nc" id="L321">					rallyBurnDownData.getBurnDownData()</span>
+<span class="nc" id="L322">									.add(existingBurnDownData.getBurnDownData().stream()</span>
+<span class="nc" id="L323">									.filter(stream -&gt; stream.get(RallyBurnDownData.ITERATION_DATE).equals(iterationDate))</span>
+<span class="nc" id="L324">									.findAny()</span>
+<span class="nc" id="L325">									.orElse(createEmptyBurnDown(burnDownDetails)));</span>
+<span class="nc" id="L326">					continue;</span>
+				} else {
+<span class="nc" id="L328">					createEmptyBurnDown(burnDownDetails);</span>
+				}
+<span class="nc bnc" id="L330" title="All 2 branches missed.">				if (iteration.getTaskEstimateTotal() != null) {</span>
+<span class="nc" id="L331">					rallyBurnDownData.setTotalEstimate(Double.parseDouble(iteration.getTaskEstimateTotal()));</span>
+				}
+<span class="nc" id="L333">				rallyBurnDownData.getBurnDownData().add(burnDownDetails);</span>
+<span class="nc" id="L334">			}</span>
+
+<span class="nc" id="L336">			rallyBurnDownData.setProjectId(iteration.getProjectId());</span>
+<span class="nc" id="L337">			rallyBurnDownData.setIterationId(iteration.getIterationId().toString());</span>
+<span class="nc" id="L338">			rallyBurnDownData.setProjectName(iteration.getProjectName());</span>
+<span class="nc" id="L339">			rallyBurnDownData.setIterationName(iteration.getIterationName());</span>
+<span class="nc" id="L340">			rallyBurnDownData.setLastUpdated(System.currentTimeMillis());</span>
+<span class="nc" id="L341">		} catch (NumberFormatException e) {</span>
+<span class="nc" id="L342">			LOG.error(&quot;Number format exception&quot;);</span>
+<span class="nc" id="L343">		} catch (java.text.ParseException e) {</span>
+<span class="nc" id="L344">			LOG.error(&quot;Could not parse date &quot;);</span>
+<span class="nc" id="L345">		}</span>
+<span class="nc" id="L346">		return rallyBurnDownData;</span>
+	}
+
+	@Override
+	public List&lt;String&gt; getIterationPeriodRange(String startDate, String endDate) {
+<span class="nc" id="L351">		DateFormat dateFormat = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;);</span>
+<span class="nc" id="L352">		List&lt;String&gt; iterationDates = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L353">		Calendar iterationEndDate = Calendar.getInstance();</span>
+<span class="nc" id="L354">		Calendar iterationStartDate = Calendar.getInstance();</span>
+
+		try {
+<span class="nc" id="L357">			iterationEndDate.setTime(dateFormat.parse(endDate));</span>
+<span class="nc" id="L358">			iterationStartDate.setTime(dateFormat.parse(startDate));</span>
+
+<span class="nc" id="L360">		} catch (java.text.ParseException e) {</span>
+<span class="nc" id="L361">			LOG.error(&quot;Parse exception &quot; + e.getMessage());</span>
+<span class="nc" id="L362">		}</span>
+<span class="nc bnc" id="L363" title="All 2 branches missed.">		while (iterationEndDate.compareTo(iterationStartDate) &gt;= 0) {</span>
+
+<span class="nc bnc" id="L365" title="All 2 branches missed.">			if (iterationStartDate.get(Calendar.DAY_OF_WEEK) != Calendar.SATURDAY</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">					&amp;&amp; iterationStartDate.get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY) {</span>
+<span class="nc" id="L367">				iterationDates.add(dateFormat.format(iterationStartDate.getTime()));</span>
+			}
+<span class="nc" id="L369">			iterationStartDate.add(Calendar.DAY_OF_MONTH, 1);</span>
+		}
+<span class="nc" id="L371">		return iterationDates;</span>
+	}
+
+	private JSONObject parseAsObject(String url) throws ParseException {
+<span class="nc" id="L375">		ResponseEntity&lt;String&gt; response = rest.exchange(url, HttpMethod.GET,</span>
+<span class="nc" id="L376">				new HttpEntity&lt;String&gt;(this.createHeaders(getUserName(url), getPassword(url))), String.class);</span>
+<span class="nc" id="L377">		return (JSONObject) new JSONParser().parse(response.getBody());</span>
+	}
+
+	private String getPassword(String url) {
+<span class="nc bnc" id="L381" title="All 2 branches missed.">		for (String rallyServer : rallySettings.getServers()) {</span>
+<span class="nc bnc" id="L382" title="All 2 branches missed.">			if (url.contains(rallyServer)) {</span>
+<span class="nc" id="L383">				return rallySettings.getPasswords().get(rallySettings.getServers().indexOf(rallyServer));</span>
+			}
+<span class="nc" id="L385">		}</span>
+<span class="nc" id="L386">		return null;</span>
+	}
+
+	private String getUserName(String url) {
+<span class="nc bnc" id="L390" title="All 2 branches missed.">		for (String rallyServer : rallySettings.getServers()) {</span>
+<span class="nc bnc" id="L391" title="All 2 branches missed.">			if (url.contains(rallyServer)) {</span>
+<span class="nc" id="L392">				return rallySettings.getUsernames().get(rallySettings.getServers().indexOf(rallyServer));</span>
+			}
+<span class="nc" id="L394">		}</span>
+<span class="nc" id="L395">		return null;</span>
+	}
+
+	private String str(JSONObject json, String key) {
+<span class="nc" id="L399">		Object obj = json.get(key);</span>
+<span class="nc bnc" id="L400" title="All 2 branches missed.">		return obj == null ? null : obj.toString();</span>
+	}
+
+	private HttpHeaders createHeaders(String username, String password) {
+
+<span class="nc" id="L405">		HttpHeaders headers = new HttpHeaders();</span>
+<span class="nc bnc" id="L406" title="All 8 branches missed.">		if (username != null &amp;&amp; !username.isEmpty() &amp;&amp; password != null &amp;&amp; !password.isEmpty()) {</span>
+<span class="nc" id="L407">			String auth = username + &quot;:&quot; + password;</span>
+<span class="nc" id="L408">			byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName(&quot;US-ASCII&quot;)));</span>
+<span class="nc" id="L409">			String authHeader = &quot;Basic &quot; + new String(encodedAuth);</span>
+<span class="nc" id="L410">			headers.set(&quot;Authorization&quot;, authHeader);</span>
+		}
+<span class="nc" id="L412">		return headers;</span>
+	}
+
+	public List&lt;RallyProject&gt; getRallyProjectCollector(String projectId) {
+<span class="nc" id="L416">		return rallyProjectRepository.findByProjectCollectorItemId(projectId);</span>
+	}
+
+	// Helper method to find the remaining days
+	public int getRemainingDays(String startDate, String endDate, Date currentDate) throws java.text.ParseException {
+<span class="nc" id="L421">		DateFormat dateFormat = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;);</span>
+
+<span class="nc" id="L423">		Calendar iterationEndDate = Calendar.getInstance();</span>
+<span class="nc" id="L424">		iterationEndDate.setTime(dateFormat.parse(endDate));</span>
+
+<span class="nc" id="L426">		Calendar iterationStartDate = Calendar.getInstance();</span>
+<span class="nc" id="L427">		iterationStartDate.setTime(dateFormat.parse(startDate));</span>
+
+<span class="nc" id="L429">		Calendar currentCalendarDate = Calendar.getInstance();</span>
+<span class="nc" id="L430">		currentCalendarDate.setTime(currentDate);</span>
+
+<span class="nc" id="L432">		int remainingDays = 0;</span>
+
+<span class="nc bnc" id="L434" title="All 2 branches missed.">		if ((iterationStartDate.compareTo(currentCalendarDate) == 1)</span>
+<span class="nc bnc" id="L435" title="All 2 branches missed.">				|| (iterationEndDate.compareTo(currentCalendarDate) == -1)) {</span>
+
+<span class="nc" id="L437">			return remainingDays;</span>
+		}
+
+<span class="nc bnc" id="L440" title="All 2 branches missed.">		while (iterationEndDate.compareTo(currentCalendarDate) == 1) {</span>
+<span class="nc bnc" id="L441" title="All 2 branches missed.">			if ((currentCalendarDate.get(Calendar.DAY_OF_WEEK) != Calendar.SATURDAY)</span>
+<span class="nc bnc" id="L442" title="All 2 branches missed.">					&amp;&amp; (currentCalendarDate.get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY)) {</span>
+<span class="nc" id="L443">				++remainingDays;</span>
+			}
+<span class="nc" id="L445">			currentCalendarDate.add(Calendar.DAY_OF_MONTH, 1);</span>
+		}
+
+<span class="nc" id="L448">		return remainingDays;</span>
+	}
+
+	@Nonnull
+	private static Stream&lt;Object&gt; arrayToStream(JSONArray array) {
+<span class="nc" id="L453">		return StreamSupport.stream(array.spliterator(), false);</span>
+	}
+	
+	private Map&lt;String, String&gt; createEmptyBurnDown(Map&lt;String, String&gt; burnDownDetails) {
+<span class="nc" id="L457">		burnDownDetails.put(RallyBurnDownData.ACCEPTED_POINTS, &quot;0&quot;);</span>
+<span class="nc" id="L458">		burnDownDetails.put(RallyBurnDownData.ITERATION_TO_DO_HOURS, &quot;0&quot;);</span>
+<span class="nc" id="L459">		return burnDownDetails;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

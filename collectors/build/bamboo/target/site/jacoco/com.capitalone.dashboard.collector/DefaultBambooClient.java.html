@@ -1,0 +1,425 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DefaultBambooClient.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:bamboo-build-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">DefaultBambooClient.java</span></div><h1>DefaultBambooClient.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+import com.capitalone.dashboard.model.Build;
+import com.capitalone.dashboard.model.BuildStatus;
+import com.capitalone.dashboard.model.BambooJob;
+import com.capitalone.dashboard.model.SCM;
+import com.capitalone.dashboard.util.Supplier;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestOperations;
+
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.LinkedHashMap;
+import java.util.Date;
+
+
+/**
+ * BambooClient implementation that uses RestTemplate and JSONSimple to
+ * fetch information from Bamboo instances.
+ */
+@Component
+public class DefaultBambooClient implements BambooClient {
+<span class="fc" id="L47">    private static final Logger LOG = LoggerFactory.getLogger(DefaultBambooClient.class);</span>
+
+    private final RestOperations rest;
+    private final BambooSettings settings;
+
+    private static final String JOBS_URL_SUFFIX = &quot;rest/api/latest/plan?expand=plans&amp;max-result=2000&quot;;
+    private static final String JOBS_RESULT_SUFFIX= &quot;rest/api/latest/result/&quot;;
+    private static final String BUILD_DETAILS_URL_SUFFIX = &quot;?expand=results.result.artifacts&amp;expand=changes.change.files&quot;;
+
+    @Autowired
+<span class="fc" id="L57">    public DefaultBambooClient(Supplier&lt;RestOperations&gt; restOperationsSupplier, BambooSettings settings) {</span>
+<span class="fc" id="L58">        this.rest = restOperationsSupplier.get();</span>
+<span class="fc" id="L59">        this.settings = settings;</span>
+<span class="fc" id="L60">    }</span>
+    @SuppressWarnings(&quot;PMD.ExcessiveMethodLength&quot;)
+    @Override
+    public Map&lt;BambooJob, Set&lt;Build&gt;&gt; getInstanceJobs(String instanceUrl) {
+<span class="fc" id="L64">        Map&lt;BambooJob, Set&lt;Build&gt;&gt; result = new LinkedHashMap&lt;&gt;();</span>
+        try {
+<span class="fc" id="L66">            String url = joinURL(instanceUrl, JOBS_URL_SUFFIX);</span>
+<span class="fc" id="L67">            ResponseEntity&lt;String&gt; responseEntity = makeRestCall(url);</span>
+<span class="fc" id="L68">            String returnJSON = responseEntity.getBody();</span>
+            // LOG.info(returnJSON);
+<span class="fc" id="L70">            JSONParser parser = new JSONParser();</span>
+
+            try {
+<span class="fc" id="L73">                 JSONObject object = (JSONObject) parser.parse(returnJSON);</span>
+
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">                for (Object job : getJsonArray((JSONObject)object.get(&quot;plans&quot;), &quot;plan&quot;)) {</span>
+<span class="nc" id="L76">                    JSONObject jsonJob = (JSONObject) job;</span>
+
+<span class="nc" id="L78">                    final String planName = getString(jsonJob, &quot;key&quot;);</span>
+<span class="nc" id="L79">                    JSONObject link=(JSONObject)jsonJob.get(&quot;link&quot;);</span>
+<span class="nc" id="L80">                    final String planURL = getString(link, &quot;href&quot;);</span>
+
+<span class="nc" id="L82">                    LOG.info(&quot;Plan:&quot; + planName);</span>
+<span class="nc" id="L83">                    LOG.info(&quot;PlanURL: &quot; + planURL);</span>
+
+                    // In terms of Bamboo this is the plan not job
+<span class="nc" id="L86">                    BambooJob bambooJob = new BambooJob();</span>
+<span class="nc" id="L87">                    bambooJob.setInstanceUrl(instanceUrl);</span>
+<span class="nc" id="L88">                    bambooJob.setJobName(planName);</span>
+<span class="nc" id="L89">                    bambooJob.setJobUrl(planURL);</span>
+
+                    // Finding out the results of the top-level plan 
+
+<span class="nc" id="L93">                    String resultUrl = joinURL(instanceUrl,JOBS_RESULT_SUFFIX);</span>
+<span class="nc" id="L94">                    resultUrl = joinURL(resultUrl,planName);</span>
+//                    LOG.info(&quot;Job:&quot; + planName);
+//                    LOG.info(&quot;Result URL:&quot;+ resultUrl);
+<span class="nc" id="L97">                    responseEntity = makeRestCall(resultUrl);</span>
+<span class="nc" id="L98">                    returnJSON = responseEntity.getBody();</span>
+//                    LOG.info(&quot;Result :&quot;+ returnJSON);
+<span class="nc" id="L100">                    jsonJob = (JSONObject) parser.parse(returnJSON);</span>
+
+<span class="nc" id="L102">                    Set&lt;Build&gt; builds = new LinkedHashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">                    for (Object build : getJsonArray((JSONObject)jsonJob.get(&quot;results&quot;), &quot;result&quot;)) {</span>
+<span class="nc" id="L104">                        JSONObject jsonBuild = (JSONObject) build;</span>
+//                        LOG.info(&quot;Entered each build for job : &quot;+ planName);
+                        // A basic Build object. This will be fleshed out later if this is a new Build.
+<span class="nc" id="L107">                        String dockerLocalHostIP = settings.getDockerLocalHostIP();</span>
+<span class="nc" id="L108">                        String buildNumber = jsonBuild.get(&quot;buildNumber&quot;).toString();</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">                        if (!&quot;0&quot;.equals(buildNumber)) {</span>
+//                            LOG.info(&quot;BuildNO &quot; + buildNumber + &quot; for planName: &quot; + planName);
+<span class="nc" id="L111">                            Build bambooBuild = new Build();</span>
+<span class="nc" id="L112">                            bambooBuild.setNumber(buildNumber);</span>
+<span class="nc" id="L113">                            String buildURL = joinURL(resultUrl,buildNumber); //getString(jsonBuild, &quot;url&quot;);</span>
+//                            LOG.info(buildURL);
+                            //Modify localhost if Docker Natting is being done
+<span class="nc bnc" id="L116" title="All 2 branches missed.">                            if (!dockerLocalHostIP.isEmpty()) {</span>
+<span class="nc" id="L117">                                buildURL = buildURL.replace(&quot;localhost&quot;, dockerLocalHostIP);</span>
+<span class="nc" id="L118">                                LOG.debug(&quot;Adding build &amp; Updated URL to map LocalHost for Docker: &quot; + buildURL);</span>
+                            } else {
+<span class="nc" id="L120">                                LOG.debug(&quot; Adding Build: &quot; + buildURL);</span>
+                            }
+
+<span class="nc" id="L123">                            bambooBuild.setBuildUrl(buildURL);</span>
+<span class="nc" id="L124">                            builds.add(bambooBuild);</span>
+                        }
+<span class="nc" id="L126">                    }</span>
+                    // add the builds to the job
+<span class="nc" id="L128">                    result.put(bambooJob, builds);</span>
+
+                    //But we might have many branches and subplans in them so we have to find them out as well
+<span class="nc" id="L131">                    String branchesUrl= joinURL(planURL,&quot;/branch&quot;);</span>
+<span class="nc" id="L132">                    responseEntity = makeRestCall(branchesUrl);</span>
+<span class="nc" id="L133">                    returnJSON = responseEntity.getBody();</span>
+<span class="nc" id="L134">                    JSONObject jsonBranches = (JSONObject) parser.parse(returnJSON);</span>
+
+<span class="nc bnc" id="L136" title="All 2 branches missed.">                    for (Object branch : getJsonArray((JSONObject)jsonBranches.get(&quot;branches&quot;), &quot;branch&quot;)) {</span>
+<span class="nc" id="L137">                        JSONObject branchObject=(JSONObject) branch;</span>
+<span class="nc" id="L138">                        String subPlan=branchObject.get(&quot;key&quot;).toString();</span>
+                        // Figure out nested jobs under the branches
+
+<span class="nc" id="L141">                        resultUrl = joinURL(instanceUrl,JOBS_RESULT_SUFFIX);</span>
+<span class="nc" id="L142">                        resultUrl = joinURL(resultUrl,subPlan);</span>
+<span class="nc" id="L143">                        LOG.info(&quot;sub Plan:&quot; + subPlan);</span>
+<span class="nc" id="L144">                        LOG.info(&quot;sub plan-Result URL:&quot;+ resultUrl);</span>
+<span class="nc" id="L145">                        responseEntity = makeRestCall(resultUrl);</span>
+<span class="nc" id="L146">                        returnJSON = responseEntity.getBody();</span>
+    //                    LOG.info(&quot;Result :&quot;+ returnJSON);
+<span class="nc" id="L148">                        jsonJob = (JSONObject) parser.parse(returnJSON);</span>
+
+<span class="nc bnc" id="L150" title="All 2 branches missed.">                        for (Object build : getJsonArray((JSONObject)jsonJob.get(&quot;results&quot;), &quot;result&quot;)) {</span>
+<span class="nc" id="L151">                            JSONObject jsonBuild = (JSONObject) build;</span>
+<span class="nc" id="L152">                           LOG.info(&quot;Entered each build for nested plan : &quot;+ subPlan);</span>
+                            // A basic Build object. This will be fleshed out later if this is a new Build.
+<span class="nc" id="L154">                            String dockerLocalHostIP = settings.getDockerLocalHostIP();</span>
+<span class="nc" id="L155">                            String buildNumber = jsonBuild.get(&quot;buildNumber&quot;).toString();</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">                            if (!&quot;0&quot;.equals(buildNumber)) {</span>
+    //                            LOG.info(&quot;BuildNO &quot; + buildNumber + &quot; for planName: &quot; + planName);
+<span class="nc" id="L158">                                Build bambooBuild = new Build();</span>
+<span class="nc" id="L159">                                bambooBuild.setNumber(buildNumber);</span>
+<span class="nc" id="L160">                                String buildURL = joinURL(resultUrl,buildNumber); //getString(jsonBuild, &quot;url&quot;);</span>
+    //                            LOG.info(buildURL);
+                                //Modify localhost if Docker Natting is being done
+<span class="nc bnc" id="L163" title="All 2 branches missed.">                                if (!dockerLocalHostIP.isEmpty()) {</span>
+<span class="nc" id="L164">                                    buildURL = buildURL.replace(&quot;localhost&quot;, dockerLocalHostIP);</span>
+<span class="nc" id="L165">                                    LOG.debug(&quot;Adding build &amp; Updated URL to map LocalHost for Docker: &quot; + buildURL);</span>
+                                } else {
+<span class="nc" id="L167">                                    LOG.debug(&quot; Adding Build: &quot; + buildURL);</span>
+                                }
+
+<span class="nc" id="L170">                                bambooBuild.setBuildUrl(buildURL);</span>
+<span class="nc" id="L171">                                builds.add(bambooBuild);</span>
+                            }
+<span class="nc" id="L173">                        }</span>
+                        // add the builds to the job
+<span class="nc" id="L175">                        result.put(bambooJob, builds);</span>
+
+                        // Ended with nested branches
+<span class="nc" id="L178">                    }</span>
+
+<span class="nc" id="L180">                }</span>
+<span class="nc" id="L181">            } catch (ParseException e) {</span>
+<span class="nc" id="L182">                LOG.error(&quot;Parsing jobs on instance: &quot; + instanceUrl, e);</span>
+<span class="fc" id="L183">            }</span>
+<span class="nc" id="L184">        } catch (RestClientException rce) {</span>
+<span class="nc" id="L185">            LOG.error(&quot;client exception loading jobs&quot;, rce);</span>
+<span class="nc" id="L186">            throw rce;</span>
+<span class="nc" id="L187">        } catch (MalformedURLException mfe) {</span>
+<span class="nc" id="L188">            LOG.error(&quot;malformed url for loading jobs&quot;, mfe);</span>
+<span class="fc" id="L189">        }</span>
+<span class="fc" id="L190">        return result;</span>
+    }
+
+    @Override
+    public Build getBuildDetails(String buildUrl, String instanceUrl) {
+        try {
+<span class="fc" id="L196">            String newUrl = rebuildJobUrl(buildUrl, instanceUrl);</span>
+<span class="fc" id="L197">            String url = joinURL(newUrl, BUILD_DETAILS_URL_SUFFIX);</span>
+//            LOG.info(&quot;Build Details URL:&quot;+ url);
+<span class="fc" id="L199">            ResponseEntity&lt;String&gt; result = makeRestCall(url);</span>
+<span class="fc" id="L200">            String resultJSON = result.getBody();</span>
+//            LOG.info(&quot;Build Details :&quot;+ resultJSON);
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">            if (StringUtils.isEmpty(resultJSON)) {</span>
+<span class="nc" id="L203">                LOG.error(&quot;Error getting build details for. URL=&quot; + url);</span>
+<span class="nc" id="L204">                return null;</span>
+            }
+<span class="fc" id="L206">            JSONParser parser = new JSONParser();</span>
+            try {
+<span class="fc" id="L208">                JSONObject buildJson = (JSONObject) parser.parse(resultJSON);</span>
+<span class="fc" id="L209">                Boolean finished = (Boolean) buildJson.get(&quot;finished&quot;);</span>
+                // Ignore jobs that are building
+<span class="pc bpc" id="L211" title="1 of 2 branches missed.">                if (finished) {</span>
+<span class="fc" id="L212">                    Build build = new Build();</span>
+<span class="fc" id="L213">                    build.setNumber(buildJson.get(&quot;buildNumber&quot;).toString());</span>
+<span class="fc" id="L214">                    build.setBuildUrl(buildUrl);</span>
+<span class="fc" id="L215">                    build.setTimestamp(System.currentTimeMillis());</span>
+                    
+                    
+<span class="fc" id="L218">                    SimpleDateFormat dateFormat = new SimpleDateFormat(&quot;yyyy-MM-dd'T'HH:mm:ss.SSSXXX&quot;);//&quot;2016-06-23T09:13:29.961+07:00&quot;</span>
+<span class="fc" id="L219">                    Date parsedDate = dateFormat.parse(buildJson.get(&quot;buildStartedTime&quot;).toString());</span>
+<span class="fc" id="L220">                    build.setStartTime((Long) parsedDate.getTime());</span>
+                    
+<span class="fc" id="L222">                    build.setDuration((Long) buildJson.get(&quot;buildDuration&quot;));</span>
+<span class="fc" id="L223">                    build.setEndTime(build.getStartTime() + build.getDuration());</span>
+<span class="fc" id="L224">                    build.setBuildStatus(getBuildStatus(buildJson));</span>
+//                    build.setStartedBy(firstCulprit(buildJson));
+<span class="pc bpc" id="L226" title="1 of 2 branches missed.">                    if (settings.isSaveLog()) {</span>
+<span class="nc" id="L227">                        build.setLog(getLog(buildUrl));</span>
+                    }
+<span class="fc" id="L229">                    addChangeSets(build, buildJson);</span>
+<span class="fc" id="L230">                    return build;</span>
+                }
+
+<span class="nc" id="L233">            } catch (Exception e) {</span>
+<span class="nc" id="L234">                LOG.error(&quot;Parsing build: &quot; + buildUrl, e);</span>
+<span class="nc" id="L235">            }</span>
+<span class="nc" id="L236">        } catch (RestClientException rce) {</span>
+<span class="nc" id="L237">            LOG.error(&quot;Client exception loading build details: &quot; + rce.getMessage() + &quot;. URL =&quot; + buildUrl );</span>
+<span class="nc" id="L238">        } catch (MalformedURLException mfe) {</span>
+<span class="nc" id="L239">            LOG.error(&quot;Malformed url for loading build details&quot; + mfe.getMessage() + &quot;. URL =&quot; + buildUrl );</span>
+<span class="nc" id="L240">        } catch (URISyntaxException use) {</span>
+<span class="nc" id="L241">            LOG.error(&quot;Uri syntax exception for loading build details&quot;+ use.getMessage() + &quot;. URL =&quot; + buildUrl );</span>
+<span class="nc" id="L242">        } catch (RuntimeException re) {</span>
+<span class="nc" id="L243">            LOG.error(&quot;Unknown error in getting build details. URL=&quot;+ buildUrl, re);</span>
+<span class="nc" id="L244">        } catch (UnsupportedEncodingException unse) {</span>
+<span class="nc" id="L245">            LOG.error(&quot;Unsupported Encoding Exception in getting build details. URL=&quot; + buildUrl, unse);</span>
+<span class="nc" id="L246">        }</span>
+<span class="nc" id="L247">        return null;</span>
+    }
+
+
+    //This method will rebuild the API endpoint because the buildUrl obtained via Jenkins API
+    //does not save the auth user info and we need to add it back.
+    public static String rebuildJobUrl(String build, String server) throws URISyntaxException, MalformedURLException, UnsupportedEncodingException {
+<span class="fc" id="L254">        URL instanceUrl = new URL(server);</span>
+<span class="fc" id="L255">        String userInfo = instanceUrl.getUserInfo();</span>
+<span class="fc" id="L256">        String instanceProtocol = instanceUrl.getProtocol();</span>
+
+        //decode to handle spaces in the job name.
+<span class="fc" id="L259">        URL buildUrl = new URL(URLDecoder.decode(build, &quot;UTF-8&quot;));</span>
+<span class="fc" id="L260">        String buildPath = buildUrl.getPath();</span>
+
+<span class="fc" id="L262">        String host = buildUrl.getHost();</span>
+<span class="fc" id="L263">        int port = buildUrl.getPort();</span>
+<span class="fc" id="L264">        URI newUri = new URI(instanceProtocol, userInfo, host, port, buildPath, null, null);</span>
+<span class="fc" id="L265">        return newUri.toString();</span>
+    }
+
+
+    /**
+     * Grabs changeset information for the given build.
+     *
+     * @param build     a Build
+     * @param buildJson the build JSON object
+     */
+    private void addChangeSets(Build build, JSONObject buildJson) {
+<span class="fc" id="L276">        JSONObject changeSet = (JSONObject) buildJson.get(&quot;changes&quot;);</span>
+
+//        Map&lt;String, String&gt; revisionToUrl = new HashMap&lt;&gt;();
+
+//        // Build a map of revision to module (scm url). This is not always
+//        // provided by the Bamboo API, but we can use it if available.
+//        for (Object revision : getJsonArray(changeSet, &quot;revisions&quot;)) {
+//            JSONObject json = (JSONObject) revision;
+//            revisionToUrl.put(json.get(&quot;revision&quot;).toString(), getString(json, &quot;module&quot;));
+//        }
+
+<span class="fc bfc" id="L287" title="All 2 branches covered.">        for (Object item : getJsonArray(changeSet, &quot;change&quot;)) {</span>
+<span class="fc" id="L288">            JSONObject jsonItem = (JSONObject) item;</span>
+<span class="fc" id="L289">            SCM scm = new SCM();</span>
+<span class="fc" id="L290">            scm.setScmAuthor(getString(jsonItem, &quot;author&quot;));</span>
+<span class="fc" id="L291">            scm.setScmCommitLog(getString(jsonItem, &quot;comment&quot;));</span>
+<span class="fc" id="L292">            scm.setScmCommitTimestamp(getCommitTimestamp(jsonItem));</span>
+<span class="fc" id="L293">            scm.setScmRevisionNumber(getRevision(jsonItem));</span>
+<span class="fc" id="L294">            scm.setScmUrl(getString(jsonItem,&quot;commitUrl&quot;));</span>
+<span class="fc" id="L295">            scm.setNumberOfChanges(getJsonArray((JSONObject)jsonItem.get(&quot;files&quot;), &quot;file&quot;).size());</span>
+<span class="fc" id="L296">            build.getSourceChangeSet().add(scm);</span>
+<span class="fc" id="L297">        }</span>
+<span class="fc" id="L298">    }</span>
+
+    ////// Helpers
+
+    private long getCommitTimestamp(JSONObject jsonItem) {
+<span class="pc bpc" id="L303" title="1 of 2 branches missed.">        if (jsonItem.get(&quot;timestamp&quot;) != null) {</span>
+<span class="nc" id="L304">            return (Long) jsonItem.get(&quot;timestamp&quot;);</span>
+<span class="pc bpc" id="L305" title="1 of 2 branches missed.">        } else if (jsonItem.get(&quot;date&quot;) != null) {</span>
+<span class="fc" id="L306">            String dateString = (String) jsonItem.get(&quot;date&quot;);</span>
+            try {
+<span class="fc" id="L308">                return new SimpleDateFormat(&quot;yyyy-MM-dd'T'HH:mm:ss.SSSXXX&quot;).parse(dateString).getTime();</span>
+<span class="nc" id="L309">            } catch (java.text.ParseException e) {</span>
+                // Try an alternate date format...looks like this one is used by Git
+                try {
+<span class="nc" id="L312">                    return new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss Z&quot;).parse(dateString).getTime();</span>
+<span class="nc" id="L313">                } catch (java.text.ParseException e1) {</span>
+<span class="nc" id="L314">                    LOG.error(&quot;Invalid date string: &quot; + dateString, e);</span>
+                }
+            }
+        }
+<span class="nc" id="L318">        return 0;</span>
+    }
+
+    private String getString(JSONObject json, String key) {
+<span class="fc" id="L322">        return (String) json.get(key);</span>
+    }
+
+    private String getRevision(JSONObject jsonItem) {
+        // Use revision if provided, otherwise use id
+<span class="fc" id="L327">        Long revision = (Long) jsonItem.get(&quot;revision&quot;);</span>
+<span class="pc bpc" id="L328" title="1 of 2 branches missed.">        return revision == null ? getString(jsonItem, &quot;changesetId&quot;) : revision.toString();</span>
+    }
+
+    private JSONArray getJsonArray(JSONObject json, String key) {
+<span class="fc" id="L332">        Object array = json.get(key);</span>
+<span class="pc bpc" id="L333" title="1 of 2 branches missed.">        return array == null ? new JSONArray() : (JSONArray) array;</span>
+    }
+
+    private String firstCulprit(JSONObject buildJson) {
+<span class="nc" id="L337">        JSONArray culprits = getJsonArray(buildJson, &quot;culprits&quot;);</span>
+<span class="nc bnc" id="L338" title="All 2 branches missed.">        if (CollectionUtils.isEmpty(culprits)) {</span>
+<span class="nc" id="L339">            return null;</span>
+        }
+<span class="nc" id="L341">        JSONObject culprit = (JSONObject) culprits.get(0);</span>
+<span class="nc" id="L342">        return getFullName(culprit);</span>
+    }
+
+    private String getFullName(JSONObject author) {
+<span class="nc" id="L346">        return getString(author, &quot;fullName&quot;);</span>
+    }
+
+    private String getCommitAuthor(JSONObject jsonItem) {
+        // Use user if provided, otherwise use author.fullName
+<span class="nc" id="L351">        JSONObject author = (JSONObject) jsonItem.get(&quot;author&quot;);</span>
+<span class="nc bnc" id="L352" title="All 2 branches missed.">        return author == null ? getString(jsonItem, &quot;user&quot;) : getFullName(author);</span>
+    }
+
+    private BuildStatus getBuildStatus(JSONObject buildJson) {
+<span class="fc" id="L356">        String status = buildJson.get(&quot;buildState&quot;).toString();</span>
+<span class="pc bpc" id="L357" title="15 of 18 branches missed.">        switch (status) {</span>
+            case &quot;Successful&quot;:
+<span class="fc" id="L359">                return BuildStatus.Success;</span>
+            case &quot;UNSTABLE&quot;:
+<span class="nc" id="L361">                return BuildStatus.Unstable;</span>
+            case &quot;Failed&quot;:
+<span class="nc" id="L363">                return BuildStatus.Failure;</span>
+            case &quot;ABORTED&quot;:
+<span class="nc" id="L365">                return BuildStatus.Aborted;</span>
+            default:
+<span class="nc" id="L367">                return BuildStatus.Unknown;</span>
+        }
+    }
+
+    protected ResponseEntity&lt;String&gt; makeRestCall(String sUrl) throws MalformedURLException {
+<span class="fc" id="L372">        URI thisuri = URI.create(sUrl);</span>
+<span class="fc" id="L373">        String userInfo = thisuri.getUserInfo();</span>
+
+        //get userinfo from URI or settings (in spring properties)
+<span class="pc bpc" id="L376" title="1 of 6 branches missed.">        if (StringUtils.isEmpty(userInfo) &amp;&amp; (this.settings.getUsername() != null) &amp;&amp; (this.settings.getApiKey() != null)) {</span>
+<span class="fc" id="L377">            userInfo = this.settings.getUsername() + &quot;:&quot; + this.settings.getApiKey();</span>
+        }
+        // Basic Auth only.
+<span class="fc bfc" id="L380" title="All 2 branches covered.">        if (StringUtils.isNotEmpty(userInfo)) {</span>
+<span class="fc" id="L381">            return rest.exchange(thisuri, HttpMethod.GET,</span>
+<span class="fc" id="L382">                    new HttpEntity&lt;&gt;(createHeaders(userInfo)),</span>
+                    String.class);
+        } else {
+<span class="fc" id="L385">            return rest.exchange(thisuri, HttpMethod.GET, null,</span>
+                    String.class);
+        }
+
+    }
+
+    protected HttpHeaders createHeaders(final String userInfo) {
+<span class="fc" id="L392">        byte[] encodedAuth = Base64.encodeBase64(</span>
+<span class="fc" id="L393">                userInfo.getBytes(StandardCharsets.US_ASCII));</span>
+<span class="fc" id="L394">        String authHeader = &quot;Basic &quot; + new String(encodedAuth);</span>
+
+<span class="fc" id="L396">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L397">        headers.set(HttpHeaders.AUTHORIZATION, authHeader);</span>
+<span class="fc" id="L398">        headers.set(HttpHeaders.ACCEPT,&quot;application/json&quot;);</span>
+<span class="fc" id="L399">        return headers;</span>
+    }
+
+    protected String getLog(String buildUrl) {
+        try {
+<span class="fc" id="L404">            return makeRestCall(joinURL(buildUrl, &quot;consoleText&quot;)).getBody();</span>
+<span class="nc" id="L405">        } catch (MalformedURLException mfe) {</span>
+<span class="nc" id="L406">            LOG.error(&quot;malformed url for build log&quot;, mfe);</span>
+        }
+
+<span class="nc" id="L409">        return &quot;&quot;;</span>
+    }
+
+    // join a base url to another path or paths - this will handle trailing or non-trailing /'s
+    public static String joinURL(String base, String... paths) throws MalformedURLException {
+<span class="fc" id="L414">        StringBuilder result = new StringBuilder(base);</span>
+<span class="fc bfc" id="L415" title="All 2 branches covered.">        for (String path : paths) {</span>
+<span class="fc" id="L416">            String p = path.replaceFirst(&quot;^(\\/)+&quot;, &quot;&quot;);</span>
+<span class="fc bfc" id="L417" title="All 2 branches covered.">            if (result.lastIndexOf(&quot;/&quot;) != result.length() - 1) {</span>
+<span class="fc" id="L418">                result.append('/');</span>
+            }
+<span class="fc" id="L420">            result.append(p);</span>
+        }
+<span class="fc" id="L422">        return result.toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ApplicationScoreService.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:score-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard</a> &gt; <span class="el_source">ApplicationScoreService.java</span></div><h1>ApplicationScoreService.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard;
+
+import java.util.*;
+
+import com.capitalone.dashboard.exception.PropagateScoreException;
+import com.capitalone.dashboard.model.score.ScoreCollectorItem;
+import com.capitalone.dashboard.model.score.ScoreMetric;
+import com.capitalone.dashboard.model.score.settings.*;
+import com.capitalone.dashboard.widget.*;
+import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.capitalone.dashboard.model.*;
+import com.capitalone.dashboard.repository.DashboardRepository;
+
+/**
+ * Service to calculate Dashboard score for a {@link ScoreCollectorItem}
+ * &lt;p&gt;
+ *   On construction the service will initialize settings for widgets.
+ *   These settings will be used to calculate score
+ * &lt;p&gt;
+ *
+ */
+@Service
+public class ApplicationScoreService {
+<span class="fc" id="L29">  private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationScoreService.class);</span>
+
+  private final DashboardRepository dashboardRepository;
+
+  private final BuildWidgetScore buildWidgetScore;
+  private final QualityWidgetScore qualityWidgetScore;
+  private final DeployWidgetScore deployWidgetScore;
+  private final GithubScmWidgetScore githubScmWidgetScore;
+
+  @Autowired
+  public ApplicationScoreService(
+    DashboardRepository dashboardRepository,
+    BuildWidgetScore buildWidgetScore,
+    QualityWidgetScore qualityWidgetScore,
+    DeployWidgetScore deployWidgetScore,
+<span class="fc" id="L44">    GithubScmWidgetScore githubScmWidgetScore) {</span>
+<span class="fc" id="L45">    this.dashboardRepository = dashboardRepository;</span>
+<span class="fc" id="L46">    this.buildWidgetScore = buildWidgetScore;</span>
+<span class="fc" id="L47">    this.qualityWidgetScore = qualityWidgetScore;</span>
+<span class="fc" id="L48">    this.deployWidgetScore = deployWidgetScore;</span>
+<span class="fc" id="L49">    this.githubScmWidgetScore = githubScmWidgetScore;</span>
+<span class="fc" id="L50">  }</span>
+
+
+  /**
+   * Calculate score for a {@link ScoreCollectorItem}
+   *
+   * @param scoreApplication Score Application collector item for a dashboard
+   * @param scoreCriteriaSettings Score Criteria Settings
+   * @return Score for dashboard
+   */
+  public ScoreMetric getScoreForApplication(ScoreCollectorItem scoreApplication, ScoreCriteriaSettings scoreCriteriaSettings) {
+<span class="fc" id="L61">    Dashboard dashboard = getDashboard(scoreApplication.getDashboardId());</span>
+
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">    if (null == dashboard) {</span>
+<span class="nc" id="L64">      LOGGER.info(&quot;Dashboard with id &quot; + scoreApplication.getDashboardId() + &quot; is null!&quot;);</span>
+<span class="nc" id="L65">      return null;</span>
+    }
+
+<span class="fc" id="L68">    LOGGER.info(&quot;Dashboard title:&quot; + dashboard.getTitle() + &quot;, type:&quot; + dashboard.getType() + &quot;, owner:&quot; + dashboard.getOwner());</span>
+
+<span class="pc bpc" id="L70" title="2 of 4 branches missed.">    if (null == dashboard.getType() || !dashboard.getType().equals(DashboardType.Team)) {</span>
+<span class="nc" id="L71">      return null;</span>
+    }
+
+<span class="fc" id="L74">    LOGGER.info(&quot;dashboard.getTitle():&quot; + dashboard.getTitle() + &quot; &quot; + dashboard.getOwner());</span>
+
+<span class="fc" id="L76">    ScoreWeight dashboardScore = getDashboardScoreFromWidgets(</span>
+<span class="fc" id="L77">      processWidgetScores(dashboard.getWidgets(), scoreCriteriaSettings)</span>
+      );
+
+<span class="fc" id="L80">    LOGGER.info(&quot;dashboardScore: {}&quot; + dashboardScore);</span>
+<span class="fc" id="L81">    ScoreMetric scoreMetric = ScoreCalculationUtils.generateScoreMetric(</span>
+      dashboardScore,
+<span class="fc" id="L83">      scoreCriteriaSettings.getMaxScore(),</span>
+<span class="fc" id="L84">      scoreApplication.getId(),</span>
+<span class="fc" id="L85">      dashboard.getId()</span>
+      );
+
+<span class="fc" id="L88">    LOGGER.info(&quot;ScoreMetric scoreMetric &quot; + scoreMetric.toString());</span>
+
+<span class="fc" id="L90">    return scoreMetric;</span>
+  }
+
+  private Dashboard getDashboard(ObjectId id) {
+<span class="fc" id="L94">    Dashboard dashboard = dashboardRepository.findOne(id);</span>
+<span class="fc" id="L95">    return dashboard;</span>
+  }
+
+  /**
+   * Calculate dashboard score from widget score settings
+   *
+   * @param widgetScores widget score settings
+   * @return dashboard score
+   */
+  private ScoreWeight getDashboardScoreFromWidgets(List&lt;ScoreWeight&gt; widgetScores) {
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">    if (null == widgetScores) {</span>
+<span class="nc" id="L106">      return getDashboardScore(new ScoreTypeValue(Constants.ZERO_SCORE), widgetScores);</span>
+    }
+
+    try {
+      //Calculate score
+<span class="fc" id="L111">      return getDashboardScore(</span>
+<span class="fc" id="L112">        ScoreCalculationUtils.calculateComponentScoreTypeValue(widgetScores, PropagateType.dashboard),</span>
+        widgetScores
+      );
+<span class="fc" id="L115">    } catch (PropagateScoreException ex) {</span>
+<span class="fc" id="L116">      ScoreWeight scoreDashboard = new ScoreWeight();</span>
+<span class="fc" id="L117">      scoreDashboard.setScore(ex.getScore());</span>
+<span class="fc" id="L118">      scoreDashboard.setMessage(ex.getMessage());</span>
+<span class="fc" id="L119">      scoreDashboard.setState(ex.getState());</span>
+<span class="fc" id="L120">      scoreDashboard.setChildren(widgetScores);</span>
+<span class="fc" id="L121">      return scoreDashboard;</span>
+    }
+  }
+
+  private ScoreWeight getDashboardScore(ScoreTypeValue score, List&lt;ScoreWeight&gt; scoreWidgets) {
+<span class="fc" id="L126">    ScoreWeight scoreDashboard = new ScoreWeight();</span>
+<span class="fc" id="L127">    scoreDashboard.setScore(score);</span>
+<span class="fc" id="L128">    scoreDashboard.setChildren(scoreWidgets);</span>
+<span class="fc" id="L129">    scoreDashboard.setState(ScoreWeight.ProcessingState.complete);</span>
+
+<span class="fc" id="L131">    return scoreDashboard;</span>
+  }
+
+  /**
+   * Process scores for each widget based on widget settings
+   *
+   * @param widgets List of widgets
+   * @param scoreCriteriaSettings Score Criteria Settings
+   * @return List of widget scores
+   */
+  private List&lt;ScoreWeight&gt; processWidgetScores(List&lt;Widget&gt; widgets, ScoreCriteriaSettings scoreCriteriaSettings) {
+<span class="fc" id="L142">    List&lt;ScoreWeight&gt; scoreWeights = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L144">    Map&lt;String, ScoreComponentSettings&gt; scoreParamSettingsMap = generateWidgetSettings(scoreCriteriaSettings);</span>
+
+<span class="fc" id="L146">    Set&lt;String&gt; widgetTypes = scoreParamSettingsMap.keySet();</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">    if (widgetTypes.isEmpty()) {</span>
+<span class="nc" id="L148">      return null;</span>
+    }
+
+    //For each widget calculate score
+<span class="fc bfc" id="L152" title="All 2 branches covered.">    for (String widgetType : widgetTypes) {</span>
+<span class="fc" id="L153">      ScoreComponentSettings scoreSettings = scoreParamSettingsMap.get(widgetType);</span>
+<span class="fc" id="L154">      WidgetScore widgetScore = getWidgetScoreByType(widgetType);</span>
+<span class="fc" id="L155">      ScoreWeight score = widgetScore.processWidgetScore(</span>
+<span class="fc" id="L156">        getWidgetByName(widgets, widgetType),</span>
+        scoreSettings
+        );
+<span class="fc" id="L159">      LOGGER.info(&quot;Widget for type: &quot; + widgetType + &quot; score&quot; + score);</span>
+
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">      if (null != score) {</span>
+<span class="fc" id="L162">        setWidgetAlert(score, scoreCriteriaSettings.getComponentAlert());</span>
+<span class="fc" id="L163">        scoreWeights.add(score);</span>
+      }
+<span class="fc" id="L165">    }</span>
+
+<span class="fc" id="L167">    return scoreWeights;</span>
+  }
+
+  private void setWidgetAlert(ScoreWeight score, ComponentAlert componentAlert) {
+<span class="pc bpc" id="L171" title="3 of 4 branches missed.">    if (null == componentAlert || null == componentAlert.getValue()) {</span>
+<span class="fc" id="L172">      return;</span>
+    }
+<span class="nc" id="L174">    score.setAlert(</span>
+<span class="nc" id="L175">      ScoreCalculationUtils.isComponentAlert(componentAlert, score.getScore().getScoreValue())</span>
+    );
+<span class="nc" id="L177">  }</span>
+
+  /**
+   * Add settings for widget in map if it exists
+   * This map is used to calculate score for team
+   *
+   * @param scoreParamSettingsMap Map to update the settings for a widget
+   * @param widgetType Type of widget
+   * @param scoreComponentSettings score settings for the widget
+   */
+  private void addSettingsToMap(Map&lt;String, ScoreComponentSettings&gt; scoreParamSettingsMap, String widgetType, ScoreComponentSettings scoreComponentSettings) {
+<span class="fc" id="L188">    LOGGER.info(&quot;addSettingsToMap with widgetType:&quot; + widgetType + &quot; scoreParamSettings:&quot; + scoreComponentSettings);</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">    if (null != scoreComponentSettings) {</span>
+<span class="fc" id="L190">      scoreParamSettingsMap.put(widgetType, scoreComponentSettings);</span>
+    }
+<span class="fc" id="L192">  }</span>
+
+  /**
+   * Generate criteria settings for each widget type
+   *
+   * @param scoreCriteriaSettings Score Criteria Settings
+   * @return Map of settings by each widget name
+   */
+  private Map&lt;String, ScoreComponentSettings&gt; generateWidgetSettings(ScoreCriteriaSettings scoreCriteriaSettings) {
+<span class="fc" id="L201">    Map&lt;String, ScoreComponentSettings&gt; scoreParamSettingsMap = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L203">    addSettingsToMap(</span>
+      scoreParamSettingsMap,
+      Constants.WIDGET_BUILD,
+<span class="fc" id="L206">      getSettingsIfEnabled(</span>
+<span class="fc" id="L207">        scoreCriteriaSettings.getBuild()</span>
+      ));
+
+<span class="fc" id="L210">    addSettingsToMap(</span>
+      scoreParamSettingsMap,
+      Constants.WIDGET_DEPLOY,
+<span class="fc" id="L213">      getSettingsIfEnabled(</span>
+<span class="fc" id="L214">        scoreCriteriaSettings.getDeploy()</span>
+      ));
+
+<span class="fc" id="L217">    addSettingsToMap(</span>
+      scoreParamSettingsMap,
+      Constants.WIDGET_CODE_ANALYSIS,
+<span class="fc" id="L220">      getSettingsIfEnabled(</span>
+<span class="fc" id="L221">        scoreCriteriaSettings.getQuality()</span>
+      ));
+
+<span class="fc" id="L224">    addSettingsToMap(</span>
+      scoreParamSettingsMap,
+      Constants.WIDGET_GITHUB_SCM,
+<span class="fc" id="L227">      getSettingsIfEnabled(</span>
+<span class="fc" id="L228">        scoreCriteriaSettings.getScm()</span>
+      ));
+
+<span class="fc" id="L231">    return scoreParamSettingsMap;</span>
+  }
+
+  private ScoreComponentSettings getSettingsIfEnabled(ScoreComponentSettings scoreComponentSettings) {
+<span class="pc bpc" id="L235" title="2 of 4 branches missed.">    if (null != scoreComponentSettings &amp;&amp; !scoreComponentSettings.isDisabled()) {</span>
+<span class="fc" id="L236">      return scoreComponentSettings;</span>
+    }
+<span class="nc" id="L238">    return null;</span>
+  }
+
+  private Widget getWidgetByName(List&lt;Widget&gt; widgets, String name) {
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">    for (Widget widget : widgets) {</span>
+<span class="fc bfc" id="L243" title="All 2 branches covered.">      if (name.equals(widget.getName())) {</span>
+<span class="fc" id="L244">        return widget;</span>
+      }
+<span class="fc" id="L246">    }</span>
+<span class="nc" id="L247">    return null;</span>
+  }
+
+  private WidgetScore getWidgetScoreByType(String widgetType) {
+<span class="fc bfc" id="L251" title="All 2 branches covered.">    if (widgetType.equals(Constants.WIDGET_BUILD)) {</span>
+<span class="fc" id="L252">      return this.buildWidgetScore;</span>
+<span class="fc bfc" id="L253" title="All 2 branches covered.">    } else if (widgetType.equals(Constants.WIDGET_DEPLOY)) {</span>
+<span class="fc" id="L254">      return this.deployWidgetScore;</span>
+<span class="fc bfc" id="L255" title="All 2 branches covered.">    } else if (widgetType.equals(Constants.WIDGET_CODE_ANALYSIS)) {</span>
+<span class="fc" id="L256">      return this.qualityWidgetScore;</span>
+<span class="pc bpc" id="L257" title="1 of 2 branches missed.">    } else if (widgetType.equals(Constants.WIDGET_GITHUB_SCM)) {</span>
+<span class="fc" id="L258">      return this.githubScmWidgetScore;</span>
+    }
+<span class="nc" id="L260">    return null;</span>
+  }
+
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

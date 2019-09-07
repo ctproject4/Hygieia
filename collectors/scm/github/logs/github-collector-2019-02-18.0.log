@@ -1,0 +1,76 @@
+2019-02-18 11:56:19,795 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 11:56:19,798 INFO  c.c.d.collector.CollectorTask - Starting...
+2019-02-18 11:56:19,798 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 11:56:19,806 INFO  c.c.d.collector.GitHubCollectorTask - {url=http://current}::null:: get commits
+2019-02-18 11:56:19,807 INFO  c.c.d.collector.GitHubCollectorTask - {url=http://current}::null get issues
+2019-02-18 11:56:19,807 INFO  c.c.d.collector.GitHubCollectorTask - {url=http://current}::null::get pulls
+2019-02-18 11:56:19,813 INFO  c.c.d.collector.CollectorTask - Repo Count              1        0s
+2019-02-18 11:56:19,813 INFO  c.c.d.collector.CollectorTask - New Commits             1        0s
+2019-02-18 11:56:19,813 INFO  c.c.d.collector.CollectorTask - New Pulls               0        0s
+2019-02-18 11:56:19,813 INFO  c.c.d.collector.CollectorTask - New Issues              0        0s
+2019-02-18 11:56:19,813 INFO  c.c.d.collector.CollectorTask - Finished                         0s
+2019-02-18 11:56:19,823 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 11:56:19,823 INFO  c.c.d.collector.CollectorTask - Starting...
+2019-02-18 11:56:19,823 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 11:56:19,824 INFO  c.c.d.collector.CollectorTask - Repo Count              1        0s
+2019-02-18 11:56:19,824 INFO  c.c.d.collector.CollectorTask - New Commits             0        0s
+2019-02-18 11:56:19,824 INFO  c.c.d.collector.CollectorTask - New Pulls               0        0s
+2019-02-18 11:56:19,824 INFO  c.c.d.collector.CollectorTask - New Issues              0        0s
+2019-02-18 11:56:19,824 INFO  c.c.d.collector.CollectorTask - Finished                         0s
+2019-02-18 11:56:19,826 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 11:56:19,827 INFO  c.c.d.collector.CollectorTask - Starting...
+2019-02-18 11:56:19,827 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 11:56:19,827 INFO  c.c.d.collector.GitHubCollectorTask - {url=http://current}::null:: get commits
+2019-02-18 11:56:19,827 INFO  c.c.d.collector.GitHubCollectorTask - {url=http://current}::null get issues
+2019-02-18 11:56:19,828 INFO  c.c.d.collector.GitHubCollectorTask - {url=http://current}::null::get pulls
+2019-02-18 11:56:19,828 INFO  c.c.d.collector.CollectorTask - Repo Count              1        0s
+2019-02-18 11:56:19,828 INFO  c.c.d.collector.CollectorTask - New Commits             1        0s
+2019-02-18 11:56:19,828 INFO  c.c.d.collector.CollectorTask - New Pulls               0        0s
+2019-02-18 11:56:19,828 INFO  c.c.d.collector.CollectorTask - New Issues              1        0s
+2019-02-18 11:56:19,828 INFO  c.c.d.collector.CollectorTask - Finished                         0s
+2019-02-18 11:56:19,831 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 11:56:19,831 INFO  c.c.d.collector.CollectorTask - Starting...
+2019-02-18 11:56:19,831 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 11:56:19,831 INFO  c.c.d.collector.CollectorTask - Repo Count              1        0s
+2019-02-18 11:56:19,831 INFO  c.c.d.collector.CollectorTask - New Commits             0        0s
+2019-02-18 11:56:19,832 INFO  c.c.d.collector.CollectorTask - New Pulls               0        0s
+2019-02-18 11:56:19,832 INFO  c.c.d.collector.CollectorTask - New Issues              0        0s
+2019-02-18 11:56:19,832 INFO  c.c.d.collector.CollectorTask - Finished                         0s
+2019-02-18 12:29:26,576 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 12:29:26,589 INFO  c.c.d.collector.CollectorTask - Starting...
+2019-02-18 12:29:26,589 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 12:29:26,603 INFO  c.c.d.collector.GitHubCollectorTask - {url=http://current}::null:: get commits
+2019-02-18 12:29:26,605 INFO  c.c.d.collector.GitHubCollectorTask - {url=http://current}::null get issues
+2019-02-18 12:29:26,605 INFO  c.c.d.collector.GitHubCollectorTask - {url=http://current}::null::get pulls
+2019-02-18 12:29:26,612 INFO  c.c.d.collector.CollectorTask - Repo Count              1        0s
+2019-02-18 12:29:26,612 INFO  c.c.d.collector.CollectorTask - New Commits             1        0s
+2019-02-18 12:29:26,612 INFO  c.c.d.collector.CollectorTask - New Pulls               0        0s
+2019-02-18 12:29:26,612 INFO  c.c.d.collector.CollectorTask - New Issues              0        0s
+2019-02-18 12:29:26,612 INFO  c.c.d.collector.CollectorTask - Finished                         0s
+2019-02-18 12:29:26,640 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 12:29:26,640 INFO  c.c.d.collector.CollectorTask - Starting...
+2019-02-18 12:29:26,640 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 12:29:26,641 INFO  c.c.d.collector.CollectorTask - Repo Count              1        0s
+2019-02-18 12:29:26,641 INFO  c.c.d.collector.CollectorTask - New Commits             0        0s
+2019-02-18 12:29:26,641 INFO  c.c.d.collector.CollectorTask - New Pulls               0        0s
+2019-02-18 12:29:26,641 INFO  c.c.d.collector.CollectorTask - New Issues              0        0s
+2019-02-18 12:29:26,641 INFO  c.c.d.collector.CollectorTask - Finished                         0s
+2019-02-18 12:29:26,644 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 12:29:26,644 INFO  c.c.d.collector.CollectorTask - Starting...
+2019-02-18 12:29:26,644 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 12:29:26,645 INFO  c.c.d.collector.GitHubCollectorTask - {url=http://current}::null:: get commits
+2019-02-18 12:29:26,645 INFO  c.c.d.collector.GitHubCollectorTask - {url=http://current}::null get issues
+2019-02-18 12:29:26,645 INFO  c.c.d.collector.GitHubCollectorTask - {url=http://current}::null::get pulls
+2019-02-18 12:29:26,646 INFO  c.c.d.collector.CollectorTask - Repo Count              1        0s
+2019-02-18 12:29:26,661 INFO  c.c.d.collector.CollectorTask - New Commits             1        0s
+2019-02-18 12:29:26,661 INFO  c.c.d.collector.CollectorTask - New Pulls               0        0s
+2019-02-18 12:29:26,662 INFO  c.c.d.collector.CollectorTask - New Issues              1        0s
+2019-02-18 12:29:26,662 INFO  c.c.d.collector.CollectorTask - Finished                         0s
+2019-02-18 12:29:26,665 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 12:29:26,665 INFO  c.c.d.collector.CollectorTask - Starting...
+2019-02-18 12:29:26,665 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-18 12:29:26,665 INFO  c.c.d.collector.CollectorTask - Repo Count              1        0s
+2019-02-18 12:29:26,665 INFO  c.c.d.collector.CollectorTask - New Commits             0        0s
+2019-02-18 12:29:26,665 INFO  c.c.d.collector.CollectorTask - New Pulls               0        0s
+2019-02-18 12:29:26,665 INFO  c.c.d.collector.CollectorTask - New Issues              0        0s
+2019-02-18 12:29:26,665 INFO  c.c.d.collector.CollectorTask - Finished                         0s

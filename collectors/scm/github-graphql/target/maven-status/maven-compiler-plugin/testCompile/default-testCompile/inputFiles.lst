@@ -1,0 +1,3 @@
+/home/Devops/Hygieia/collectors/scm/github-graphql/src/test/java/com/capitalone/dashboard/collector/GitHubCollectorTaskTest.java
+/home/Devops/Hygieia/collectors/scm/github-graphql/src/test/java/com/capitalone/dashboard/model/GitHubRepoTests.java
+/home/Devops/Hygieia/collectors/scm/github-graphql/src/test/java/com/capitalone/dashboard/collector/DefaultGitHubClientTest.java

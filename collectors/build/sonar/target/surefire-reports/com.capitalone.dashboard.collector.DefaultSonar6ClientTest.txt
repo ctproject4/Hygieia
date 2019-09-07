@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.capitalone.dashboard.collector.DefaultSonar6ClientTest
+-------------------------------------------------------------------------------
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.333 sec - in com.capitalone.dashboard.collector.DefaultSonar6ClientTest

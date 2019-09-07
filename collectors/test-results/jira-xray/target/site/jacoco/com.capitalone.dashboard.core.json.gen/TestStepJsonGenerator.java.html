@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>TestStepJsonGenerator.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:jira-xray-testresult-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.core.json.gen</a> &gt; <span class="el_source">TestStepJsonGenerator.java</span></div><h1>TestStepJsonGenerator.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.core.json.gen;
+
+import com.atlassian.jira.rest.client.internal.json.gen.JsonGenerator;
+import com.capitalone.dashboard.api.domain.Defect;
+import com.capitalone.dashboard.api.domain.Evidence;
+import com.capitalone.dashboard.api.domain.TestStep;
+import com.google.common.collect.Iterables;
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
+
+import java.util.ArrayList;
+
+/**
+ * This class will generate a JSON Object for a Test Step
+ */
+<span class="fc" id="L17">public class TestStepJsonGenerator  implements JsonGenerator&lt;TestStep&gt; {</span>
+
+<span class="fc" id="L19">    private final static RendereableItemJsonGenerator RENDEREABLE_GENERATOR =new RendereableItemJsonGenerator();</span>
+<span class="fc" id="L20">    private final static DefectJSONGenerator DEFECTS_GENERATOR =new DefectJSONGenerator();</span>
+
+    public final static String KEY_ID=&quot;id&quot;;
+    public final static String KEY_INDEX=&quot;index&quot;;
+    public final static String KEY_STEP=&quot;step&quot;;
+    public final static String KEY_DATA=&quot;data&quot;;
+    public final static String KEY_RESULT=&quot;result&quot;;
+    // UPDATABLE FIELDS
+    public final static String KEY_ATTACHMENTS=&quot;attachments&quot;;
+    public final static String KEY_EVIDENCES=&quot;evidences&quot;;
+    public final static String KEY_DEFECTS=&quot;defects&quot;;
+    public final static String KEY_STATUS=&quot;status&quot;;
+    public final static String KEY_COMMENT=&quot;comment&quot;;
+
+    public JSONObject generate(TestStep testStep) throws JSONException {
+<span class="nc" id="L35">        JSONObject ex=new JSONObject();</span>
+<span class="nc" id="L36">        ex.put(KEY_ID,testStep.getId());</span>
+<span class="nc" id="L37">        ex.put(KEY_INDEX,testStep.getIndex());</span>
+<span class="nc" id="L38">        ex.put(KEY_STEP, RENDEREABLE_GENERATOR.generate(testStep.getStep()));</span>
+<span class="nc" id="L39">        ex.put(KEY_DATA, RENDEREABLE_GENERATOR.generate(testStep.getData()));</span>
+<span class="nc" id="L40">        ex.put(KEY_RESULT, RENDEREABLE_GENERATOR.generate(testStep.getResult()));</span>
+<span class="nc" id="L41">        ex.put(KEY_STATUS,testStep.getStatus().name());</span>
+       // ex.put(KEY_COMMENT, RENDEREABLE_GENERATOR.generate(testStep.getComment()));
+
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        if(testStep.getAttachments()!=null) {</span>
+<span class="nc" id="L45">            ex.put(KEY_ATTACHMENTS,generateAttachments(testStep));</span>
+        }
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        if(testStep.getEvidences()!=null) {</span>
+<span class="nc" id="L48">            ex.put(KEY_EVIDENCES,generateEvidences(testStep));</span>
+        }
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        if(testStep.getDefects()!=null) {</span>
+<span class="nc" id="L51">            ex.put(KEY_DEFECTS,generateDefects(testStep));</span>
+        }
+
+<span class="nc" id="L54">    return ex;</span>
+    }
+
+
+    protected JSONObject generateAttachments(TestStep testStep) throws JSONException {
+<span class="nc" id="L59">        ArrayList&lt;Evidence&gt; removes=new ArrayList&lt;Evidence&gt;();</span>
+<span class="nc" id="L60">        ArrayList&lt;Evidence&gt; adds=new ArrayList&lt;Evidence&gt;();</span>
+        Iterable&lt;Evidence&gt; all;
+
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        if( testStep.getVersion()!=0) {</span>
+<span class="nc" id="L64">            all= Iterables.concat(testStep.getOldVersion().getAttachments(),testStep.getAttachments());</span>
+        }
+        else {
+<span class="nc" id="L67">            all=testStep.getAttachments();</span>
+        }
+
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if(testStep.getVersion()!=0){</span>
+<span class="nc" id="L71">            ArrayList&lt;Evidence&gt; oldEv=new ArrayList&lt;Evidence&gt;();</span>
+<span class="nc" id="L72">            ArrayList&lt;Evidence&gt; newEv=new ArrayList&lt;Evidence&gt;();</span>
+<span class="nc" id="L73">            Iterables.addAll(oldEv,testStep.getOldVersion().getAttachments());</span>
+<span class="nc" id="L74">            Iterables.addAll(newEv,testStep.getAttachments());</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">            for(Evidence ev: all){</span>
+<span class="nc bnc" id="L76" title="All 4 branches missed.">                if(!oldEv.contains(ev) &amp;&amp; !newEv.contains(ev)){</span>
+<span class="nc" id="L77">                    removes.add(ev);</span>
+                }
+<span class="nc bnc" id="L79" title="All 4 branches missed.">                if(!oldEv.contains(ev) &amp;&amp; newEv.contains(ev)){</span>
+<span class="nc" id="L80">                    adds.add(ev);</span>
+                }
+<span class="nc" id="L82">            }</span>
+        }
+
+<span class="nc" id="L85">        JSONObject attachments=new JSONObject();</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        if(!adds.isEmpty()) {</span>
+<span class="nc" id="L87">            attachments.put(&quot;add&quot;,new JSONArray(adds));</span>
+        }
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        if(!removes.isEmpty()) {</span>
+<span class="nc" id="L90">            attachments.put(&quot;remove&quot;,new JSONArray(removes));</span>
+        }
+
+<span class="nc" id="L93">        return attachments;</span>
+    }
+
+    protected JSONObject generateEvidences(TestStep testStep) throws JSONException {
+<span class="nc" id="L97">        ArrayList&lt;Evidence&gt; removes=new ArrayList&lt;Evidence&gt;();</span>
+<span class="nc" id="L98">        ArrayList&lt;Evidence&gt; adds=new ArrayList&lt;Evidence&gt;();</span>
+
+        Iterable&lt;Evidence&gt; all;
+
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        if( testStep.getVersion()!=0) {</span>
+<span class="nc" id="L103">            all= Iterables.concat(testStep.getOldVersion().getEvidences(),testStep.getEvidences());</span>
+        }
+        else {
+<span class="nc" id="L106">            all=testStep.getEvidences();</span>
+        }
+
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        if(testStep.getVersion()!=0){</span>
+<span class="nc" id="L110">            ArrayList&lt;Evidence&gt; oldEv=new ArrayList&lt;Evidence&gt;();</span>
+<span class="nc" id="L111">            ArrayList&lt;Evidence&gt; newEv=new ArrayList&lt;Evidence&gt;();</span>
+<span class="nc" id="L112">            Iterables.addAll(oldEv,testStep.getOldVersion().getAttachments());</span>
+<span class="nc" id="L113">            Iterables.addAll(newEv,testStep.getAttachments());</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">            for(Evidence ev: all){</span>
+<span class="nc bnc" id="L115" title="All 4 branches missed.">                if(!oldEv.contains(ev) &amp;&amp; !newEv.contains(ev)){</span>
+<span class="nc" id="L116">                    removes.add(ev);</span>
+                }
+<span class="nc bnc" id="L118" title="All 4 branches missed.">                if(!oldEv.contains(ev) &amp;&amp; newEv.contains(ev)){</span>
+<span class="nc" id="L119">                    adds.add(ev);</span>
+                }
+<span class="nc" id="L121">            }</span>
+
+        }
+
+<span class="nc" id="L125">        JSONObject evidences=new JSONObject();</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        if(!adds.isEmpty()) {</span>
+<span class="nc" id="L127">            evidences.put(&quot;add&quot;,new JSONArray(adds));</span>
+        }
+<span class="nc bnc" id="L129" title="All 2 branches missed.">        if(!removes.isEmpty()) {</span>
+<span class="nc" id="L130">            evidences.put(&quot;remove&quot;,new JSONArray(removes));</span>
+        }
+<span class="nc" id="L132">        return evidences;</span>
+    }
+
+    protected Object generateDefects (TestStep testStep) throws JSONException{
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        if(testStep.getVersion()!=0) {</span>
+<span class="nc" id="L137">            return generateDefectsUpdates(testStep);</span>
+        }
+        else {
+<span class="nc" id="L140">            return generateDefectsArray(testStep);</span>
+        }
+    }
+
+    protected JSONArray generateDefectsArray(TestStep testStep) throws JSONException {
+<span class="nc" id="L145">        ArrayList&lt;JSONObject&gt; defects=new ArrayList&lt;JSONObject&gt;();</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">        for(Defect def: testStep.getDefects()){</span>
+<span class="nc" id="L147">            defects.add(DEFECTS_GENERATOR.generate(def));</span>
+<span class="nc" id="L148">        }</span>
+<span class="nc" id="L149">        return new JSONArray(defects);</span>
+    }
+
+    //TODO: EXTRACT LOGIC AND CLEAN CODE, IMPLEMENT COMMON CLASSES AND INTERFACES
+    protected JSONObject generateDefectsUpdates(TestStep testStep) throws JSONException {
+<span class="nc" id="L154">        ArrayList&lt;Defect&gt; removes=new ArrayList&lt;Defect&gt;();</span>
+<span class="nc" id="L155">        ArrayList&lt;Defect&gt; adds=new ArrayList&lt;Defect&gt;();</span>
+
+        Iterable&lt;Defect&gt; all;
+
+<span class="nc bnc" id="L159" title="All 2 branches missed.">        if( testStep.getVersion()!=0) {</span>
+<span class="nc" id="L160">            all= Iterables.concat(testStep.getOldVersion().getDefects(),testStep.getDefects());</span>
+        }
+        else {
+<span class="nc" id="L163">            all=testStep.getDefects();</span>
+        }
+
+<span class="nc bnc" id="L166" title="All 2 branches missed.">        if (testStep.getVersion() != 0) {</span>
+<span class="nc" id="L167">            ArrayList&lt;Defect&gt; oldDef = new ArrayList&lt;Defect&gt;();</span>
+<span class="nc" id="L168">            ArrayList&lt;Defect&gt; newDef = new ArrayList&lt;Defect&gt;();</span>
+<span class="nc" id="L169">            Iterables.addAll(oldDef, testStep.getOldVersion().getDefects());</span>
+<span class="nc" id="L170">            Iterables.addAll(newDef, testStep.getDefects());</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">            for (Defect def : all) {</span>
+<span class="nc bnc" id="L172" title="All 4 branches missed.">                if (!oldDef.contains(def) &amp;&amp; !newDef.contains(def)) {</span>
+<span class="nc" id="L173">                    removes.add(def);</span>
+                }
+<span class="nc bnc" id="L175" title="All 4 branches missed.">                if (!oldDef.contains(def) &amp;&amp; newDef.contains(def)) {</span>
+<span class="nc" id="L176">                    adds.add(def);</span>
+                }
+<span class="nc" id="L178">            }</span>
+        }
+
+<span class="nc" id="L181">        JSONObject defects = new JSONObject();</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">        if(!adds.isEmpty()) {</span>
+<span class="nc" id="L183">            defects.put(&quot;add&quot;, new JSONArray(adds));</span>
+        }
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        if(!removes.isEmpty()) {</span>
+<span class="nc" id="L186">            defects.put(&quot;remove&quot;, new JSONArray(removes));</span>
+        }
+<span class="nc" id="L188">        return defects;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

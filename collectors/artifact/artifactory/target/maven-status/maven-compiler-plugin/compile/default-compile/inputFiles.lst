@@ -1,0 +1,17 @@
+/home/Devops/Hygieia/collectors/artifact/artifactory/src/main/java/com/capitalone/dashboard/model/ArtifactoryRepo.java
+/home/Devops/Hygieia/collectors/artifact/artifactory/src/main/java/com/capitalone/dashboard/model/ArtifactoryCollector.java
+/home/Devops/Hygieia/collectors/artifact/artifactory/src/main/java/com/capitalone/dashboard/model/BaseArtifact.java
+/home/Devops/Hygieia/collectors/artifact/artifactory/src/main/java/com/capitalone/dashboard/collector/ArtifactorySettings.java
+/home/Devops/Hygieia/collectors/artifact/artifactory/src/main/java/com/capitalone/dashboard/model/ArtifactoryCollectionMode.java
+/home/Devops/Hygieia/collectors/artifact/artifactory/src/main/java/com/capitalone/dashboard/model/RepoAndPattern.java
+/home/Devops/Hygieia/collectors/artifact/artifactory/src/main/java/com/capitalone/dashboard/collector/ArtifactoryCollectorTask.java
+/home/Devops/Hygieia/collectors/artifact/artifactory/src/main/java/com/capitalone/dashboard/util/ArtifactUtil.java
+/home/Devops/Hygieia/collectors/artifact/artifactory/src/main/java/com/capitalone/dashboard/collector/ArtifactoryClient.java
+/home/Devops/Hygieia/collectors/artifact/artifactory/src/main/java/com/capitalone/dashboard/model/ServerSetting.java
+/home/Devops/Hygieia/collectors/artifact/artifactory/src/main/java/com/capitalone/dashboard/collector/DefaultArtifactoryClient.java
+/home/Devops/Hygieia/collectors/artifact/artifactory/src/main/java/com/capitalone/dashboard/repository/ArtifactoryCollectorRepository.java
+/home/Devops/Hygieia/collectors/artifact/artifactory/src/main/java/com/capitalone/dashboard/repository/ArtifactoryRepoRepository.java
+/home/Devops/Hygieia/collectors/artifact/artifactory/src/main/java/com/capitalone/dashboard/model/ArtifactItem.java
+/home/Devops/Hygieia/collectors/artifact/artifactory/src/main/java/com/capitalone/dashboard/repository/ArtifactItemRepository.java
+/home/Devops/Hygieia/collectors/artifact/artifactory/src/main/java/com/capitalone/dashboard/Application.java
+/home/Devops/Hygieia/collectors/artifact/artifactory/src/main/java/com/capitalone/dashboard/collector/RestOperationsSupplier.java

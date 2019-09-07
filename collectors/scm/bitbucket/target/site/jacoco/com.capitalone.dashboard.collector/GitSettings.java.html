@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GitSettings.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:bitbucket-scm-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">GitSettings.java</span></div><h1>GitSettings.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+/**
+ * Bean to hold settings specific to the git collector.
+ */
+@Component
+@ConfigurationProperties(prefix = &quot;git&quot;)
+<span class="fc" id="L11">public class GitSettings {</span>
+    private String cron;
+    private String host;
+    private String key;
+    private int firstRunHistoryDays;
+    private String api;
+    private int pageSize;
+
+	public String getHost() {
+<span class="nc" id="L20">		return host;</span>
+	}
+
+	public void setHost(String host) {
+<span class="nc" id="L24">		this.host = host;</span>
+<span class="nc" id="L25">	}</span>
+
+	public String getCron() {
+<span class="nc" id="L28">        return cron;</span>
+    }
+
+    public void setCron(String cron) {
+<span class="nc" id="L32">        this.cron = cron;</span>
+<span class="nc" id="L33">    }</span>
+
+	public String getKey() {
+<span class="fc" id="L36">		return key;</span>
+	}
+	
+	public void setKey(String key) {
+<span class="fc" id="L40">		this.key = key;</span>
+<span class="fc" id="L41">	}</span>
+	
+    public int getFirstRunHistoryDays() {
+<span class="nc" id="L44">		return firstRunHistoryDays;</span>
+	}
+
+	public void setFirstRunHistoryDays(int firstRunHistoryDays) {
+<span class="nc" id="L48">		this.firstRunHistoryDays = firstRunHistoryDays;</span>
+<span class="nc" id="L49">	}</span>
+
+	public String getApi() {
+<span class="fc" id="L52">		return api;</span>
+	}
+
+	public void setApi(String api) {
+<span class="fc" id="L56">		this.api = api;</span>
+<span class="fc" id="L57">	}</span>
+	
+	public int getPageSize() {
+<span class="fc" id="L60">		return pageSize;</span>
+	}
+	
+	public void setPageSize(int pageSize) {
+<span class="fc" id="L64">		this.pageSize = pageSize;</span>
+<span class="fc" id="L65">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

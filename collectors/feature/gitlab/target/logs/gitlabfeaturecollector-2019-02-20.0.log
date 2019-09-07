@@ -1,0 +1,28 @@
+2019-02-20 00:00:00,000 INFO  c.c.d.collector.CollectorTask - Running Collector: GitlabFeature
+2019-02-20 00:00:00,008 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-20 00:00:00,008 INFO  c.c.d.collector.CollectorTask - Starting...
+2019-02-20 00:00:00,008 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-20 00:00:00,008 INFO  c.c.d.collector.CollectorTask - Issues Added/Updated    0        0s
+2019-02-20 00:00:00,009 INFO  c.c.d.collector.CollectorTask - Issues Deleted          0        0s
+2019-02-20 00:01:00,000 INFO  c.c.d.collector.CollectorTask - Running Collector: GitlabFeature
+2019-02-20 00:01:00,002 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-20 00:01:00,003 INFO  c.c.d.collector.CollectorTask - Starting...
+2019-02-20 00:01:00,003 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-20 00:01:00,003 INFO  c.c.d.collector.CollectorTask - Issues Added/Updated    0        0s
+2019-02-20 00:01:00,003 INFO  c.c.d.collector.CollectorTask - Issues Deleted          0        0s
+2019-02-20 00:02:00,000 INFO  c.c.d.collector.CollectorTask - Running Collector: GitlabFeature
+2019-02-20 00:02:00,003 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-20 00:02:00,003 INFO  c.c.d.collector.CollectorTask - Starting...
+2019-02-20 00:02:00,003 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-20 00:02:00,003 INFO  c.c.d.collector.CollectorTask - Issues Added/Updated    0        0s
+2019-02-20 00:02:00,003 INFO  c.c.d.collector.CollectorTask - Issues Deleted          0        0s
+2019-02-20 00:03:00,000 INFO  c.c.d.collector.CollectorTask - Running Collector: GitlabFeature
+2019-02-20 00:03:00,004 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-20 00:03:00,005 INFO  c.c.d.collector.CollectorTask - Starting...
+2019-02-20 00:03:00,008 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-20 00:03:00,009 INFO  c.c.d.collector.CollectorTask - Issues Added/Updated    0        0s
+2019-02-20 00:03:00,009 INFO  c.c.d.collector.CollectorTask - Issues Deleted          0        0s
+2019-02-20 00:03:08,946 INFO  o.s.c.a.AnnotationConfigApplicationContext - Closing org.springframework.context.annotation.AnnotationConfigApplicationContext@65986d7e: startup date [Tue Feb 19 20:04:42 IST 2019]; parent: org.springframework.context.annotation.AnnotationConfigApplicationContext@30f6328b
+2019-02-20 00:03:08,960 INFO  o.s.j.e.a.AnnotationMBeanExporter - Unregistering JMX-exposed beans on shutdown
+2019-02-20 00:03:08,961 INFO  o.s.j.e.a.AnnotationMBeanExporter - Unregistering JMX-exposed beans
+2019-02-20 00:03:09,009 INFO  o.s.s.c.ThreadPoolTaskScheduler - Shutting down ExecutorService 'taskScheduler'

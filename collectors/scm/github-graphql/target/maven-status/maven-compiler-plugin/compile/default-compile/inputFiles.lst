@@ -1,0 +1,15 @@
+/home/Devops/Hygieia/collectors/scm/github-graphql/src/main/java/com/capitalone/dashboard/collector/GitHubCollectorTask.java
+/home/Devops/Hygieia/collectors/scm/github-graphql/src/main/java/com/capitalone/dashboard/collector/CommitPullMatcher.java
+/home/Devops/Hygieia/collectors/scm/github-graphql/src/main/java/com/capitalone/dashboard/repository/GitHubRepoRepository.java
+/home/Devops/Hygieia/collectors/scm/github-graphql/src/main/java/com/capitalone/dashboard/model/MergeEvent.java
+/home/Devops/Hygieia/collectors/scm/github-graphql/src/main/java/com/capitalone/dashboard/collector/RestOperationsSupplier.java
+/home/Devops/Hygieia/collectors/scm/github-graphql/src/main/java/com/capitalone/dashboard/model/GitHubRateLimit.java
+/home/Devops/Hygieia/collectors/scm/github-graphql/src/main/java/com/capitalone/dashboard/model/GitHubParsed.java
+/home/Devops/Hygieia/collectors/scm/github-graphql/src/main/java/com/capitalone/dashboard/collector/GitHubClient.java
+/home/Devops/Hygieia/collectors/scm/github-graphql/src/main/java/com/capitalone/dashboard/collector/DefaultGitHubClient.java
+/home/Devops/Hygieia/collectors/scm/github-graphql/src/main/java/com/capitalone/dashboard/collector/GitHubSettings.java
+/home/Devops/Hygieia/collectors/scm/github-graphql/src/main/java/com/capitalone/dashboard/model/GitHubRepo.java
+/home/Devops/Hygieia/collectors/scm/github-graphql/src/main/java/com/capitalone/dashboard/model/GitHubGraphQLQuery.java
+/home/Devops/Hygieia/collectors/scm/github-graphql/src/main/java/com/capitalone/dashboard/Application.java
+/home/Devops/Hygieia/collectors/scm/github-graphql/src/main/java/com/capitalone/dashboard/model/GitHubPaging.java
+/home/Devops/Hygieia/collectors/scm/github-graphql/src/main/java/com/capitalone/dashboard/model/CollectionMode.java

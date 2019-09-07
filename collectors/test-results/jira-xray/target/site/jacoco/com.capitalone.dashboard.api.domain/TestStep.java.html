@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>TestStep.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:jira-xray-testresult-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.api.domain</a> &gt; <span class="el_source">TestStep.java</span></div><h1>TestStep.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.api.domain;
+
+import com.atlassian.jira.rest.client.api.domain.BasicIssue;
+import com.capitalone.dashboard.core.json.util.RendereableItem;
+
+import java.net.URI;
+
+/**
+ * This class will get the details from a Test Step
+ */
+public class TestStep extends BasicIssue implements Versionable&lt;TestStep&gt; {
+
+<span class="nc" id="L13">    private int version = 0;</span>
+<span class="nc" id="L14">    private TestStep oldVersion = null;</span>
+
+    //TODO: To be used in future
+    private Integer index;
+    private RendereableItem step;
+    private RendereableItem data;
+    private RendereableItem result;
+    private Iterable&lt;Evidence&gt; attachments;
+    private Iterable&lt;Evidence&gt; evidences;
+    Iterable&lt;Defect&gt; defects;
+    private Comment comment;
+    private Status status;
+
+
+    public TestStep(URI self, String key, Long id) {
+<span class="nc" id="L29">        super(self, key, id);</span>
+<span class="nc" id="L30">    }</span>
+
+    public TestStep(URI self, String key, Long id, Integer index, RendereableItem step, RendereableItem data, RendereableItem result, Status status) {
+<span class="nc" id="L33">        super(self, key, id);</span>
+<span class="nc" id="L34">        this.index = index;</span>
+<span class="nc" id="L35">        this.step = step;</span>
+<span class="nc" id="L36">        this.data = data;</span>
+<span class="nc" id="L37">        this.result = result;</span>
+<span class="nc" id="L38">        this.status = status;</span>
+<span class="nc" id="L39">    }</span>
+
+
+    public Integer getIndex() {
+<span class="nc" id="L43">        return index;</span>
+    }
+
+    public void setIndex(Integer index) {
+<span class="nc" id="L47">        this.index = index;</span>
+<span class="nc" id="L48">    }</span>
+
+    public RendereableItem getStep() {
+<span class="nc" id="L51">        return step;</span>
+    }
+
+    public void setStep(RendereableItem step) {
+<span class="nc" id="L55">        this.step = step;</span>
+<span class="nc" id="L56">    }</span>
+
+    public RendereableItem getData() {
+<span class="nc" id="L59">        return data;</span>
+    }
+
+    public void setData(RendereableItem data) {
+<span class="nc" id="L63">        this.data = data;</span>
+<span class="nc" id="L64">    }</span>
+
+    public RendereableItem getResult() {
+<span class="nc" id="L67">        return result;</span>
+    }
+
+    public void setResult(RendereableItem result) {
+<span class="nc" id="L71">        this.result = result;</span>
+<span class="nc" id="L72">    }</span>
+
+    public Iterable&lt;Evidence&gt; getAttachments() {
+<span class="nc" id="L75">        return attachments;</span>
+    }
+
+    public void setAttachments(Iterable&lt;Evidence&gt; attachments) {
+<span class="nc" id="L79">        this.setOldVersion(this);</span>
+<span class="nc" id="L80">        this.attachments = attachments;</span>
+<span class="nc" id="L81">    }</span>
+
+    public TestStep getOldVersion() {
+<span class="nc" id="L84">        return oldVersion;</span>
+    }
+
+    public void setOldVersion(TestStep oldVersion) {
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        if (this.oldVersion == null)</span>
+<span class="nc" id="L89">            this.oldVersion = oldVersion;</span>
+<span class="nc" id="L90">        this.version = 1;</span>
+<span class="nc" id="L91">    }</span>
+
+    public int getVersion() {
+<span class="nc" id="L94">        return version;</span>
+    }
+
+    public Comment getComment() {
+<span class="nc" id="L98">        return comment;</span>
+    }
+
+    public void setComment(Comment comment) {
+<span class="nc" id="L102">        this.comment = comment;</span>
+<span class="nc" id="L103">    }</span>
+
+    public Iterable&lt;Evidence&gt; getEvidences() {
+<span class="nc" id="L106">        return evidences;</span>
+    }
+
+    public void setEvidences(Iterable&lt;Evidence&gt; evidences) {
+<span class="nc" id="L110">        this.evidences = evidences;</span>
+<span class="nc" id="L111">    }</span>
+
+    public Iterable&lt;Defect&gt; getDefects() {
+<span class="nc" id="L114">        return defects;</span>
+    }
+
+<span class="nc" id="L117">    public enum Status {TODO, EXECUTING, ABORTED, FAIL, PASS, SKIP}</span>
+
+    public Status getStatus() {
+<span class="nc" id="L120">        return status;</span>
+    }
+
+}
+
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

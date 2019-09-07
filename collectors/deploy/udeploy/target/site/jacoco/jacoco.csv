@@ -1,0 +1,12 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+com.capitalone.dashboard:udeploy-deployment-collector,com.capitalone.dashboard,Application,8,0,0,0,3,0,2,0,2,0
+com.capitalone.dashboard:udeploy-deployment-collector,com.capitalone.dashboard.collector,UDeployCollectorTask.new Predicate() {...},27,0,4,0,5,0,4,0,2,0
+com.capitalone.dashboard:udeploy-deployment-collector,com.capitalone.dashboard.collector,UDeployCollectorTask.new Predicate() {...},34,0,6,0,7,0,5,0,2,0
+com.capitalone.dashboard:udeploy-deployment-collector,com.capitalone.dashboard.collector,RestOperationsSupplier,18,0,0,0,5,0,2,0,2,0
+com.capitalone.dashboard:udeploy-deployment-collector,com.capitalone.dashboard.collector,UDeploySettings,33,12,0,0,15,4,9,4,9,4
+com.capitalone.dashboard:udeploy-deployment-collector,com.capitalone.dashboard.collector,UDeployCollectorTask,653,0,64,0,152,0,51,0,19,0
+com.capitalone.dashboard:udeploy-deployment-collector,com.capitalone.dashboard.collector,DefaultUDeployClient,207,728,25,49,43,149,25,30,1,17
+com.capitalone.dashboard:udeploy-deployment-collector,com.capitalone.dashboard.model,UDeployApplication,47,42,10,0,7,10,7,7,2,7
+com.capitalone.dashboard:udeploy-deployment-collector,com.capitalone.dashboard.model,Environment,8,15,0,0,4,6,2,3,2,3
+com.capitalone.dashboard:udeploy-deployment-collector,com.capitalone.dashboard.model,UDeployCollector,89,0,2,0,23,0,5,0,4,0
+com.capitalone.dashboard:udeploy-deployment-collector,com.capitalone.dashboard.model,UDeployEnvResCompData,30,50,0,0,12,22,9,14,9,14

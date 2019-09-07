@@ -1,0 +1,3 @@
+com/capitalone/dashboard/model/GitHubRepoTests.class
+com/capitalone/dashboard/collector/GitHubCollectorTaskTest.class
+com/capitalone/dashboard/collector/DefaultGitHubClientTest.class

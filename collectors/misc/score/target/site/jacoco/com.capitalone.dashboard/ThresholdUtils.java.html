@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ThresholdUtils.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:score-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard</a> &gt; <span class="el_source">ThresholdUtils.java</span></div><h1>ThresholdUtils.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard;
+
+import java.util.*;
+
+import com.capitalone.dashboard.model.ScoreWeight;
+import org.apache.commons.collections.CollectionUtils;
+
+import com.capitalone.dashboard.model.score.settings.ScoreThresholdSettings;
+import com.capitalone.dashboard.model.score.settings.ScoreTypeValue;
+import com.capitalone.dashboard.exception.ThresholdException;
+import org.apache.commons.lang3.tuple.Pair;
+import org.joda.time.LocalDate;
+
+<span class="nc" id="L14">public class ThresholdUtils {</span>
+
+  public static void sortByValueType(List&lt;ScoreThresholdSettings&gt; scoreThresholdSettings) {
+<span class="pc bpc" id="L17" title="1 of 2 branches missed.">    if (CollectionUtils.isEmpty(scoreThresholdSettings)) {</span>
+<span class="nc" id="L18">      return;</span>
+    }
+
+<span class="fc" id="L21">    Collections.sort(scoreThresholdSettings, VALUE_TYPE_COMPATATOR);</span>
+<span class="fc" id="L22">  }</span>
+
+<span class="fc" id="L24">  private static final Comparator&lt;ScoreThresholdSettings&gt; VALUE_TYPE_COMPATATOR = new Comparator&lt;ScoreThresholdSettings&gt;() {</span>
+
+    @Override
+    public int compare(ScoreThresholdSettings o1, ScoreThresholdSettings o2) {
+<span class="nc" id="L28">      int typeCompare = o1.getType().compareTo(o2.getType());</span>
+<span class="nc bnc" id="L29" title="All 2 branches missed.">      if (0 != typeCompare) {</span>
+<span class="nc" id="L30">        return typeCompare;</span>
+      }
+
+<span class="nc bnc" id="L33" title="All 2 branches missed.">      if (isComparatorForGreater(o1.getComparator()) &amp;&amp;</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">        isComparatorForGreater(o2.getComparator())) {</span>
+<span class="nc" id="L35">        return o2.getValue().compareTo(o1.getValue());</span>
+      }
+<span class="nc" id="L37">      return o1.getValue().compareTo(o2.getValue());</span>
+    }
+
+    private boolean isComparatorForGreater(ScoreThresholdSettings.ComparatorType comparatorType) {
+<span class="nc bnc" id="L41" title="All 4 branches missed.">      return (comparatorType == ScoreThresholdSettings.ComparatorType.greater</span>
+      || comparatorType == ScoreThresholdSettings.ComparatorType.greater_or_equal);
+
+    }
+  };
+
+
+  public static List&lt;ScoreThresholdSettings&gt; findAllThresholdsByType(List&lt;ScoreThresholdSettings&gt; scoreThresholdSettings, ScoreThresholdSettings.ValueType valueType) {
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">    if (CollectionUtils.isEmpty(scoreThresholdSettings)) {</span>
+<span class="nc" id="L50">      return null;</span>
+    }
+
+<span class="fc" id="L53">    List&lt;ScoreThresholdSettings&gt; filteredByType = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">    for (ScoreThresholdSettings scoreThresholdSetting : scoreThresholdSettings) {</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">      if (scoreThresholdSetting.getType() == valueType) {</span>
+<span class="fc" id="L56">        filteredByType.add(scoreThresholdSetting);</span>
+      }
+<span class="fc" id="L58">    }</span>
+<span class="fc" id="L59">    return filteredByType;</span>
+  }
+
+
+  public static List&lt;ScoreThresholdSettings&gt; findAllPercentThresholds(List&lt;ScoreThresholdSettings&gt; scoreThresholdSettings) {
+<span class="fc" id="L64">    return findAllThresholdsByType(scoreThresholdSettings, ScoreThresholdSettings.ValueType.percent);</span>
+  }
+
+  public static List&lt;ScoreThresholdSettings&gt; findAllDaysThresholds(List&lt;ScoreThresholdSettings&gt; scoreThresholdSettings) {
+<span class="fc" id="L68">    return findAllThresholdsByType(scoreThresholdSettings, ScoreThresholdSettings.ValueType.days);</span>
+  }
+
+  public static void checkPercentThresholds(List&lt;ScoreThresholdSettings&gt; percentThresholds, Double coveragePercent)
+    throws ThresholdException {
+<span class="fc bfc" id="L73" title="All 2 branches covered.">    for (ScoreThresholdSettings percentThreshold : percentThresholds) {</span>
+<span class="fc" id="L74">      ScoreTypeValue scoreTypeValue = getScoreForThreshold(percentThreshold, coveragePercent.compareTo(percentThreshold.getValue()));</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">      if (null != scoreTypeValue) {</span>
+<span class="fc" id="L76">        throw new ThresholdException(</span>
+<span class="fc" id="L77">          getThresholdFailureMessage(percentThreshold),</span>
+          scoreTypeValue
+        );
+      }
+<span class="fc" id="L81">    }</span>
+<span class="fc" id="L82">  }</span>
+
+  public static void checkPercentThresholds(
+    List&lt;ScoreThresholdSettings&gt; percentThresholds,
+    List&lt;Long&gt; timestamps,
+    int days)
+    throws ThresholdException {
+<span class="fc bfc" id="L89" title="All 2 branches covered.">    for (ScoreThresholdSettings percentThreshold : percentThresholds) {</span>
+<span class="fc" id="L90">      Integer numDaysToCheck = percentThreshold.getNumDaysToCheck();</span>
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">      int checkLastDays = (null != numDaysToCheck) ? numDaysToCheck : days;</span>
+<span class="fc" id="L92">      Double coveragePercent = getPercentCoverage(timestamps, checkLastDays, days);</span>
+<span class="fc" id="L93">      ScoreTypeValue scoreTypeValue = getScoreForThreshold(percentThreshold, coveragePercent.compareTo(percentThreshold.getValue()));</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">      if (null != scoreTypeValue) {</span>
+<span class="fc" id="L95">        throw new ThresholdException(</span>
+<span class="fc" id="L96">          getThresholdFailureMessage(percentThreshold, checkLastDays),</span>
+          scoreTypeValue
+        );
+      }
+<span class="fc" id="L100">    }</span>
+<span class="fc" id="L101">  }</span>
+
+
+  public static void checkDaysThresholds(
+    List&lt;ScoreThresholdSettings&gt; daysThresholds,
+    List&lt;Long&gt; timestamps,
+    int days)
+    throws ThresholdException {
+<span class="nc bnc" id="L109" title="All 2 branches missed.">    for (ScoreThresholdSettings daysThreshold : daysThresholds) {</span>
+<span class="nc" id="L110">      Integer numDaysToCheck = daysThreshold.getNumDaysToCheck();</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">      int checkLastDays = (null != numDaysToCheck) ? numDaysToCheck : days;</span>
+<span class="nc" id="L112">      Double coverageDays = Double.valueOf(getDaysCoverage(timestamps, checkLastDays, days));</span>
+<span class="nc" id="L113">      ScoreTypeValue scoreTypeValue = ThresholdUtils.getScoreForThreshold(daysThreshold, coverageDays.compareTo(daysThreshold.getValue()));</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">      if (null != scoreTypeValue) {</span>
+<span class="nc" id="L115">        throw new ThresholdException(</span>
+<span class="nc" id="L116">          ThresholdUtils.getThresholdFailureMessage(daysThreshold, checkLastDays),</span>
+          scoreTypeValue
+        );
+      }
+<span class="nc" id="L120">    }</span>
+<span class="nc" id="L121">  }</span>
+
+  private static Double getPercentCoverage(List&lt;Long&gt; timestamps, int checkLastDays, int days) {
+    List&lt;Long&gt; filteredTimestamps;
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">    if (checkLastDays == days) {</span>
+<span class="fc" id="L126">      filteredTimestamps = timestamps;</span>
+    } else {
+<span class="nc" id="L128">      filteredTimestamps = filterTimestampsForDays(timestamps, checkLastDays);</span>
+    }
+<span class="fc" id="L130">    Set&lt;String&gt; dates = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">    for (Long timestamp : filteredTimestamps) {</span>
+<span class="fc" id="L132">      dates.add(Constants.DAY_FORMAT.format(new Date(timestamp)));</span>
+<span class="fc" id="L133">    }</span>
+<span class="fc" id="L134">    return (dates.size() * 100) / ((double) checkLastDays);</span>
+  }
+
+
+  private static int getDaysCoverage(List&lt;Long&gt; timestamps, int checkLastDays, int days) {
+    List&lt;Long&gt; filteredTimestamps;
+<span class="nc bnc" id="L140" title="All 2 branches missed.">    if (checkLastDays == days) {</span>
+<span class="nc" id="L141">      filteredTimestamps = timestamps;</span>
+    } else {
+<span class="nc" id="L143">      filteredTimestamps = filterTimestampsForDays(timestamps, checkLastDays);</span>
+    }
+<span class="nc" id="L145">    Set&lt;String&gt; dates = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">    for (Long timestamp : filteredTimestamps) {</span>
+<span class="nc" id="L147">      dates.add(Constants.DAY_FORMAT.format(new Date(timestamp)));</span>
+<span class="nc" id="L148">    }</span>
+<span class="nc" id="L149">    return dates.size();</span>
+  }
+
+  private static List&lt;Long&gt; filterTimestampsForDays(List&lt;Long&gt; timestamps, int checkLastDays) {
+<span class="nc" id="L153">    long startTimeTarget = new LocalDate().minusDays(checkLastDays).toDate().getTime();</span>
+<span class="nc" id="L154">    List&lt;Long&gt; filteredTimestamps = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">    for (Long timestamp : timestamps) {</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">      if (timestamp &gt;= startTimeTarget) {</span>
+<span class="nc" id="L157">        filteredTimestamps.add(timestamp);</span>
+      }
+<span class="nc" id="L159">    }</span>
+<span class="nc" id="L160">    return filteredTimestamps;</span>
+  }
+
+  public static Pair&lt;String, String&gt; getThresholdFailureMessage(ScoreThresholdSettings scoreThresholdSettings) {
+<span class="fc" id="L164">    return getThresholdFailureMessage(scoreThresholdSettings, null);</span>
+  }
+
+
+  public static Pair&lt;String, String&gt; getThresholdFailureMessage(ScoreThresholdSettings scoreThresholdSettings, Integer days) {
+<span class="fc" id="L169">    String prefixPass = &quot;&quot;,</span>
+<span class="fc" id="L170">      prefixFail = &quot;&quot;,</span>
+<span class="fc" id="L171">      suffix = &quot;&quot;,</span>
+<span class="fc" id="L172">      typeMessage = &quot;&quot;,</span>
+<span class="fc" id="L173">      value = Utils.roundAlloc(scoreThresholdSettings.getValue());</span>
+
+<span class="fc" id="L175">    boolean daysPresent = false;</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">    boolean isValueMax = (scoreThresholdSettings.getValue().compareTo(Double.valueOf(Constants.MAX_SCORE)) == 0);</span>
+<span class="pc bpc" id="L177" title="1 of 4 branches missed.">    if (null == days || days == 0) {</span>
+<span class="fc" id="L178">      prefixPass = prefixFail = &quot;Value is &quot;;</span>
+    } else {
+<span class="fc" id="L180">      daysPresent = true;</span>
+<span class="fc" id="L181">      prefixPass = &quot;Data is present for &quot;;</span>
+<span class="fc" id="L182">      prefixFail = &quot;Data should be present for &quot;;</span>
+<span class="fc" id="L183">      suffix = &quot; days of last &quot; + days + &quot; days&quot;;</span>
+    }
+
+<span class="fc" id="L186">    Pair&lt;String, String&gt; comparatorMessage = getComparatorMessage(</span>
+<span class="fc" id="L187">      scoreThresholdSettings.getComparator(),</span>
+      daysPresent,
+      isValueMax
+    );
+
+<span class="pc bpc" id="L192" title="1 of 2 branches missed.">    if (scoreThresholdSettings.getType() == ScoreThresholdSettings.ValueType.percent) {</span>
+<span class="fc" id="L193">      typeMessage = &quot;%&quot;;</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">    } else if (scoreThresholdSettings.getType() == ScoreThresholdSettings.ValueType.days) {</span>
+<span class="nc" id="L195">      typeMessage = &quot; days&quot;;</span>
+    }
+
+<span class="fc" id="L198">    String passMessage = prefixPass + comparatorMessage.getLeft() +</span>
+      value + typeMessage + suffix;
+<span class="fc" id="L200">    String failMessage = prefixFail + comparatorMessage.getRight() +</span>
+        value + typeMessage + suffix;
+
+<span class="fc" id="L203">    return Pair.of(passMessage, failMessage);</span>
+  }
+
+  private static Pair&lt;String, String&gt; getComparatorMessage(
+    ScoreThresholdSettings.ComparatorType comparatorType,
+    boolean daysPresent,
+    boolean isValueMax
+  ) {
+<span class="fc bfc" id="L211" title="All 2 branches covered.">    String greaterOrMore = daysPresent ? &quot;more&quot; : &quot;greater&quot;,</span>
+<span class="fc" id="L212">      less = &quot;less than &quot;,</span>
+<span class="fc" id="L213">      greater = greaterOrMore + &quot; than &quot;,</span>
+<span class="fc" id="L214">      lessOrEqual = &quot;less than or equal to &quot;,</span>
+<span class="fc" id="L215">      greaterOrEqual = greaterOrMore + &quot; than or equal to &quot;,</span>
+<span class="fc" id="L216">      comparatorMessagePass = &quot;&quot;,</span>
+<span class="fc" id="L217">      comparatorMessageFail = &quot;&quot;;</span>
+
+
+<span class="pc bpc" id="L220" title="5 of 6 branches missed.">    switch (comparatorType) {</span>
+      case equals:
+<span class="nc" id="L222">        break;</span>
+      case less:
+<span class="fc" id="L224">        comparatorMessagePass = less;</span>
+<span class="fc bfc" id="L225" title="All 2 branches covered.">        if (!daysPresent) {</span>
+<span class="fc" id="L226">          comparatorMessageFail = comparatorMessagePass;</span>
+<span class="pc bpc" id="L227" title="1 of 2 branches missed.">        } else if (!isValueMax) {</span>
+<span class="fc" id="L228">          comparatorMessageFail = greaterOrEqual;</span>
+        }
+        break;
+      case greater:
+<span class="nc" id="L232">        comparatorMessagePass = greater;</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">        if (!daysPresent) {</span>
+<span class="nc" id="L234">          comparatorMessageFail = comparatorMessagePass;</span>
+        } else {
+<span class="nc" id="L236">          comparatorMessageFail = lessOrEqual;</span>
+        }
+<span class="nc" id="L238">        break;</span>
+      case less_or_equal:
+<span class="nc" id="L240">        comparatorMessagePass = lessOrEqual;</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">        if (!daysPresent) {</span>
+<span class="nc" id="L242">          comparatorMessageFail = comparatorMessagePass;</span>
+        } else {
+<span class="nc" id="L244">          comparatorMessageFail = greater;</span>
+        }
+<span class="nc" id="L246">        break;</span>
+      case greater_or_equal:
+<span class="nc bnc" id="L248" title="All 2 branches missed.">        if (!isValueMax) {</span>
+<span class="nc" id="L249">          comparatorMessagePass = greaterOrEqual;</span>
+        }
+<span class="nc bnc" id="L251" title="All 2 branches missed.">        if (!daysPresent) {</span>
+<span class="nc" id="L252">          comparatorMessageFail = comparatorMessagePass;</span>
+        } else {
+<span class="nc" id="L254">          comparatorMessageFail = less;</span>
+        }
+<span class="nc" id="L256">        break;</span>
+      default:
+        break;
+    }
+
+<span class="fc" id="L261">    return Pair.of(comparatorMessagePass, comparatorMessageFail);</span>
+  }
+
+  public static ScoreTypeValue getScoreForThreshold(ScoreThresholdSettings percentThreshold, int compareResult) {
+<span class="pc bpc" id="L265" title="5 of 6 branches missed.">    switch (percentThreshold.getComparator()) {</span>
+      case equals:
+<span class="nc bnc" id="L267" title="All 2 branches missed.">        if (compareResult == 0) {</span>
+<span class="nc" id="L268">          return percentThreshold.getScore();</span>
+        }
+<span class="nc" id="L270">        return null;</span>
+      case less:
+<span class="fc bfc" id="L272" title="All 2 branches covered.">        if (compareResult == -1) {</span>
+<span class="fc" id="L273">          return percentThreshold.getScore();</span>
+        }
+<span class="fc" id="L275">        return null;</span>
+      case greater:
+<span class="nc bnc" id="L277" title="All 2 branches missed.">        if (compareResult == 1) {</span>
+<span class="nc" id="L278">          return percentThreshold.getScore();</span>
+        }
+<span class="nc" id="L280">        return null;</span>
+      case less_or_equal:
+<span class="nc bnc" id="L282" title="All 4 branches missed.">        if (compareResult == 0 || compareResult == -1) {</span>
+<span class="nc" id="L283">          return percentThreshold.getScore();</span>
+        }
+<span class="nc" id="L285">        return null;</span>
+      case greater_or_equal:
+<span class="nc bnc" id="L287" title="All 4 branches missed.">        if (compareResult == 0 || compareResult == 1) {</span>
+<span class="nc" id="L288">          return percentThreshold.getScore();</span>
+        }
+<span class="nc" id="L290">        return null;</span>
+      default:
+<span class="nc" id="L292">        return null;</span>
+    }
+
+  }
+
+  public static ScoreWeight.ProcessingState getCriteriaStateFromScore(ScoreTypeValue scoreTypeValue) {
+<span class="pc bpc" id="L298" title="1 of 2 branches missed.">    if (scoreTypeValue.getScoreValue().compareTo(Constants.ZERO_SCORE) &gt; 0) {</span>
+<span class="nc" id="L299">      return ScoreWeight.ProcessingState.criteria_passed;</span>
+    }
+<span class="fc" id="L301">    return ScoreWeight.ProcessingState.criteria_failed;</span>
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

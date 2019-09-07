@@ -1,0 +1,5 @@
+/home/Devops/Hygieia/collectors/misc/score/src/test/java/com/capitalone/dashboard/widget/BuildWidgetScoreTest.java
+/home/Devops/Hygieia/collectors/misc/score/src/test/java/com/capitalone/dashboard/widget/QualityWidgetScoreTest.java
+/home/Devops/Hygieia/collectors/misc/score/src/test/java/com/capitalone/dashboard/widget/DeployWidgetScoreTest.java
+/home/Devops/Hygieia/collectors/misc/score/src/test/java/com/capitalone/dashboard/ApplicationScoreServiceTest.java
+/home/Devops/Hygieia/collectors/misc/score/src/test/java/com/capitalone/dashboard/widget/GithubScmWidgetScoreTest.java

@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DefaultAppdynamicsClient.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:appdynamics-performance-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">DefaultAppdynamicsClient.java</span></div><h1>DefaultAppdynamicsClient.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+import com.capitalone.dashboard.model.AppdynamicsApplication;
+import com.capitalone.dashboard.model.PerformanceMetric;
+import com.capitalone.dashboard.util.Supplier;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestOperations;
+
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
+@Component
+public class DefaultAppdynamicsClient implements AppdynamicsClient {
+<span class="fc" id="L37">    private static final Log LOG = LogFactory.getLog(DefaultAppdynamicsClient.class);</span>
+    private static final String APPLICATION_LIST_PATH = &quot;/controller/rest/applications?output=json&quot;;
+    private static final String OVERALL_SUFFIX = &quot;Overall Application Performance|*&quot;;
+    private static final String OVERALL_METRIC_PATH = &quot;/controller/rest/applications/%s/metric-data?metric-path=%s&amp;time-range-type=BEFORE_NOW&amp;duration-in-mins=15&amp;output=json&quot;;
+    private static final String HEALTH_VIOLATIONS_PATH = &quot;/controller/rest/applications/%s/problems/healthrule-violations?time-range-type=BEFORE_NOW&amp;duration-in-mins=15&amp;output=json&quot;;
+    private static final String NODE_LIST_PATH = &quot;/controller/rest/applications/%s/nodes?output=json&quot;;
+    private static final String BUSINESS_TRANSACTION_LIST_PATH = &quot;/controller/rest/applications/%s/business-transactions?output=json&quot;;
+    private static final String METRIC_PATH_DELIMITER = &quot;\\|&quot;;
+    private final AppdynamicsSettings settings;
+    private final RestOperations rest;
+    //overall metrics
+    private static final String ERRORS_PER_MINUTE = &quot;errorsperMinute&quot;;
+    private static final String AVERAGE_RESPONSE_TIME = &quot;averageResponseTime&quot;;
+    private static final String CALLS_PER_MINUTE = &quot;callsperMinute&quot;;
+    private static final String RESPONSE_TIME_SEVERITY = &quot;responseTimeSeverity&quot;;
+    private static final String BUSINESS_TRANSACTION_HEALTH = &quot;businessTransactionHealthPercent&quot;;
+    private static final String NODE_HEALTH_PECENT = &quot;nodeHealthPercent&quot;;
+    private static final String TOTAL_CALLS = &quot;totalCalls&quot;;
+    private static final String TOTAL_ERRORS = &quot;totalErrors&quot;;
+    private static final String VIOLATION_OBJECT = &quot;violationObject&quot;;
+    private static final String ERROR_RATE_SEVERITY = &quot;errorRateSeverity&quot;;
+    private static final String BUSINESS_TRANSACTION = &quot;BUSINESS_TRANSACTION&quot;;
+
+    @Autowired
+<span class="fc" id="L61">    public DefaultAppdynamicsClient(AppdynamicsSettings settings, Supplier&lt;RestOperations&gt; restOperationsSupplier) {</span>
+<span class="fc" id="L62">        this.settings = settings;</span>
+<span class="fc" id="L63">        this.rest = restOperationsSupplier.get();</span>
+<span class="fc" id="L64">    }</span>
+
+    // join a base url to another path or paths - this will handle trailing or non-trailing /'s
+    public static String joinURL(String base, String... paths) throws MalformedURLException {
+<span class="fc" id="L68">        StringBuilder result = new StringBuilder(base);</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        for (String path : paths) {</span>
+<span class="fc" id="L70">            String p = path.replaceFirst(&quot;^(\\/)+&quot;, &quot;&quot;);</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">            if (result.lastIndexOf(&quot;/&quot;) != result.length() - 1) {</span>
+<span class="fc" id="L72">                result.append('/');</span>
+            }
+<span class="fc" id="L74">            result.append(p);</span>
+        }
+<span class="fc" id="L76">        return result.toString();</span>
+    }
+
+    /**
+     * Retrieves a JSON array of all of the applications that are registered in AppDynamics.
+     *
+     * @return Set of applications used to populate the collector_items database. This data is
+     * later used by the front end to populate the dropdown list of applications.
+     */
+    @Override
+    public Set&lt;AppdynamicsApplication&gt; getApplications(String instanceUrl) {
+<span class="fc" id="L87">        Set&lt;AppdynamicsApplication&gt; returnSet = new HashSet&lt;&gt;();</span>
+        try {
+<span class="fc" id="L89">            String url = joinURL(instanceUrl, APPLICATION_LIST_PATH);</span>
+<span class="fc" id="L90">            ResponseEntity&lt;String&gt; responseEntity = makeRestCall(url);</span>
+<span class="fc" id="L91">            String returnJSON = responseEntity.getBody();</span>
+<span class="fc" id="L92">            JSONParser parser = new JSONParser();</span>
+
+            try {
+<span class="fc" id="L95">                JSONArray array = (JSONArray) parser.parse(returnJSON);</span>
+
+<span class="fc bfc" id="L97" title="All 2 branches covered.">                for (Object entry : array) {</span>
+<span class="fc" id="L98">                    JSONObject jsonEntry = (JSONObject) entry;</span>
+
+<span class="fc" id="L100">                    String appName = getString(jsonEntry, &quot;name&quot;);</span>
+<span class="fc" id="L101">                    String appId = String.valueOf(getLong(jsonEntry, &quot;id&quot;));</span>
+<span class="fc" id="L102">                    String desc = getString(jsonEntry, &quot;description&quot;);</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">                    if (StringUtils.isEmpty(desc)) {</span>
+<span class="fc" id="L104">                        desc = appName;</span>
+                    }
+<span class="fc" id="L106">                    AppdynamicsApplication app = new AppdynamicsApplication();</span>
+<span class="fc" id="L107">                    app.setAppID(appId);</span>
+<span class="fc" id="L108">                    app.setAppName(appName);</span>
+<span class="fc" id="L109">                    app.setAppDesc(desc);</span>
+<span class="fc" id="L110">                    app.setDescription(desc);</span>
+<span class="fc" id="L111">                    returnSet.add(app);</span>
+<span class="fc" id="L112">                }</span>
+<span class="nc" id="L113">            } catch (ParseException e) {</span>
+<span class="nc" id="L114">                LOG.error(&quot;Parsing applications on instance: &quot; + instanceUrl, e);</span>
+<span class="fc" id="L115">            }</span>
+<span class="nc" id="L116">        } catch (RestClientException rce) {</span>
+<span class="nc" id="L117">            LOG.error(&quot;client exception loading applications&quot;, rce);</span>
+<span class="nc" id="L118">            throw rce;</span>
+<span class="nc" id="L119">        } catch (MalformedURLException mfe) {</span>
+<span class="nc" id="L120">            LOG.error(&quot;malformed url for loading applications&quot;, mfe);</span>
+<span class="fc" id="L121">        }</span>
+<span class="fc" id="L122">        return returnSet;</span>
+    }
+
+    /**
+     * Obtains the relevant data via different appdynamics api calls.
+     *
+     * @param application the current application. Used to provide access to appID/name
+     * @return List of PerformanceMetrics used to populate the performance database
+     */
+    @Override
+    public Map&lt;String,Object&gt; getPerformanceMetrics(AppdynamicsApplication application, String instanceUrl ) {
+<span class="fc" id="L133">        Map&lt;String,Object&gt; metrics = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L135">        metrics.putAll(getOverallMetrics(application, instanceUrl));</span>
+<span class="fc" id="L136">        metrics.putAll(getCalculatedMetrics(metrics));</span>
+<span class="fc" id="L137">        metrics.putAll(getHealthMetrics(application, instanceUrl));</span>
+<span class="fc" id="L138">        metrics.putAll(getViolations(application, instanceUrl));</span>
+<span class="fc" id="L139">        metrics.putAll(getSeverityMetrics(application, instanceUrl));</span>
+<span class="fc" id="L140">        return metrics;</span>
+    }
+
+    /**
+     * Obtains the &quot;Overall Application Performance&quot; metrics for the current application from Appdynamics
+     * e.g. /controller/#/location=METRIC_BROWSER&amp;timeRange=last_15_minutes.BEFORE_NOW.-1.-1.15&amp;application=&lt;APPID&gt;
+     * Currently used by the UI: calls per minute, errors per minute, average response time
+     * @param application the current application. Used to provide access to appID/name
+     * @return List of PerformanceMetrics used to populate the performance database
+     */
+    private Map&lt;String,Long&gt; getOverallMetrics(AppdynamicsApplication application, String instanceUrl) {
+<span class="fc" id="L151">        Map&lt;String,Long&gt; overallMetrics = new HashMap&lt;&gt;();</span>
+        try {
+<span class="fc" id="L153">            String url = joinURL(instanceUrl, String.format(OVERALL_METRIC_PATH, application.getAppID(), URLEncoder.encode(OVERALL_SUFFIX, &quot;UTF-8&quot;), String.valueOf(settings.getTimeWindow())));</span>
+<span class="fc" id="L154">            ResponseEntity&lt;String&gt; responseEntity = makeRestCall(url);</span>
+<span class="fc" id="L155">            String returnJSON = responseEntity.getBody();</span>
+<span class="fc" id="L156">            JSONParser parser = new JSONParser();</span>
+
+            try {
+<span class="fc" id="L159">                JSONArray array = (JSONArray) parser.parse(returnJSON);</span>
+
+<span class="fc bfc" id="L161" title="All 2 branches covered.">                for (Object entry : array) {</span>
+<span class="fc" id="L162">                    JSONObject jsonEntry = (JSONObject) entry;</span>
+<span class="fc" id="L163">                    String metricPath = getString(jsonEntry, &quot;metricPath&quot;);</span>
+<span class="fc" id="L164">                    JSONArray metricValues =  getJsonArray(jsonEntry, &quot;metricValues&quot;);</span>
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">                    if (metricValues.isEmpty()){</span>
+<span class="nc" id="L166">                        continue;</span>
+                    }
+<span class="fc" id="L168">                    JSONObject mObj = (JSONObject) metricValues.get(0);</span>
+<span class="fc" id="L169">                    Long metricValue = getLong(mObj, &quot;value&quot;);</span>
+
+<span class="fc" id="L171">                    PerformanceMetric metric = new PerformanceMetric();</span>
+<span class="fc" id="L172">                    String metricName = parseMetricName(metricPath);</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">                    if(in(metricName,CALLS_PER_MINUTE,ERRORS_PER_MINUTE,AVERAGE_RESPONSE_TIME)){</span>
+<span class="fc" id="L174">                        metric.setName(parseMetricName(metricPath));</span>
+<span class="fc" id="L175">                        metric.setValue(metricValue);</span>
+<span class="fc" id="L176">                        overallMetrics.put(parseMetricName(metricPath),metricValue);</span>
+                    }
+<span class="fc" id="L178">                }</span>
+<span class="nc" id="L179">            } catch (ParseException | RestClientException e) {</span>
+<span class="nc" id="L180">                LOG.error(&quot;Parsing metrics for : &quot; + instanceUrl + &quot;. Application =&quot; + application.getAppName(), e);</span>
+<span class="fc" id="L181">            }</span>
+<span class="nc" id="L182">        } catch (MalformedURLException | UnsupportedEncodingException mfe) {</span>
+<span class="nc" id="L183">            LOG.error(&quot;malformed url for loading jobs&quot;, mfe);</span>
+<span class="fc" id="L184">        }</span>
+<span class="fc" id="L185">        return overallMetrics;</span>
+    }
+
+    /**
+     * Some metrics are not immediately available (e.g. Total Calls, Total Errors). We need to calculate them.
+     *
+     * @param metrics the already-populated list of metrics. We use this data to calculate new values.
+     * @return List of PerformanceMetrics used to populate the performance database
+     */
+    private Map&lt;String,Long&gt; getCalculatedMetrics(Map&lt;String,Object&gt; metrics) {
+
+<span class="fc" id="L196">        long errorsPerMinVal = 0;</span>
+<span class="fc" id="L197">        long callsPerMinVal = 0;</span>
+<span class="fc" id="L198">        Map&lt;String,Long&gt; calculatedMetrics = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L199">        Iterator it = metrics.keySet().iterator();</span>
+<span class="fc bfc" id="L200" title="All 2 branches covered.">        while(it.hasNext()){</span>
+<span class="fc" id="L201">            String key = (String)it.next();</span>
+<span class="fc bfc" id="L202" title="All 2 branches covered.">            if(key.equals(ERRORS_PER_MINUTE)){</span>
+<span class="fc" id="L203">                errorsPerMinVal = (long) metrics.get(key);</span>
+            }
+
+<span class="fc bfc" id="L206" title="All 2 branches covered.">            if(key.equals(CALLS_PER_MINUTE)){</span>
+<span class="fc" id="L207">                callsPerMinVal = (long) metrics.get(key);</span>
+            }
+
+<span class="fc" id="L210">        }</span>
+        // Total Errors
+        // Right now the timeframe is hard-coded to 15 min. Change this if that changes.
+<span class="fc" id="L213">        calculatedMetrics.put(TOTAL_ERRORS,errorsPerMinVal * 15);</span>
+
+        // Total Calls
+        // Right now the timeframe is hard-coded to 15 min. Change this if that changes.
+<span class="fc" id="L217">        calculatedMetrics.put(TOTAL_CALLS,callsPerMinVal * 15);</span>
+
+<span class="fc" id="L219">        return calculatedMetrics;</span>
+    }
+
+    /**
+     * Calculates the Node Health Percent and Business Health Percent values
+     * @param application the current application. Used to provide access to appID/name
+     * @return List of two PerformanceMetrics that contain info about the health percents
+     */
+    private Map&lt;String,Object&gt; getHealthMetrics(AppdynamicsApplication application, String instanceUrl ) {
+        // business health percent
+<span class="fc" id="L229">        long numNodeViolations = 0;</span>
+<span class="fc" id="L230">        long numBusinessViolations = 0;</span>
+<span class="fc" id="L231">        long numNodes = 0;</span>
+<span class="fc" id="L232">        long numBusinessTransactions = 0;</span>
+<span class="fc" id="L233">        double nodeHealthPercent = 0.0;</span>
+<span class="fc" id="L234">        double businessHealthPercent = 0.0;</span>
+
+<span class="fc" id="L236">        Map&lt;String,Object&gt; healthMetrics = new HashMap&lt;&gt;();</span>
+
+        try {
+            // GET NUMBER OF VIOLATIONS OF EACH TYPE
+<span class="fc" id="L240">            String url = joinURL(instanceUrl, String.format(HEALTH_VIOLATIONS_PATH, application.getAppID()));</span>
+<span class="fc" id="L241">            ResponseEntity&lt;String&gt; responseEntity = makeRestCall(url);</span>
+<span class="fc" id="L242">            String returnJSON = responseEntity.getBody();</span>
+<span class="fc" id="L243">            JSONParser parser = new JSONParser();</span>
+
+<span class="fc" id="L245">            JSONArray array = (JSONArray) parser.parse(returnJSON);</span>
+
+<span class="pc bpc" id="L247" title="1 of 2 branches missed.">            for (Object entry : array) {</span>
+
+<span class="nc" id="L249">                JSONObject jsonEntry = (JSONObject) entry;</span>
+
+<span class="nc bnc" id="L251" title="All 2 branches missed.">                if (getString(jsonEntry, &quot;incidentStatus&quot;).equals(&quot;RESOLVED&quot;))</span>
+<span class="nc" id="L252">                    continue;</span>
+
+<span class="nc" id="L254">                JSONObject affEntityObj = (JSONObject) jsonEntry.get(&quot;affectedEntityDefinition&quot;);</span>
+
+<span class="nc" id="L256">                String entityType = getString(affEntityObj, &quot;entityType&quot;);</span>
+
+<span class="nc bnc" id="L258" title="All 2 branches missed.">                if (entityType.equals(&quot;APPLICATION_COMPONENT_NODE&quot;)) {</span>
+<span class="nc" id="L259">                    numNodeViolations++;</span>
+
+<span class="nc bnc" id="L261" title="All 2 branches missed.">                } else if (entityType.equals(BUSINESS_TRANSACTION)) {</span>
+<span class="nc" id="L262">                    numBusinessViolations++;</span>
+
+                }
+<span class="nc" id="L265">            }</span>
+
+
+            // GET NUMBER OF NODES
+<span class="fc" id="L269">            url = joinURL(instanceUrl, String.format(NODE_LIST_PATH, application.getAppID()));</span>
+<span class="fc" id="L270">            responseEntity = makeRestCall(url);</span>
+<span class="fc" id="L271">            returnJSON = responseEntity.getBody();</span>
+<span class="fc" id="L272">            parser = new JSONParser();</span>
+<span class="fc" id="L273">            array = (JSONArray) parser.parse(returnJSON);</span>
+
+<span class="fc" id="L275">            numNodes = array.size();</span>
+
+            // GET NUMBER OF BUSINESS TRANSACTIONS
+<span class="fc" id="L278">            url = joinURL(instanceUrl, String.format(BUSINESS_TRANSACTION_LIST_PATH, application.getAppID()));</span>
+<span class="fc" id="L279">            responseEntity = makeRestCall(url);</span>
+<span class="fc" id="L280">            returnJSON = responseEntity.getBody();</span>
+<span class="fc" id="L281">            parser = new JSONParser();</span>
+<span class="fc" id="L282">            array = (JSONArray) parser.parse(returnJSON);</span>
+
+<span class="fc" id="L284">            numBusinessTransactions = array.size();</span>
+
+<span class="nc" id="L286">        } catch (MalformedURLException e) {</span>
+<span class="nc" id="L287">            LOG.error(&quot;client exception loading applications&quot;, e);</span>
+<span class="nc" id="L288">        } catch (ParseException e) {</span>
+<span class="nc" id="L289">            LOG.error(&quot;client exception loading applications&quot;, e);</span>
+<span class="pc" id="L290">        }</span>
+
+        // Node health percent is just 1 - (num node violations / num nodes)
+<span class="pc bpc" id="L293" title="1 of 2 branches missed.">        if (numNodes != 0)</span>
+<span class="fc" id="L294">            nodeHealthPercent = Math.floor(100.0 * (1.0 - ((double) (numNodeViolations) / (double) (numNodes)))) / 100.0;</span>
+
+        // Right now the timeframe is hard-coded to 15 min. Change this if that changes.
+<span class="fc" id="L297">        healthMetrics.put(NODE_HEALTH_PECENT,nodeHealthPercent);</span>
+
+        // Business health percent is just 1 - (num business transaction violations / num business transactions)
+<span class="pc bpc" id="L300" title="1 of 2 branches missed.">        if (numBusinessTransactions != 0)</span>
+<span class="fc" id="L301">            businessHealthPercent = Math.floor(100.0 * (1.0 - ((double) (numBusinessViolations) / (double) (numBusinessTransactions)))) / 100.0;</span>
+<span class="fc" id="L302">        healthMetrics.put(BUSINESS_TRANSACTION_HEALTH,businessHealthPercent);</span>
+
+<span class="fc" id="L304">        return healthMetrics;</span>
+    }
+
+    /**
+     * Obtains a list of health violations for the current application from Appdynamics
+     * e.g. /controller/#/location=APP_INCIDENT_LIST&amp;application=&lt;APPID&gt;
+     *
+     * @param application the current application. Used to provide access to appID/name
+     * @return Single element list, value is the raw JSON object of the health violations
+     */
+    private Map&lt;String,Object&gt; getViolations(AppdynamicsApplication application, String instanceUrl ) {
+<span class="fc" id="L315">        Map&lt;String,Object&gt; violationObjects = new HashMap&lt;&gt;();</span>
+
+        try {
+<span class="fc" id="L318">            String url = joinURL(instanceUrl, String.format(HEALTH_VIOLATIONS_PATH, application.getAppID()));</span>
+<span class="fc" id="L319">            ResponseEntity&lt;String&gt; responseEntity = makeRestCall(url);</span>
+<span class="fc" id="L320">            String returnJSON = responseEntity.getBody();</span>
+<span class="fc" id="L321">            JSONParser parser = new JSONParser();</span>
+
+<span class="fc" id="L323">            JSONArray array = (JSONArray) parser.parse(returnJSON);</span>
+
+<span class="fc" id="L325">            violationObjects.put(VIOLATION_OBJECT,array);</span>
+<span class="nc" id="L326">        } catch (MalformedURLException e) {</span>
+<span class="nc" id="L327">            LOG.error(&quot;client exception loading applications&quot;, e);</span>
+<span class="nc" id="L328">        } catch (ParseException e) {</span>
+<span class="nc" id="L329">            LOG.error(&quot;client exception loading applications&quot;, e);</span>
+<span class="pc" id="L330">        }</span>
+
+<span class="fc" id="L332">        return violationObjects;</span>
+
+    }
+
+    /**
+     * Calculates the response time and error rate severities.
+     * 0: good, 1: warning, 2: critical
+     * Iterates through list of violations. The final severity will be the highest of them all
+     * (e.g. response time violations are Warning, Critical, Warning, Warning, Warning -&gt; Critical)
+     *
+     * @param application the current application. Used to provide access to appID/name
+     * @return List of two PerformanceMetrics that contain info about the severities
+     */
+    private Map&lt;String,Object&gt; getSeverityMetrics(AppdynamicsApplication application, String instanceUrl ) {
+
+<span class="fc" id="L347">        long responseTimeSeverity = 0;</span>
+<span class="fc" id="L348">        long errorRateSeverity = 0;</span>
+
+<span class="fc" id="L350">        Map&lt;String,Object&gt; severityMetrics = new HashMap&lt;&gt;();</span>
+
+        try {
+            // NUMBER OF VIOLATIONS
+<span class="fc" id="L354">            String url = joinURL(instanceUrl, String.format(HEALTH_VIOLATIONS_PATH, application.getAppID()));</span>
+<span class="fc" id="L355">            ResponseEntity&lt;String&gt; responseEntity = makeRestCall(url);</span>
+<span class="fc" id="L356">            String returnJSON = responseEntity.getBody();</span>
+<span class="fc" id="L357">            JSONParser parser = new JSONParser();</span>
+
+<span class="fc" id="L359">            JSONArray array = (JSONArray) parser.parse(returnJSON);</span>
+
+<span class="pc bpc" id="L361" title="1 of 2 branches missed.">            for (Object entry : array) {</span>
+<span class="nc" id="L362">                JSONObject jsonEntry = (JSONObject) entry;</span>
+<span class="nc" id="L363">                JSONObject affEntityObj = (JSONObject) jsonEntry.get(&quot;affectedEntityDefinition&quot;);</span>
+
+<span class="nc" id="L365">                String entityType = getString(affEntityObj, &quot;entityType&quot;);</span>
+
+
+<span class="nc bnc" id="L368" title="All 2 branches missed.">                if (entityType.equals(BUSINESS_TRANSACTION)) {</span>
+
+<span class="nc bnc" id="L370" title="All 2 branches missed.">                    long severity = getString(jsonEntry, &quot;severity&quot;).equals(&quot;CRITICAL&quot;) ? 2 : 1;</span>
+
+<span class="nc bnc" id="L372" title="All 2 branches missed.">                    if (getString(jsonEntry, &quot;name&quot;).equals(&quot;Business Transaction error rate is much higher than normal&quot;)) {</span>
+<span class="nc" id="L373">                        errorRateSeverity = Math.max(errorRateSeverity, severity);</span>
+<span class="nc bnc" id="L374" title="All 2 branches missed.">                    } else if (getString(jsonEntry, &quot;name&quot;).equals(&quot;Business Transaction response time is much higher than normal&quot;)) {</span>
+<span class="nc" id="L375">                        responseTimeSeverity = Math.max(responseTimeSeverity, severity);</span>
+                    }
+                }
+<span class="nc" id="L378">            }</span>
+<span class="nc" id="L379">        } catch (MalformedURLException e) {</span>
+<span class="nc" id="L380">            LOG.error(&quot;client exception loading applications&quot;, e);</span>
+<span class="nc" id="L381">        } catch (ParseException e) {</span>
+<span class="nc" id="L382">            LOG.error(&quot;client exception loading applications&quot;, e);</span>
+<span class="pc" id="L383">        }</span>
+<span class="fc" id="L384">        severityMetrics.put(ERROR_RATE_SEVERITY,errorRateSeverity);</span>
+<span class="fc" id="L385">        severityMetrics.put(RESPONSE_TIME_SEVERITY,responseTimeSeverity);</span>
+<span class="fc" id="L386">        return severityMetrics;</span>
+    }
+
+    private String parseMetricName(String metricPath) {
+<span class="fc" id="L390">        String[] arr = metricPath.split(METRIC_PATH_DELIMITER);</span>
+<span class="pc bpc" id="L391" title="1 of 2 branches missed.">        if (arr == null) return &quot;&quot;;</span>
+<span class="fc" id="L392">        String metricName =   arr[arr.length - 1].replaceAll(&quot; &quot;,&quot;&quot;);</span>
+<span class="fc" id="L393">        metricName = metricName.replaceAll(&quot;\\(ms\\)&quot;,&quot;&quot;);</span>
+<span class="fc" id="L394">        metricName  = StringUtils.capitalize(metricName);</span>
+<span class="fc" id="L395">        metricName = Character.toLowerCase(metricName.charAt(0)) + metricName.substring(1);</span>
+<span class="fc" id="L396">        return  metricName;</span>
+    }
+
+    private boolean in(String suspect,String ... obj){
+<span class="fc bfc" id="L400" title="All 2 branches covered.">        for (String string:obj) {</span>
+<span class="fc bfc" id="L401" title="All 2 branches covered.">            if(string.equalsIgnoreCase(suspect)){</span>
+<span class="fc" id="L402">                return  true;</span>
+            }
+        }
+<span class="fc" id="L405">        return false;</span>
+    }
+
+    protected ResponseEntity&lt;String&gt; makeRestCall(String sUrl) throws MalformedURLException {
+<span class="fc" id="L409">        URI thisuri = URI.create(sUrl);</span>
+<span class="fc" id="L410">        String userInfo = thisuri.getUserInfo();</span>
+<span class="fc" id="L411">        ResponseEntity&lt;String&gt; response = null;</span>
+        //get userinfo from URI or settings (in spring properties)
+<span class="pc bpc" id="L413" title="4 of 6 branches missed.">        if (StringUtils.isEmpty(userInfo) &amp;&amp; (this.settings.getUsername() != null) &amp;&amp; (this.settings.getPassword() != null)) {</span>
+<span class="nc" id="L414">            userInfo = this.settings.getUsername() + &quot;:&quot; + this.settings.getPassword();</span>
+        }
+        // Basic Auth only.
+<span class="pc bpc" id="L417" title="1 of 2 branches missed.">        if (StringUtils.isNotEmpty(userInfo)) {</span>
+<span class="nc" id="L418">            response =  rest.exchange(thisuri, HttpMethod.GET,</span>
+<span class="nc" id="L419">                    new HttpEntity&lt;&gt;(createHeaders(userInfo)),</span>
+                    String.class);
+        } else {
+<span class="fc" id="L422">            response =  rest.exchange(thisuri, HttpMethod.GET, null,</span>
+                    String.class);
+        }
+<span class="fc" id="L425">        return response;</span>
+
+    }
+
+    protected HttpHeaders createHeaders(final String userInfo) {
+<span class="nc" id="L430">        byte[] encodedAuth = Base64.encodeBase64(</span>
+<span class="nc" id="L431">                userInfo.getBytes(StandardCharsets.US_ASCII));</span>
+<span class="nc" id="L432">        String authHeader = &quot;Basic &quot; + new String(encodedAuth);</span>
+
+<span class="nc" id="L434">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="nc" id="L435">        headers.set(HttpHeaders.AUTHORIZATION, authHeader);</span>
+<span class="nc" id="L436">        return headers;</span>
+    }
+
+    private String getString(JSONObject json, String key) {
+<span class="fc" id="L440">        return (String) json.get(key);</span>
+    }
+
+    private Long getLong(JSONObject json, String key) {
+<span class="fc" id="L444">        return (Long) json.get(key);</span>
+    }
+
+    private JSONArray getJsonArray(JSONObject json, String key) {
+<span class="fc" id="L448">        Object array = json.get(key);</span>
+<span class="pc bpc" id="L449" title="1 of 2 branches missed.">        return array == null ? new JSONArray() : (JSONArray) array;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

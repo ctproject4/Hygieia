@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>StoryDataClient.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:versionone-feature-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">StoryDataClient.java</span></div><h1>StoryDataClient.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+import com.capitalone.dashboard.datafactory.versionone.VersionOneDataFactoryImpl;
+import com.capitalone.dashboard.misc.HygieiaException;
+import com.capitalone.dashboard.model.Collector;
+import com.capitalone.dashboard.model.Feature;
+import com.capitalone.dashboard.repository.FeatureCollectorRepository;
+import com.capitalone.dashboard.repository.FeatureRepository;
+import com.capitalone.dashboard.util.DateUtil;
+import com.capitalone.dashboard.util.FeatureCollectorConstants;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * This is the primary implemented/extended data collector for the feature
+ * collector. This will get data from the source system, but will grab the
+ * majority of needed data and aggregate it in a single, flat MongoDB collection
+ * for consumption.
+ *
+ * @author kfk884
+ */
+public class StoryDataClient extends BaseClient {
+<span class="nc" id="L31">	private static final Logger LOGGER = LoggerFactory.getLogger(StoryDataClient.class);</span>
+
+	private final FeatureSettings featureSettings;
+	private final FeatureCollectorRepository featureCollectorRepository;
+	private final FeatureRepository featureRepo;
+
+	/**
+	 * Extends the constructor from the super class.
+	 */
+	public StoryDataClient(FeatureSettings featureSettings, FeatureRepository featureRepository,
+			FeatureCollectorRepository featureCollectorRepository,
+			VersionOneDataFactoryImpl vOneApi) {
+<span class="nc" id="L43">		super(vOneApi, featureSettings);</span>
+<span class="nc" id="L44">		LOGGER.debug(&quot;Constructing data collection for the feature widget, story-level data...&quot;);</span>
+
+<span class="nc" id="L46">		this.featureSettings = featureSettings;</span>
+<span class="nc" id="L47">		this.featureRepo = featureRepository;</span>
+<span class="nc" id="L48">		this.featureCollectorRepository = featureCollectorRepository;</span>
+<span class="nc" id="L49">	}</span>
+
+	/**
+	 * Updates the MongoDB with a JSONArray received from the source system
+	 * back-end with story-based data.
+	 *
+	 * @param tmpMongoDetailArray
+	 *            A JSON response in JSONArray format from the source system
+	 *
+	 */
+	@Override
+	@SuppressWarnings({ &quot;unchecked&quot;, &quot;PMD.ExcessiveMethodLength&quot;, &quot;PMD.NPathComplexity&quot; })
+	protected void updateMongoInfo(JSONArray tmpMongoDetailArray) {
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		for (Object obj : tmpMongoDetailArray) {</span>
+<span class="nc" id="L63">			DateUtil dateUtil = new DateUtil();</span>
+<span class="nc" id="L64">			JSONObject dataMainObj = (JSONObject) obj;</span>
+<span class="nc" id="L65">			Feature feature = new Feature();</span>
+
+<span class="nc" id="L67">			removeExistingEntity(getJSONString(dataMainObj, &quot;_oid&quot;));</span>
+
+			// collectorId
+<span class="nc" id="L70">			feature.setCollectorId(featureCollectorRepository</span>
+<span class="nc" id="L71">					.findByName(FeatureCollectorConstants.VERSIONONE).getId());</span>
+
+			// ID
+<span class="nc" id="L74">			feature.setsId(getJSONString(dataMainObj, &quot;_oid&quot;));</span>
+
+			// sNumber
+<span class="nc" id="L77">			feature.setsNumber(getJSONString(dataMainObj, &quot;Number&quot;));</span>
+
+			// sName
+<span class="nc" id="L80">			feature.setsName(getJSONString(dataMainObj, &quot;Name&quot;));</span>
+
+			// sStatus
+<span class="nc" id="L83">			feature.setsStatus(getJSONString(dataMainObj, &quot;Status.Name&quot;));</span>
+
+			// sState
+<span class="nc" id="L86">			feature.setsState(getJSONString(dataMainObj, &quot;AssetState&quot;));</span>
+			
+			// sTypeID
+<span class="nc" id="L89">			feature.setsTypeId(&quot;&quot;);</span>
+			
+			// sTypeName
+<span class="nc" id="L92">			feature.setsTypeName(getJSONString(dataMainObj, &quot;AssetType&quot;));</span>
+
+			// sEstimate
+<span class="nc" id="L95">			feature.setsEstimate(getJSONString(dataMainObj, &quot;Estimate&quot;));</span>
+
+			// sChangeDate
+<span class="nc" id="L98">			feature.setChangeDate(getJSONString(dataMainObj, &quot;ChangeDate&quot;));</span>
+
+			// IsDeleted
+<span class="nc" id="L101">			feature.setIsDeleted(getJSONString(dataMainObj, &quot;IsDeleted&quot;));</span>
+
+			// sProjectID
+<span class="nc" id="L104">			JSONObject tmpObj = (JSONObject) dataMainObj.get(&quot;Scope.ID&quot;);</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">			if (tmpObj.containsKey(&quot;_oid&quot;)) {</span>
+<span class="nc" id="L106">				feature.setsProjectID(getJSONString(tmpObj, &quot;_oid&quot;));</span>
+			}
+
+			// sProjectName
+<span class="nc" id="L110">			feature.setsProjectName(getJSONString(dataMainObj, &quot;Scope.Name&quot;));</span>
+
+			// sProjectBeginDate
+<span class="nc" id="L113">			feature.setsProjectBeginDate(getJSONString(dataMainObj, &quot;Scope.BeginDate&quot;));</span>
+
+			// sProjectEndDate
+<span class="nc" id="L116">			feature.setsProjectEndDate(getJSONString(dataMainObj, &quot;Scope.EndDate&quot;));</span>
+
+			// sProjectChangeDate
+<span class="nc" id="L119">			feature.setsProjectChangeDate(getJSONString(dataMainObj, &quot;Scope.ChangeDate&quot;));</span>
+
+			// sProjectState
+<span class="nc" id="L122">			feature.setsProjectState(getJSONString(dataMainObj, &quot;Scope.AssetState&quot;));</span>
+
+			// sProjectIsDeleted
+<span class="nc" id="L125">			feature.setsProjectIsDeleted(getJSONString(dataMainObj, &quot;Scope.IsDeleted&quot;));</span>
+
+			// sProjectPath
+<span class="nc" id="L128">			String projPath = feature.getsProjectName();</span>
+<span class="nc" id="L129">			List&lt;String&gt; projList = (List&lt;String&gt;) dataMainObj.get(&quot;Scope.ParentAndUp.Name&quot;);</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">			if (!CollectionUtils.isEmpty(projList)) {</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">				for (String proj : projList) {</span>
+<span class="nc" id="L132">					projPath = proj + &quot;--&gt;&quot; + projPath;</span>
+<span class="nc" id="L133">				}</span>
+<span class="nc" id="L134">				projPath = &quot;All--&gt;&quot; + projPath;</span>
+			} else {
+<span class="nc" id="L136">				projPath = &quot;All--&gt;&quot; + projPath;</span>
+			}
+<span class="nc" id="L138">			feature.setsProjectPath(sanitizeResponse(projPath));</span>
+
+			// sEpicID
+<span class="nc" id="L141">			tmpObj = (JSONObject) dataMainObj.get(&quot;Super.ID&quot;);</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">			if (tmpObj.containsKey(&quot;_oid&quot;)) {</span>
+<span class="nc" id="L143">				feature.setsEpicID(getJSONString(tmpObj, &quot;_oid&quot;));</span>
+			}
+
+			// sEpicNumber
+<span class="nc" id="L147">			feature.setsEpicNumber(getJSONString(dataMainObj, &quot;Super.Number&quot;));</span>
+
+			// sEpicName
+<span class="nc" id="L150">			feature.setsEpicName(getJSONString(dataMainObj, &quot;Super.Name&quot;));</span>
+
+			// sEpicBeginDate
+<span class="nc" id="L153">			feature.setsEpicBeginDate(getJSONString(dataMainObj, &quot;Super.PlannedStart&quot;));</span>
+
+			// sEpicEndDate
+<span class="nc" id="L156">			feature.setsEpicEndDate(getJSONString(dataMainObj, &quot;Super.PlannedEnd&quot;));</span>
+
+			// sEpicType
+<span class="nc" id="L159">			feature.setsEpicType(getJSONString(dataMainObj, &quot;Super.Category.Name&quot;));</span>
+
+			// sEpicAssetState
+<span class="nc" id="L162">			feature.setsEpicAssetState(getJSONString(dataMainObj, &quot;Super.AssetState&quot;));</span>
+
+			// sEpicChangeDate
+<span class="nc" id="L165">			feature.setsEpicChangeDate(getJSONString(dataMainObj, &quot;Super.ChangeDate&quot;));</span>
+
+			// sEpicIsDeleted
+<span class="nc" id="L168">			feature.setsEpicIsDeleted(getJSONString(dataMainObj, &quot;Super.IsDeleted&quot;));</span>
+
+<span class="nc bnc" id="L170" title="All 2 branches missed.">			if (dateUtil.evaluateSprintLength(getJSONString(dataMainObj, &quot;Timebox.BeginDate&quot;),</span>
+<span class="nc" id="L171">					getJSONString(dataMainObj, &quot;Timebox.EndDate&quot;),</span>
+<span class="nc" id="L172">					featureSettings.getMaxKanbanIterationLength())) {</span>
+				// sSprintID
+<span class="nc" id="L174">				tmpObj = (JSONObject) dataMainObj.get(&quot;Timebox.ID&quot;);</span>
+<span class="nc" id="L175">				feature.setsSprintID(getJSONString(tmpObj, &quot;_oid&quot;));</span>
+
+				// sSprintName
+<span class="nc" id="L178">				feature.setsSprintName(getJSONString(dataMainObj, &quot;Timebox.Name&quot;));</span>
+
+				// sSprintBeginDate
+<span class="nc" id="L181">				feature.setsSprintBeginDate(getJSONString(dataMainObj, &quot;Timebox.BeginDate&quot;));</span>
+
+				// sSprintEndDate
+<span class="nc" id="L184">				feature.setsSprintEndDate(getJSONString(dataMainObj, &quot;Timebox.EndDate&quot;));</span>
+
+				// sSprintAssetState
+<span class="nc" id="L187">				feature.setsSprintAssetState(getJSONString(dataMainObj, &quot;Timebox.AssetState&quot;));</span>
+
+				// sSprintChangeDate
+<span class="nc" id="L190">				feature.setsSprintChangeDate(getJSONString(dataMainObj, &quot;Timebox.ChangeDate&quot;));</span>
+
+				// sSprintIsDeleted
+<span class="nc" id="L193">				feature.setsSprintIsDeleted(getJSONString(dataMainObj, &quot;Timebox.IsDeleted&quot;));</span>
+			} else {
+				// Issue #678 - leave sprint blank. Not having a sprint does not imply kanban
+				// as a story on a scrum board without a sprint is really on the backlog
+				// Instead the feature service is responsible for deducing if a sprint is part of
+				// kanban - see service for more details
+<span class="nc" id="L199">				feature.setsSprintID(&quot;&quot;);</span>
+<span class="nc" id="L200">				feature.setsSprintName(&quot;&quot;);</span>
+<span class="nc" id="L201">				feature.setsSprintBeginDate(&quot;&quot;);</span>
+<span class="nc" id="L202">				feature.setsSprintEndDate(&quot;&quot;);</span>
+<span class="nc" id="L203">				feature.setsSprintAssetState(getJSONString(dataMainObj, &quot;Timebox.AssetState&quot;));</span>
+			}
+
+			// sTeamID
+<span class="nc" id="L207">			tmpObj = (JSONObject) dataMainObj.get(&quot;Team.ID&quot;);</span>
+<span class="nc" id="L208">			feature.setsTeamID(getJSONString(tmpObj, &quot;_oid&quot;));</span>
+
+			// sTeamName
+<span class="nc" id="L211">			feature.setsTeamName(getJSONString(dataMainObj, &quot;Team.Name&quot;));</span>
+
+			// sTeamChangeDate
+<span class="nc" id="L214">			feature.setsTeamChangeDate(getJSONString(dataMainObj, &quot;Team.ChangeDate&quot;));</span>
+
+			// sTeamAssetState
+<span class="nc" id="L217">			feature.setsTeamAssetState(getJSONString(dataMainObj, &quot;Team.AssetState&quot;));</span>
+
+			// sTeamIsDeleted
+<span class="nc" id="L220">			feature.setsTeamIsDeleted(getJSONString(dataMainObj, &quot;Team.IsDeleted&quot;));</span>
+
+			// sOwnersID
+<span class="nc" id="L223">			List&lt;String&gt; ownersIdList = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">			for (Object ownersID : (JSONArray) dataMainObj.get(&quot;Owners.ID&quot;)) {</span>
+<span class="nc" id="L225">				ownersIdList.add(getJSONString((JSONObject) ownersID, &quot;_oid&quot;));</span>
+<span class="nc" id="L226">			}</span>
+<span class="nc" id="L227">			feature.setsOwnersID(ownersIdList);</span>
+
+			// sOwnersShortName
+<span class="nc" id="L230">			feature.setsOwnersShortName(</span>
+<span class="nc" id="L231">					toCanonicalList((List&lt;String&gt;) dataMainObj.get(&quot;Owners.Nickname&quot;)));</span>
+
+			// sOwnersFullName
+<span class="nc" id="L234">			feature.setsOwnersFullName(</span>
+<span class="nc" id="L235">					toCanonicalList((List&lt;String&gt;) dataMainObj.get(&quot;Owners.Name&quot;)));</span>
+
+			// sOwnersUsername
+<span class="nc" id="L238">			feature.setsOwnersUsername(</span>
+<span class="nc" id="L239">					toCanonicalList((List&lt;String&gt;) dataMainObj.get(&quot;Owners.Username&quot;)));</span>
+
+			// sOwnersState
+<span class="nc" id="L242">			feature.setsOwnersState(</span>
+<span class="nc" id="L243">					toCanonicalList((List&lt;String&gt;) dataMainObj.get(&quot;Owners.AssetState&quot;)));</span>
+
+			// sOwnersChangeDate
+<span class="nc" id="L246">			feature.setsOwnersChangeDate(</span>
+<span class="nc" id="L247">					toCanonicalList((List&lt;String&gt;) dataMainObj.get(&quot;Owners.ChangeDate&quot;)));</span>
+
+			// sOwnersIsDeleted
+<span class="nc" id="L250">			feature.setsOwnersIsDeleted(</span>
+<span class="nc" id="L251">					toCanonicalList((List&lt;String&gt;) dataMainObj.get(&quot;Owners.IsDeleted&quot;)));</span>
+
+<span class="nc" id="L253">			featureRepo.save(feature);</span>
+<span class="nc" id="L254">		}</span>
+<span class="nc" id="L255">	}</span>
+
+	/**
+	 * Explicitly updates queries for the source system, and initiates the
+	 * update to MongoDB from those calls.
+	 */
+	public void updateStoryInformation() throws HygieiaException {
+<span class="nc" id="L262">		String returnDate = this.featureSettings.getDeltaStartDate();</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">		if (!StringUtils.isEmpty(getMaxChangeDate())) {</span>
+<span class="nc" id="L264">			returnDate = getMaxChangeDate();</span>
+		}
+<span class="nc" id="L266">		returnDate = DateUtil.getChangeDateMinutePrior(returnDate,</span>
+<span class="nc" id="L267">				this.featureSettings.getScheduledPriorMin());</span>
+<span class="nc" id="L268">		String queryName = this.featureSettings.getStoryQuery();</span>
+<span class="nc" id="L269">		updateObjectInformation(getQuery(returnDate, queryName));</span>
+<span class="nc" id="L270">	}</span>
+
+	/**
+	 * Validates current entry and removes new entry if an older item exists in
+	 * the repo
+	 *
+	 * @param localId
+	 *            local repository item ID (not the precise mongoID)
+	 */
+	protected void removeExistingEntity(String localId) {
+<span class="nc bnc" id="L280" title="All 2 branches missed.">		if (StringUtils.isEmpty(localId))</span>
+<span class="nc" id="L281">			return;</span>
+<span class="nc" id="L282">		List&lt;Feature&gt; listOfFeature = featureRepo.getFeatureIdById(localId);</span>
+
+<span class="nc bnc" id="L284" title="All 2 branches missed.">		if (CollectionUtils.isEmpty(listOfFeature))</span>
+<span class="nc" id="L285">			return;</span>
+<span class="nc" id="L286">		featureRepo.delete(listOfFeature);</span>
+<span class="nc" id="L287">	}</span>
+
+	@Override
+	public String getMaxChangeDate() {
+<span class="nc" id="L291">		Collector col = featureCollectorRepository.findByName(FeatureCollectorConstants.VERSIONONE);</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">		if (col == null)</span>
+<span class="nc" id="L293">			return &quot;&quot;;</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">		if (StringUtils.isEmpty(featureSettings.getDeltaStartDate()))</span>
+<span class="nc" id="L295">			return &quot;&quot;;</span>
+
+<span class="nc" id="L297">		List&lt;Feature&gt; response = featureRepo</span>
+<span class="nc" id="L298">				.findTopByCollectorIdAndChangeDateGreaterThanOrderByChangeDateDesc(col.getId(),</span>
+<span class="nc" id="L299">						featureSettings.getDeltaStartDate());</span>
+<span class="nc bnc" id="L300" title="All 2 branches missed.">		if (!CollectionUtils.isEmpty(response))</span>
+<span class="nc" id="L301">			return response.get(0).getChangeDate();</span>
+<span class="nc" id="L302">		return &quot;&quot;;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

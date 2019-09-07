@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DefaultBitbucketServerClient.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:bitbucket-scm-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">DefaultBitbucketServerClient.java</span></div><h1>DefaultBitbucketServerClient.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+import com.capitalone.dashboard.model.Commit;
+import com.capitalone.dashboard.model.CommitType;
+import com.capitalone.dashboard.model.GitRepo;
+import com.capitalone.dashboard.util.Encryption;
+import com.capitalone.dashboard.util.EncryptionException;
+import com.capitalone.dashboard.util.Supplier;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.http.client.utils.URIBuilder;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestOperations;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Implementation of a git client to connect to an Atlassian Bitbucket &lt;i&gt;Server&lt;/i&gt; product. 
+ * &lt;p&gt;
+ * Note about naming scheme: Atlassian has two different Bitbucket products that use different
+ * rest API's: Bitbucket &lt;i&gt;Cloud&lt;/i&gt; (formerly known as Bitbucket) and Bitbucket &lt;i&gt;Server&lt;/i&gt; (formerly known as Stash).
+ * &lt;p&gt;
+ * Rest API's:
+ * &lt;ul&gt;
+ * &lt;li&gt;&lt;b&gt;Bitbucket Cloud:&lt;/b&gt; https://confluence.atlassian.com/bitbucket/version-2-423626329.html&lt;/li&gt;
+ * &lt;li&gt;&lt;b&gt;Bitbucket Server:&lt;/b&gt; https://developer.atlassian.com/static/rest/stash/3.11.3/stash-rest.html&lt;/li&gt;
+ * &lt;/ul&gt;
+ * &lt;b&gt;
+ * @see &lt;a href=&quot;https://confluence.atlassian.com/bitbucketserver/bitbucket-rebrand-faq-779298912.html&quot;&gt;Bitbucket rebrand FAQ&lt;/a&gt;
+ * @see &lt;a href=&quot;https://github.com/capitalone/Hygieia/issues/609&quot;&gt;Confusion on Stash/Bitbucket implementations #609&lt;/a&gt;
+ */
+@Component(&quot;bitbucket-server&quot;)
+@ConditionalOnProperty(prefix = &quot;git&quot;, name = &quot;product&quot;, havingValue = &quot;server&quot;)
+public class DefaultBitbucketServerClient implements GitClient {
+<span class="fc" id="L51">	private static final Log LOG = LogFactory.getLog(DefaultBitbucketServerClient.class);</span>
+
+	private final GitSettings settings;
+
+	private final RestOperations restOperations;
+
+	@Autowired
+	public DefaultBitbucketServerClient(GitSettings settings,
+<span class="fc" id="L59">			Supplier&lt;RestOperations&gt; restOperationsSupplier) {</span>
+<span class="fc" id="L60">		this.settings = settings;</span>
+<span class="fc" id="L61">		this.restOperations = restOperationsSupplier.get();</span>
+<span class="fc" id="L62">	}</span>
+
+	@SuppressWarnings(&quot;PMD.NPathComplexity&quot;)
+	@Override
+	public List&lt;Commit&gt; getCommits(GitRepo repo, boolean firstRun) {
+<span class="fc" id="L67">		List&lt;Commit&gt; commits = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L68">		URI queryUriPage = null;</span>
+		
+		try {
+	
+<span class="fc" id="L72">			URI queryUri = buildUri((String) repo.getOptions().get(&quot;url&quot;), repo.getBranch(), repo.getLastUpdateCommit());</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">			if (LOG.isDebugEnabled()) {</span>
+<span class="nc" id="L74">				LOG.debug(&quot;Rest Url: &quot; + queryUri);</span>
+			}
+			
+			// decrypt password
+<span class="fc" id="L78">			String decryptedPassword = &quot;&quot;;</span>
+<span class="pc bpc" id="L79" title="1 of 4 branches missed.">			if (repo.getPassword() != null &amp;&amp; !repo.getPassword().isEmpty()) {</span>
+				try {
+<span class="fc" id="L81">					decryptedPassword = Encryption.decryptString(repo.getPassword(), settings.getKey());</span>
+<span class="nc" id="L82">				} catch (EncryptionException e) {</span>
+<span class="nc" id="L83">					LOG.error(e.getMessage());</span>
+<span class="fc" id="L84">				}</span>
+			}
+			
+<span class="fc" id="L87">			boolean lastPage = false;</span>
+<span class="fc" id="L88">			queryUriPage = queryUri;</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">			while (!lastPage) {</span>
+<span class="fc" id="L90">				ResponseEntity&lt;String&gt; response = makeRestCall(queryUriPage, repo.getUserId(), decryptedPassword);</span>
+<span class="fc" id="L91">				JSONObject jsonParentObject = paresAsObject(response);</span>
+<span class="fc" id="L92">				JSONArray jsonArray = (JSONArray) jsonParentObject.get(&quot;values&quot;);</span>
+
+<span class="fc bfc" id="L94" title="All 2 branches covered.">				for (Object item : jsonArray) {</span>
+<span class="fc" id="L95">					JSONObject jsonObject = (JSONObject) item;</span>
+<span class="fc" id="L96">					String sha = str(jsonObject, &quot;id&quot;);</span>
+<span class="fc" id="L97">					JSONObject authorObject = (JSONObject) jsonObject.get(&quot;author&quot;);</span>
+<span class="fc" id="L98">					String message = str(jsonObject, &quot;message&quot;);</span>
+<span class="fc" id="L99">					String author = str(authorObject, &quot;name&quot;);</span>
+<span class="fc" id="L100">					long timestamp = Long.valueOf(str(jsonObject,&quot;authorTimestamp&quot;));</span>
+<span class="fc" id="L101">					JSONArray parents = (JSONArray) jsonObject.get(&quot;parents&quot;);</span>
+<span class="fc" id="L102">					List&lt;String&gt; parentShas = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">					if (parents != null) {</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">						for (Object parentObj : parents) {</span>
+<span class="fc" id="L105">							parentShas.add(str((JSONObject)parentObj, &quot;id&quot;));</span>
+<span class="fc" id="L106">						}</span>
+					}
+					
+<span class="fc" id="L109">					Commit commit = new Commit();</span>
+<span class="fc" id="L110">					commit.setTimestamp(System.currentTimeMillis());</span>
+<span class="fc" id="L111">					commit.setScmUrl(repo.getRepoUrl());</span>
+<span class="fc" id="L112">					commit.setScmBranch(repo.getBranch());</span>
+<span class="fc" id="L113">					commit.setScmRevisionNumber(sha);</span>
+<span class="fc" id="L114">					commit.setScmParentRevisionNumbers(parentShas);</span>
+<span class="fc" id="L115">					commit.setScmAuthor(author);</span>
+<span class="fc" id="L116">					commit.setScmCommitLog(message);</span>
+<span class="fc" id="L117">					commit.setScmCommitTimestamp(timestamp);</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">					commit.setType(parentShas.size() &gt; 1 ? CommitType.Merge : CommitType.New);</span>
+<span class="fc" id="L119">					commit.setNumberOfChanges(1);</span>
+<span class="fc" id="L120">					commits.add(commit);</span>
+<span class="fc" id="L121">				}</span>
+<span class="pc bpc" id="L122" title="1 of 4 branches missed.">				if (jsonArray == null || jsonArray.isEmpty()) {</span>
+<span class="fc" id="L123">					lastPage = true;</span>
+				} else {
+<span class="fc" id="L125">					String isLastPage = str(jsonParentObject, &quot;isLastPage&quot;);</span>
+<span class="pc bpc" id="L126" title="1 of 4 branches missed.">					lastPage = isLastPage == null || Boolean.valueOf(isLastPage);</span>
+					
+<span class="fc" id="L128">					String nextPageStart = str(jsonParentObject, &quot;nextPageStart&quot;);</span>
+<span class="pc bpc" id="L129" title="1 of 4 branches missed.">					if (nextPageStart != null &amp;&amp; !&quot;null&quot;.equals(nextPageStart)) {</span>
+<span class="fc" id="L130">						queryUriPage = new URIBuilder(queryUri).addParameter(&quot;start&quot;, nextPageStart).build();</span>
+					}
+				}
+<span class="fc" id="L133">			}</span>
+			
+<span class="fc" id="L135">			repo.setLastUpdated(System.currentTimeMillis());</span>
+<span class="nc" id="L136">		} catch (URISyntaxException e) {</span>
+<span class="nc" id="L137">			LOG.error(&quot;Invalid uri: &quot; + e.getMessage());</span>
+<span class="nc" id="L138">		} catch (RestClientException re) {</span>
+<span class="nc" id="L139">			LOG.error(&quot;Failed to obtain commits from &quot; + queryUriPage, re);</span>
+<span class="pc" id="L140">		}</span>
+		
+<span class="fc" id="L142">		return commits;</span>
+	}
+	
+	// package for junit
+	@SuppressWarnings({&quot;PMD.NPathComplexity&quot;})
+	/*package*/ URI buildUri(final String rawUrl, final String branch, final String lastKnownCommit) throws URISyntaxException {
+<span class="fc" id="L148">		URIBuilder builder = new URIBuilder();</span>
+		
+		/*
+		 * Examples:
+		 * 
+		 * ssh://git@company.com/project/repository.git
+		 * https://username@company.com/scm/project/repository.git
+		 * ssh://git@company.com/~username/repository.git
+		 * https://username@company.com/scm/~username/repository.git
+		 * 
+		 */
+		
+<span class="fc" id="L160">		String repoUrlRaw = rawUrl;</span>
+<span class="fc" id="L161">		String repoUrlProcessed = repoUrlRaw;</span>
+		
+<span class="fc bfc" id="L163" title="All 2 branches covered.">		if (repoUrlProcessed.endsWith(&quot;.git&quot;)) {</span>
+<span class="fc" id="L164">			repoUrlProcessed = repoUrlProcessed.substring(0, repoUrlProcessed.lastIndexOf(&quot;.git&quot;));</span>
+		}
+		
+<span class="fc" id="L167">		URI uri = URI.create(repoUrlProcessed.replaceAll(&quot; &quot;, &quot;%20&quot;));</span>
+		
+<span class="fc" id="L169">		String host = uri.getHost();</span>
+<span class="fc bfc" id="L170" title="All 2 branches covered.">		String scheme = &quot;ssh&quot;.equalsIgnoreCase(uri.getScheme())? &quot;https&quot; : uri.getScheme();</span>
+<span class="fc" id="L171">		int port = uri.getPort();</span>
+<span class="fc" id="L172">		String path = uri.getPath();</span>
+<span class="pc bpc" id="L173" title="2 of 6 branches missed.">		if ((path.startsWith(&quot;scm/&quot;) || path.startsWith(&quot;/scm&quot;)) &amp;&amp; path.length() &gt; 4) {</span>
+<span class="fc" id="L174">			path = path.substring(4);</span>
+		}
+<span class="pc bpc" id="L176" title="2 of 4 branches missed.">		if (path.length() &gt; 0 &amp;&amp; path.charAt(0) == '/') {</span>
+<span class="fc" id="L177">			path = path.substring(1, path.length());</span>
+		}
+		
+<span class="fc" id="L180">		String[] splitPath = path.split(&quot;/&quot;);</span>
+<span class="fc" id="L181">		String projectKey = &quot;&quot;;</span>
+<span class="fc" id="L182">		String repositorySlug = &quot;&quot;;</span>
+		
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">		if (splitPath.length &gt; 1) {</span>
+<span class="fc" id="L185">			projectKey = splitPath[0];</span>
+<span class="fc" id="L186">			repositorySlug = path.substring(path.indexOf('/') + 1, path.length());</span>
+		} else {
+			// Shouldn't get to this case
+<span class="nc" id="L189">			projectKey = &quot;&quot;;</span>
+<span class="nc" id="L190">			repositorySlug = path;</span>
+		}
+		
+<span class="pc bpc" id="L193" title="1 of 2 branches missed.">		String apiPath = settings.getApi() != null? settings.getApi() : &quot;&quot;;</span>
+		
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">		if (apiPath.endsWith(&quot;/&quot;)) {</span>
+<span class="fc" id="L196">			apiPath = settings.getApi().substring(0, settings.getApi().length() - 1);</span>
+		}
+		
+<span class="fc" id="L199">		builder.setScheme(scheme);</span>
+<span class="fc" id="L200">		builder.setHost(host);</span>
+<span class="pc bpc" id="L201" title="1 of 2 branches missed.">		if (port != -1) {</span>
+<span class="nc" id="L202">			builder.setPort(port);</span>
+		}
+		
+<span class="fc" id="L205">		builder.setPath(apiPath + &quot;/projects/&quot; + projectKey + &quot;/repos/&quot; + repositorySlug + &quot;/commits&quot;);</span>
+<span class="pc bpc" id="L206" title="1 of 4 branches missed.">		if (branch == null || branch.length() == 0) {</span>
+<span class="fc" id="L207">			builder.addParameter(&quot;until&quot;, &quot;master&quot;);</span>
+		} else {
+<span class="fc" id="L209">			builder.addParameter(&quot;until&quot;, branch.replaceAll(&quot; &quot;, &quot;%20&quot;));</span>
+		}
+		
+<span class="pc bpc" id="L212" title="1 of 4 branches missed.">		if (lastKnownCommit != null &amp;&amp; lastKnownCommit.length() &gt; 0) {</span>
+<span class="fc" id="L213">			builder.addParameter(&quot;since&quot;, lastKnownCommit);</span>
+		}
+		
+<span class="fc bfc" id="L216" title="All 2 branches covered.">		if (settings.getPageSize() &gt; 0) {</span>
+<span class="fc" id="L217">			builder.addParameter(&quot;limit&quot;, String.valueOf(settings.getPageSize()));</span>
+		}
+		
+<span class="fc" id="L220">		return builder.build();</span>
+	}
+
+	private ResponseEntity&lt;String&gt; makeRestCall(URI uri, String userId,
+			String password) {
+<span class="pc bpc" id="L225" title="1 of 2 branches missed.">		if (LOG.isDebugEnabled()) {</span>
+<span class="nc" id="L226">			LOG.debug(&quot;GET &quot; + uri);</span>
+		}
+		// Basic Auth only.
+<span class="pc bpc" id="L229" title="1 of 4 branches missed.">		if (!&quot;&quot;.equals(userId) &amp;&amp; !&quot;&quot;.equals(password)) {</span>
+<span class="fc" id="L230">			return restOperations.exchange(uri, HttpMethod.GET,</span>
+<span class="fc" id="L231">					new HttpEntity&lt;&gt;(createHeaders(userId, password)),</span>
+					String.class);
+
+		} else {
+<span class="fc" id="L235">			return restOperations.exchange(uri, HttpMethod.GET, null,</span>
+					String.class);
+		}
+
+	}
+
+	private HttpHeaders createHeaders(final String userId, final String password) {
+<span class="fc" id="L242">		String auth = userId + &quot;:&quot; + password;</span>
+<span class="fc" id="L243">		byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(StandardCharsets.US_ASCII));</span>
+<span class="fc" id="L244">		String authHeader = &quot;Basic &quot; + new String(encodedAuth);</span>
+
+<span class="fc" id="L246">		HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L247">		headers.set(&quot;Authorization&quot;, authHeader);</span>
+<span class="fc" id="L248">		return headers;</span>
+	}
+	
+	private JSONObject paresAsObject(ResponseEntity&lt;String&gt; response) {
+		try {
+<span class="fc" id="L253">			return (JSONObject) new JSONParser().parse(response.getBody());</span>
+<span class="nc" id="L254">		} catch (ParseException pe) {</span>
+<span class="nc" id="L255">			LOG.error(pe.getMessage());</span>
+		}
+<span class="nc" id="L257">		return new JSONObject();</span>
+	}
+
+	private String str(JSONObject json, String key) {
+<span class="fc" id="L261">		Object value = json.get(key);</span>
+<span class="fc bfc" id="L262" title="All 2 branches covered.">		return value == null ? null : value.toString();</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>FeatureDataMapper.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:gitlab-feature-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.data</a> &gt; <span class="el_source">FeatureDataMapper.java</span></div><h1>FeatureDataMapper.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.data;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.bson.types.ObjectId;
+import org.springframework.stereotype.Component;
+
+import com.capitalone.dashboard.gitlab.model.GitlabIssue;
+import com.capitalone.dashboard.model.Feature;
+import com.capitalone.dashboard.model.Project;
+import com.capitalone.dashboard.util.FeatureCollectorConstants;
+
+@Component
+<span class="fc" id="L18">public class FeatureDataMapper {</span>
+	
+	private static final String EMPTY_STRING = &quot;&quot;;
+	private static final String FALSE_DELETED_STATE = &quot;False&quot;;
+	private static final String ACTIVE_ASSET_STATE = &quot;Active&quot;;
+	private static final String FEATURE_IN_PROGRESS_STATUS = &quot;In Progress&quot;;
+	private static final String FEATURE_DONE_STATUS = &quot;Done&quot;;
+	private static final String GITLAB_DONE_STATUS = &quot;closed&quot;;
+	
+	public Feature mapToFeatureItem(Project project, GitlabIssue gitlabIssue, List&lt;String&gt; inProgressLabelsForProject, ObjectId existingIssueId, ObjectId gitlabCollectorId) {
+<span class="fc" id="L28">		String issueId = String.valueOf(gitlabIssue.getId());</span>
+<span class="fc" id="L29">		String storyNumber = String.valueOf(gitlabIssue.getIid());</span>
+		
+<span class="fc" id="L31">		Feature issue = new Feature();</span>
+<span class="fc" id="L32">		issue.setId(existingIssueId);</span>
+<span class="fc" id="L33">		issue.setsNumber(storyNumber);</span>
+<span class="fc" id="L34">		issue.setsId(issueId);</span>
+<span class="fc" id="L35">		issue.setCollectorId(gitlabCollectorId);</span>
+<span class="fc" id="L36">		issue.setIsDeleted(FALSE_DELETED_STATE);</span>
+<span class="fc" id="L37">		issue.setsName(gitlabIssue.getTitle());</span>
+<span class="fc" id="L38">		issue.setsStatus(determineStoryStatus(gitlabIssue, inProgressLabelsForProject));</span>
+<span class="fc" id="L39">		issue.setsState(ACTIVE_ASSET_STATE);</span>
+<span class="fc" id="L40">		issue.setsEstimate(String.valueOf(gitlabIssue.getWeight()));</span>
+<span class="fc" id="L41">		issue.setChangeDate(gitlabIssue.getUpdatedAt());</span>
+		
+		//Project Data
+<span class="fc" id="L44">		issue.setsProjectID(project.getProjectId());</span>
+<span class="fc" id="L45">		issue.setsProjectName(project.getProjectId());</span>
+<span class="fc" id="L46">		issue.setsProjectBeginDate(EMPTY_STRING);</span>
+<span class="fc" id="L47">		issue.setsProjectEndDate(EMPTY_STRING);</span>
+<span class="fc" id="L48">		issue.setsProjectChangeDate(EMPTY_STRING);</span>
+<span class="fc" id="L49">		issue.setsProjectState(EMPTY_STRING);</span>
+<span class="fc" id="L50">		issue.setsProjectIsDeleted(FALSE_DELETED_STATE);</span>
+<span class="fc" id="L51">		issue.setsProjectPath(EMPTY_STRING);</span>
+		
+		//Team Data
+<span class="fc" id="L54">		issue.setsTeamID(project.getTeamId());</span>
+<span class="fc" id="L55">		issue.setsTeamAssetState(EMPTY_STRING);</span>
+<span class="fc" id="L56">		issue.setsTeamName(project.getTeamId());</span>
+<span class="fc" id="L57">		issue.setsTeamChangeDate(EMPTY_STRING);</span>
+<span class="fc" id="L58">		issue.setsTeamIsDeleted(FALSE_DELETED_STATE);</span>
+
+		//Set Owners Data
+<span class="fc" id="L61">		issue.setsOwnersChangeDate(new ArrayList&lt;String&gt;());</span>
+<span class="fc" id="L62">		issue.setsOwnersState(Arrays.asList(ACTIVE_ASSET_STATE));</span>
+<span class="fc" id="L63">		issue.setsOwnersIsDeleted(new ArrayList&lt;String&gt;());</span>
+		
+<span class="fc" id="L65">		setEpicData(gitlabIssue, issue);</span>
+<span class="fc" id="L66">		setSprintData(gitlabIssue, issue);</span>
+		
+<span class="fc" id="L68">		return issue;</span>
+	}
+
+	private void setEpicData(GitlabIssue gitlabIssue, Feature issue) {
+<span class="fc" id="L72">		String issueId = String.valueOf(gitlabIssue.getId());</span>
+<span class="fc" id="L73">		String storyNumber = String.valueOf(gitlabIssue.getIid());</span>
+		
+<span class="fc" id="L75">		issue.setsEpicID(issueId);</span>
+<span class="fc" id="L76">		issue.setsEpicNumber(storyNumber);</span>
+<span class="fc" id="L77">		issue.setsEpicName(gitlabIssue.getTitle());</span>
+<span class="fc" id="L78">		issue.setsEpicBeginDate(EMPTY_STRING);</span>
+<span class="fc" id="L79">		issue.setsEpicEndDate(EMPTY_STRING);</span>
+<span class="fc" id="L80">		issue.setsEpicType(EMPTY_STRING);</span>
+<span class="fc" id="L81">		issue.setsEpicAssetState(EMPTY_STRING);</span>
+<span class="fc" id="L82">		issue.setsEpicChangeDate(EMPTY_STRING);</span>
+<span class="fc" id="L83">		issue.setsEpicIsDeleted(FALSE_DELETED_STATE);</span>
+<span class="fc" id="L84">	}</span>
+
+	private void setSprintData(GitlabIssue gitlabIssue, Feature issue) {
+<span class="fc bfc" id="L87" title="All 4 branches covered.">		if (gitlabIssue.getMilestone() != null &amp;&amp; StringUtils.isNotBlank(gitlabIssue.getMilestone().getDueDate())) {</span>
+<span class="fc" id="L88">			issue.setsSprintID(String.valueOf(gitlabIssue.getMilestone().getId()));</span>
+<span class="fc" id="L89">			issue.setsSprintName(gitlabIssue.getMilestone().getTitle());</span>
+<span class="fc" id="L90">			issue.setsSprintBeginDate(gitlabIssue.getMilestone().getCreatedAt());</span>
+<span class="fc" id="L91">			issue.setsSprintEndDate(gitlabIssue.getMilestone().getDueDate());</span>
+<span class="fc" id="L92">			issue.setsSprintAssetState(ACTIVE_ASSET_STATE);</span>
+<span class="fc" id="L93">			issue.setsSprintChangeDate(gitlabIssue.getMilestone().getUpdatedAt());</span>
+<span class="fc" id="L94">			issue.setsSprintIsDeleted(FALSE_DELETED_STATE);</span>
+		} 
+		else {
+<span class="fc" id="L97">			issue.setsSprintID(FeatureCollectorConstants.SPRINT_KANBAN);</span>
+<span class="fc" id="L98">			issue.setsSprintName(FeatureCollectorConstants.SPRINT_KANBAN);</span>
+<span class="fc" id="L99">			issue.setsSprintBeginDate(EMPTY_STRING);</span>
+<span class="fc" id="L100">			issue.setsSprintEndDate(EMPTY_STRING);</span>
+<span class="fc" id="L101">			issue.setsSprintAssetState(ACTIVE_ASSET_STATE);</span>
+<span class="fc" id="L102">			issue.setsSprintChangeDate(EMPTY_STRING);</span>
+<span class="fc" id="L103">			issue.setsSprintIsDeleted(FALSE_DELETED_STATE);</span>
+		}
+<span class="fc" id="L105">	}</span>
+	
+	private String determineStoryStatus(GitlabIssue issue, List&lt;String&gt; inProgressLabelsForProject) {
+<span class="fc bfc" id="L108" title="All 2 branches covered.">		if(GITLAB_DONE_STATUS.equals(issue.getState())) {</span>
+<span class="fc" id="L109">			return FEATURE_DONE_STATUS;</span>
+		}
+<span class="fc bfc" id="L111" title="All 2 branches covered.">		else if (CollectionUtils.containsAny(inProgressLabelsForProject, issue.getLabels())) {</span>
+<span class="fc" id="L112">			return FEATURE_IN_PROGRESS_STATUS;</span>
+		}
+		
+<span class="fc" id="L115">		return EMPTY_STRING;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

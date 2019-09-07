@@ -1,0 +1,4 @@
+2019-02-27 17:57:36,134 INFO  c.c.d.c.AWSCloudCollectorTask - Collecting instance details for 1 of 2. Instance ID=i-12345678
+2019-02-27 17:57:36,194 INFO  c.c.d.c.AWSCloudCollectorTask - Collecting instance details for 2 of 2. Instance ID=i-23456789
+2019-02-27 18:00:40,077 INFO  c.c.d.c.AWSCloudCollectorTask - Collecting instance details for 1 of 2. Instance ID=i-12345678
+2019-02-27 18:00:40,139 INFO  c.c.d.c.AWSCloudCollectorTask - Collecting instance details for 2 of 2. Instance ID=i-23456789

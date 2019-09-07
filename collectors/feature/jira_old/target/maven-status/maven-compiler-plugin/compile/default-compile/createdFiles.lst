@@ -1,0 +1,16 @@
+com/capitalone/dashboard/collector/JiraClient.class
+com/capitalone/dashboard/model/Epic.class
+com/capitalone/dashboard/Application.class
+com/capitalone/dashboard/model/FeatureCollector.class
+com/capitalone/dashboard/collector/DefaultJiraClient.class
+com/capitalone/dashboard/model/IssueResult.class
+com/capitalone/dashboard/repository/FeatureCollectorRepository.class
+com/capitalone/dashboard/collector/FeatureSettings.class
+com/capitalone/dashboard/model/FeatureEpicResult.class
+com/capitalone/dashboard/repository/FeatureBoardRepository.class
+com/capitalone/dashboard/utils/Utilities.class
+com/capitalone/dashboard/collector/SprintFormatter.class
+com/capitalone/dashboard/model/Sprint.class
+com/capitalone/dashboard/model/FeatureBoard.class
+com/capitalone/dashboard/collector/FeatureCollectorTask.class
+com/capitalone/dashboard/model/JiraMode.class

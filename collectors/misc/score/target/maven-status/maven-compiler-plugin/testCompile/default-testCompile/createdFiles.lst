@@ -1,0 +1,6 @@
+com/capitalone/dashboard/widget/BuildWidgetScoreTest.class
+com/capitalone/dashboard/widget/QualityWidgetScoreTest.class
+com/capitalone/dashboard/widget/DeployWidgetScoreTest.class
+com/capitalone/dashboard/widget/GithubScmWidgetScoreTest.class
+com/capitalone/dashboard/ApplicationScoreServiceTest.class
+com/capitalone/dashboard/ApplicationScoreServiceTest$CalculateScoreBuilder.class

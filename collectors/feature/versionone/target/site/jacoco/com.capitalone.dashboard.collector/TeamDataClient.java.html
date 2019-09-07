@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>TeamDataClient.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:versionone-feature-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">TeamDataClient.java</span></div><h1>TeamDataClient.java</h1><pre class="source lang-java linenums">/*************************
+ * DA-BOARD-LICENSE-START*********************************
+ * Copyright 2014 CapitalOne, LLC.
+ * &lt;p&gt;
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * &lt;p&gt;
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * &lt;p&gt;
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * ************************DA-BOARD-LICENSE-END
+ *********************************/
+
+package com.capitalone.dashboard.collector;
+
+import com.capitalone.dashboard.datafactory.versionone.VersionOneDataFactoryImpl;
+import com.capitalone.dashboard.misc.HygieiaException;
+import com.capitalone.dashboard.model.Collector;
+import com.capitalone.dashboard.model.Team;
+import com.capitalone.dashboard.repository.FeatureCollectorRepository;
+import com.capitalone.dashboard.repository.TeamRepository;
+import com.capitalone.dashboard.util.DateUtil;
+import com.capitalone.dashboard.util.FeatureCollectorConstants;
+import org.bson.types.ObjectId;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
+
+import java.util.List;
+
+/**
+ * This is the primary implemented/extended data collector for the feature
+ * collector. This will get data from the source system, but will grab the
+ * majority of needed data and aggregate it in a single, flat MongoDB collection
+ * for consumption.
+ *
+ * @author kfk884
+ */
+public class TeamDataClient extends BaseClient {
+<span class="nc" id="L48">	private static final Logger LOGGER = LoggerFactory.getLogger(TeamDataClient.class);</span>
+
+	private final TeamRepository teamRepo;
+	private final FeatureCollectorRepository featureCollectorRepository;
+	private ObjectId oldTeamId;
+	private boolean oldTeamEnabledState;
+
+	/**
+	 * Extends the constructor from the super class.
+	 *
+	 *
+	 */
+	public TeamDataClient(FeatureCollectorRepository featureCollectorRepository,
+			FeatureSettings featureSettings, TeamRepository teamRepository,
+			VersionOneDataFactoryImpl vOneApi) {
+<span class="nc" id="L63">        super(vOneApi, featureSettings);</span>
+<span class="nc" id="L64">        LOGGER.info(&quot;Get teams...&quot;);</span>
+<span class="nc" id="L65">		this.featureCollectorRepository = featureCollectorRepository;</span>
+<span class="nc" id="L66">		this.teamRepo = teamRepository;</span>
+<span class="nc" id="L67">	}</span>
+
+	/**
+	 * Updates the MongoDB with a JSONArray received from the source system
+	 * back-end with story-based data.
+	 *
+	 * @param tmpMongoDetailArray
+	 *            A JSON response in JSONArray format from the source system
+	 *
+	 */
+    @Override
+	protected void updateMongoInfo(JSONArray tmpMongoDetailArray) {
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		for (Object obj : tmpMongoDetailArray) {</span>
+<span class="nc" id="L80">			JSONObject dataMainObj = (JSONObject) obj;</span>
+<span class="nc" id="L81">			Team team = new Team(&quot;&quot;, &quot;&quot;);</span>
+			/*
+			 * Checks to see if the available asset state is not active from the
+			 * V1 Response and removes it if it exists and not active:
+			 */
+<span class="nc bnc" id="L86" title="All 2 branches missed.">			if (!getJSONString(dataMainObj, &quot;AssetState&quot;).equalsIgnoreCase(&quot;Active&quot;)) {</span>
+<span class="nc" id="L87">				this.removeInactiveScopeOwnerByTeamId(getJSONString(dataMainObj, &quot;_oid&quot;));</span>
+			} else {
+<span class="nc bnc" id="L89" title="All 2 branches missed.">				if (removeExistingEntity(getJSONString(dataMainObj, &quot;_oid&quot;))) {</span>
+<span class="nc" id="L90">					team.setId(this.getOldTeamId());</span>
+<span class="nc" id="L91">					team.setEnabled(this.isOldTeamEnabledState());</span>
+				}
+				// collectorId
+<span class="nc" id="L94">				team.setCollectorId(</span>
+<span class="nc" id="L95">						featureCollectorRepository.findByName(FeatureCollectorConstants.VERSIONONE).getId());</span>
+				// teamId
+<span class="nc" id="L97">				team.setTeamId(getJSONString(dataMainObj, &quot;_oid&quot;));</span>
+				// name
+<span class="nc" id="L99">				team.setName(getJSONString(dataMainObj, &quot;Name&quot;));</span>
+				// changeDate;
+<span class="nc" id="L101">				team.setChangeDate(</span>
+<span class="nc" id="L102">						getJSONString(dataMainObj, &quot;ChangeDate&quot;));</span>
+				// assetState
+<span class="nc" id="L104">				team.setAssetState(getJSONString(dataMainObj, &quot;AssetState&quot;));</span>
+				// isDeleted;
+<span class="nc" id="L106">				team.setIsDeleted(getJSONString(dataMainObj, &quot;IsDeleted&quot;));</span>
+<span class="nc" id="L107">				teamRepo.save(team);</span>
+			}
+<span class="nc" id="L109">		}</span>
+<span class="nc" id="L110">	}</span>
+
+	/**
+	 * Removes scope-owners (teams) from the collection which have went to an
+	 * non-active state
+	 *
+	 * @param teamId
+	 *            A given Team ID that went inactive and should be removed from
+	 *            the data collection
+	 */
+
+	private void removeInactiveScopeOwnerByTeamId(String teamId) {
+<span class="nc bnc" id="L122" title="All 2 branches missed.">		if (!StringUtils.isEmpty(teamId)</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">				&amp;&amp; teamRepo.findByTeamId(teamId) != null) {</span>
+<span class="nc" id="L124">			ObjectId inactiveTeamId = teamRepo.findByTeamId(teamId).getId();</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">			if (inactiveTeamId != null) {</span>
+<span class="nc" id="L126">				teamRepo.delete(inactiveTeamId);</span>
+			}
+		}
+<span class="nc" id="L129">	}</span>
+
+	/**
+	 * Explicitly updates queries for the source system, and initiates the
+	 * update to MongoDB from those calls.
+	 */
+	public void updateTeamInformation() throws HygieiaException {
+		// super.objClass = ScopeOwnerCollectorItem.class;
+<span class="nc" id="L137">		String returnDate = getFeatureSettings().getDeltaCollectorItemStartDate();</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">		if (!StringUtils.isEmpty(getMaxChangeDate())) {</span>
+<span class="nc" id="L139">			returnDate = getMaxChangeDate();</span>
+		}
+<span class="nc" id="L141">		returnDate = DateUtil.getChangeDateMinutePrior(returnDate,</span>
+<span class="nc" id="L142">				getFeatureSettings().getScheduledPriorMin());</span>
+<span class="nc" id="L143">		String queryName = getFeatureSettings().getTeamQuery();</span>
+<span class="nc" id="L144">		String query = getQuery(returnDate, queryName);</span>
+<span class="nc" id="L145">		updateObjectInformation(query);</span>
+<span class="nc" id="L146">	}</span>
+
+	/**
+	 * Validates current entry and removes new entry if an older item exists in
+	 * the repo
+	 *
+	 * @param localId
+	 *            local repository item ID (not the precise mongoID)
+	 */
+	protected Boolean removeExistingEntity(String localId) {
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		if (StringUtils.isEmpty(localId))</span>
+<span class="nc" id="L157">			return false;</span>
+<span class="nc" id="L158">		Team team = teamRepo.findByTeamId(localId);</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">		if (team == null)</span>
+<span class="nc" id="L160">			return false;</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">		if (!localId.equalsIgnoreCase(team.getTeamId()))</span>
+<span class="nc" id="L162">			return false;</span>
+
+<span class="nc" id="L164">		this.setOldTeamId(team.getId());</span>
+<span class="nc" id="L165">		this.setOldTeamEnabledState(team.isEnabled());</span>
+<span class="nc" id="L166">		teamRepo.delete(team.getId());</span>
+<span class="nc" id="L167">		return true;</span>
+
+	}
+
+
+	/**
+	 * Retrieves the maximum change date for a given query.
+	 *
+	 * @return A list object of the maximum change date
+	 */
+    @Override
+	public String getMaxChangeDate() {
+<span class="nc" id="L179">		Collector col = featureCollectorRepository.findByName(FeatureCollectorConstants.VERSIONONE);</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">		if (col == null)</span>
+<span class="nc" id="L181">			return &quot;&quot;;</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">		if (StringUtils.isEmpty(getFeatureSettings().getDeltaCollectorItemStartDate()))</span>
+<span class="nc" id="L183">			return &quot;&quot;;</span>
+
+<span class="nc" id="L185">		List&lt;Team&gt; response = teamRepo.findTopByChangeDateDesc(col.getId(),</span>
+<span class="nc" id="L186">				getFeatureSettings().getDeltaCollectorItemStartDate());</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">		if (!CollectionUtils.isEmpty(response))</span>
+<span class="nc" id="L188">			return response.get(0).getChangeDate();</span>
+<span class="nc" id="L189">		return &quot;&quot;;</span>
+	}
+
+	private ObjectId getOldTeamId() {
+<span class="nc" id="L193">		return oldTeamId;</span>
+	}
+
+	private void setOldTeamId(ObjectId oldTeamId) {
+<span class="nc" id="L197">		this.oldTeamId = oldTeamId;</span>
+<span class="nc" id="L198">	}</span>
+
+	private boolean isOldTeamEnabledState() {
+<span class="nc" id="L201">		return oldTeamEnabledState;</span>
+	}
+
+	private void setOldTeamEnabledState(boolean oldTeamEnabledState) {
+<span class="nc" id="L205">		this.oldTeamEnabledState = oldTeamEnabledState;</span>
+<span class="nc" id="L206">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

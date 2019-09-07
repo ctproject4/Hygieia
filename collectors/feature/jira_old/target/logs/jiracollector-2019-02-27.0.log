@@ -1,0 +1,479 @@
+2019-02-27 13:44:27,599 INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 5.2.2.Final
+2019-02-27 13:44:27,713 INFO  o.s.c.a.AnnotationConfigApplicationContext - Refreshing org.springframework.context.annotation.AnnotationConfigApplicationContext@3fe1824b: startup date [Wed Feb 27 13:44:27 IST 2019]; root of context hierarchy
+2019-02-27 13:44:27,891 INFO  o.s.b.f.a.AutowiredAnnotationBeanPostProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-02-27 13:44:27,962 INFO  o.s.c.s.PostProcessorRegistrationDelegate$BeanPostProcessorChecker - Bean 'configurationPropertiesRebinderAutoConfiguration' of type [class org.springframework.cloud.autoconfigure.ConfigurationPropertiesRebinderAutoConfiguration$$EnhancerBySpringCGLIB$$1a2aea30] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
+2019-02-27 13:44:28,241 INFO  o.s.c.c.c.ConfigServicePropertySourceLocator - Fetching config from server at: http://localhost:8888
+2019-02-27 13:44:28,355 WARN  o.s.c.c.c.ConfigServicePropertySourceLocator - Could not locate PropertySource: I/O error on GET request for "http://localhost:8888/application/default": Connection refused (Connection refused); nested exception is java.net.ConnectException: Connection refused (Connection refused)
+2019-02-27 13:44:28,357 INFO  com.capitalone.dashboard.Application - No profiles are active
+2019-02-27 13:44:28,371 INFO  o.s.c.a.AnnotationConfigApplicationContext - Refreshing org.springframework.context.annotation.AnnotationConfigApplicationContext@480f79d0: startup date [Wed Feb 27 13:44:28 IST 2019]; parent: org.springframework.context.annotation.AnnotationConfigApplicationContext@3fe1824b
+2019-02-27 13:44:29,568 INFO  o.s.cloud.context.scope.GenericScope - BeanFactory id=73603fe0-9b59-323b-bc1d-654033049f3c
+2019-02-27 13:44:29,573 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Post-processing PropertySource instances
+2019-02-27 13:44:29,582 INFO  c.u.j.c.StringEncryptorConfiguration - String Encryptor custom Bean not found with name 'jasyptStringEncryptor'. Initializing String Encryptor based on properties with name 'jasyptStringEncryptor'
+2019-02-27 13:44:29,587 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource commandLineArgs [org.springframework.core.env.SimpleCommandLinePropertySource] to EncryptableEnumerablePropertySourceWrapper
+2019-02-27 13:44:29,588 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource systemProperties [org.springframework.core.env.MapPropertySource] to EncryptableMapPropertySourceWrapper
+2019-02-27 13:44:29,588 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource systemEnvironment [org.springframework.core.env.SystemEnvironmentPropertySource] to EncryptableMapPropertySourceWrapper
+2019-02-27 13:44:29,588 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource random [org.springframework.boot.context.config.RandomValuePropertySource] to EncryptablePropertySourceWrapper
+2019-02-27 13:44:29,588 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource applicationConfig: [file:../jira.properties] [org.springframework.core.env.PropertiesPropertySource] to EncryptableMapPropertySourceWrapper
+2019-02-27 13:44:29,588 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource springCloudClientHostInfo [org.springframework.core.env.MapPropertySource] to EncryptableMapPropertySourceWrapper
+2019-02-27 13:44:29,588 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource defaultProperties [org.springframework.core.env.MapPropertySource] to EncryptableMapPropertySourceWrapper
+2019-02-27 13:44:29,592 INFO  o.s.b.f.a.AutowiredAnnotationBeanPostProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-02-27 13:44:29,623 INFO  o.s.c.s.PostProcessorRegistrationDelegate$BeanPostProcessorChecker - Bean 'org.springframework.cloud.autoconfigure.ConfigurationPropertiesRebinderAutoConfiguration' of type [class org.springframework.cloud.autoconfigure.ConfigurationPropertiesRebinderAutoConfiguration$$EnhancerBySpringCGLIB$$1a2aea30] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
+2019-02-27 13:44:29,738 INFO  o.s.s.c.ThreadPoolTaskScheduler - Initializing ExecutorService  'taskScheduler'
+2019-02-27 13:44:29,782 INFO  c.c.dashboard.config.MongoConfig - ReplicaSetfalse
+2019-02-27 13:44:29,846 INFO  c.c.dashboard.config.MongoConfig - Initializing Mongo Client server at: localhost:27017
+2019-02-27 13:44:29,872 INFO  org.mongodb.driver.cluster - Cluster created with settings {hosts=[localhost:27017], mode=SINGLE, requiredClusterType=UNKNOWN, serverSelectionTimeout='30000 ms', maxWaitQueueSize=500}
+2019-02-27 13:44:29,922 INFO  c.c.dashboard.config.MongoConfig - Connecting to Mongo: Mongo{options=MongoClientOptions{description='null', readPreference=primary, writeConcern=WriteConcern{w=1, wtimeout=0, fsync=false, j=false, codecRegistry=org.bson.codecs.configuration.ProvidersCodecRegistry@64caea34, minConnectionsPerHost=0, maxConnectionsPerHost=100, threadsAllowedToBlockForConnectionMultiplier=5, serverSelectionTimeout=30000, maxWaitTime=120000, maxConnectionIdleTime=0, maxConnectionLifeTime=0, connectTimeout=10000, socketTimeout=0, socketKeepAlive=false, sslEnabled=false, sslInvalidHostNamesAllowed=false, alwaysUseMBeans=false, heartbeatFrequency=10000, minHeartbeatFrequency=500, heartbeatConnectTimeout=20000, heartbeatSocketTimeout=20000, localThreshold=15, requiredReplicaSetName='null', dbDecoderFactory=com.mongodb.DefaultDBDecoder$1@2d096fb2, dbEncoderFactory=com.mongodb.DefaultDBEncoder$1@6864fa1e, socketFactory=javax.net.DefaultSocketFactory@2dbed7b, cursorFinalizerEnabled=true, connectionPoolSettings=ConnectionPoolSettings{maxSize=100, minSize=0, maxWaitQueueSize=500, maxWaitTimeMS=120000, maxConnectionLifeTimeMS=0, maxConnectionIdleTimeMS=0, maintenanceInitialDelayMS=0, maintenanceFrequencyMS=60000}, socketSettings=SocketSettings{connectTimeoutMS=10000, readTimeoutMS=0, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}, serverSettings=ServerSettings{heartbeatFrequencyMS=10000, minHeartbeatFrequencyMS=500}, heartbeatSocketSettings=SocketSettings{connectTimeoutMS=20000, readTimeoutMS=20000, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}}}
+2019-02-27 13:44:29,962 INFO  org.mongodb.driver.connection - Opened connection [connectionId{localValue:1, serverValue:4720}] to localhost:27017
+2019-02-27 13:44:29,964 INFO  org.mongodb.driver.cluster - Monitor thread successfully connected to server with description ServerDescription{address=localhost:27017, type=STANDALONE, state=CONNECTED, ok=true, version=ServerVersion{versionList=[3, 4, 19]}, minWireVersion=0, maxWireVersion=5, electionId=null, maxDocumentSize=16777216, roundTripTimeNanos=1572436}
+2019-02-27 13:44:30,077 INFO  org.mongodb.driver.connection - Opened connection [connectionId{localValue:2, serverValue:4721}] to localhost:27017
+2019-02-27 13:44:30,616 INFO  c.c.dashboard.config.MongoConfig - ReplicaSetfalse
+2019-02-27 13:44:30,616 INFO  c.c.dashboard.config.MongoConfig - Initializing Mongo Client server at: localhost:27017
+2019-02-27 13:44:30,617 INFO  org.mongodb.driver.cluster - Cluster created with settings {hosts=[localhost:27017], mode=SINGLE, requiredClusterType=UNKNOWN, serverSelectionTimeout='30000 ms', maxWaitQueueSize=500}
+2019-02-27 13:44:30,618 INFO  c.c.dashboard.config.MongoConfig - Connecting to Mongo: Mongo{options=MongoClientOptions{description='null', readPreference=primary, writeConcern=WriteConcern{w=1, wtimeout=0, fsync=false, j=false, codecRegistry=org.bson.codecs.configuration.ProvidersCodecRegistry@64caea34, minConnectionsPerHost=0, maxConnectionsPerHost=100, threadsAllowedToBlockForConnectionMultiplier=5, serverSelectionTimeout=30000, maxWaitTime=120000, maxConnectionIdleTime=0, maxConnectionLifeTime=0, connectTimeout=10000, socketTimeout=0, socketKeepAlive=false, sslEnabled=false, sslInvalidHostNamesAllowed=false, alwaysUseMBeans=false, heartbeatFrequency=10000, minHeartbeatFrequency=500, heartbeatConnectTimeout=20000, heartbeatSocketTimeout=20000, localThreshold=15, requiredReplicaSetName='null', dbDecoderFactory=com.mongodb.DefaultDBDecoder$1@2d096fb2, dbEncoderFactory=com.mongodb.DefaultDBEncoder$1@6864fa1e, socketFactory=javax.net.DefaultSocketFactory@2dbed7b, cursorFinalizerEnabled=true, connectionPoolSettings=ConnectionPoolSettings{maxSize=100, minSize=0, maxWaitQueueSize=500, maxWaitTimeMS=120000, maxConnectionLifeTimeMS=0, maxConnectionIdleTimeMS=0, maintenanceInitialDelayMS=0, maintenanceFrequencyMS=60000}, socketSettings=SocketSettings{connectTimeoutMS=10000, readTimeoutMS=0, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}, serverSettings=ServerSettings{heartbeatFrequencyMS=10000, minHeartbeatFrequencyMS=500}, heartbeatSocketSettings=SocketSettings{connectTimeoutMS=20000, readTimeoutMS=20000, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}}}
+2019-02-27 13:44:30,623 INFO  org.mongodb.driver.connection - Opened connection [connectionId{localValue:3, serverValue:4722}] to localhost:27017
+2019-02-27 13:44:30,625 INFO  org.mongodb.driver.cluster - Monitor thread successfully connected to server with description ServerDescription{address=localhost:27017, type=STANDALONE, state=CONNECTED, ok=true, version=ServerVersion{versionList=[3, 4, 19]}, minWireVersion=0, maxWireVersion=5, electionId=null, maxDocumentSize=16777216, roundTripTimeNanos=264306}
+2019-02-27 13:44:30,626 INFO  c.c.dashboard.config.MongoConfig - ReplicaSetfalse
+2019-02-27 13:44:30,626 INFO  c.c.dashboard.config.MongoConfig - Initializing Mongo Client server at: localhost:27017
+2019-02-27 13:44:30,626 INFO  org.mongodb.driver.cluster - Cluster created with settings {hosts=[localhost:27017], mode=SINGLE, requiredClusterType=UNKNOWN, serverSelectionTimeout='30000 ms', maxWaitQueueSize=500}
+2019-02-27 13:44:30,628 INFO  org.mongodb.driver.connection - Opened connection [connectionId{localValue:4, serverValue:4723}] to localhost:27017
+2019-02-27 13:44:30,629 INFO  org.mongodb.driver.cluster - Monitor thread successfully connected to server with description ServerDescription{address=localhost:27017, type=STANDALONE, state=CONNECTED, ok=true, version=ServerVersion{versionList=[3, 4, 19]}, minWireVersion=0, maxWireVersion=5, electionId=null, maxDocumentSize=16777216, roundTripTimeNanos=262106}
+2019-02-27 13:44:30,630 INFO  c.c.dashboard.config.MongoConfig - Connecting to Mongo: Mongo{options=MongoClientOptions{description='null', readPreference=primary, writeConcern=WriteConcern{w=1, wtimeout=0, fsync=false, j=false, codecRegistry=org.bson.codecs.configuration.ProvidersCodecRegistry@64caea34, minConnectionsPerHost=0, maxConnectionsPerHost=100, threadsAllowedToBlockForConnectionMultiplier=5, serverSelectionTimeout=30000, maxWaitTime=120000, maxConnectionIdleTime=0, maxConnectionLifeTime=0, connectTimeout=10000, socketTimeout=0, socketKeepAlive=false, sslEnabled=false, sslInvalidHostNamesAllowed=false, alwaysUseMBeans=false, heartbeatFrequency=10000, minHeartbeatFrequency=500, heartbeatConnectTimeout=20000, heartbeatSocketTimeout=20000, localThreshold=15, requiredReplicaSetName='null', dbDecoderFactory=com.mongodb.DefaultDBDecoder$1@2d096fb2, dbEncoderFactory=com.mongodb.DefaultDBEncoder$1@6864fa1e, socketFactory=javax.net.DefaultSocketFactory@2dbed7b, cursorFinalizerEnabled=true, connectionPoolSettings=ConnectionPoolSettings{maxSize=100, minSize=0, maxWaitQueueSize=500, maxWaitTimeMS=120000, maxConnectionLifeTimeMS=0, maxConnectionIdleTimeMS=0, maintenanceInitialDelayMS=0, maintenanceFrequencyMS=60000}, socketSettings=SocketSettings{connectTimeoutMS=10000, readTimeoutMS=0, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}, serverSettings=ServerSettings{heartbeatFrequencyMS=10000, minHeartbeatFrequencyMS=500}, heartbeatSocketSettings=SocketSettings{connectTimeoutMS=20000, readTimeoutMS=20000, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}}}
+2019-02-27 13:44:31,154 INFO  c.c.dashboard.config.MongoConfig - ReplicaSetfalse
+2019-02-27 13:44:31,154 INFO  c.c.dashboard.config.MongoConfig - Initializing Mongo Client server at: localhost:27017
+2019-02-27 13:44:31,155 INFO  org.mongodb.driver.cluster - Cluster created with settings {hosts=[localhost:27017], mode=SINGLE, requiredClusterType=UNKNOWN, serverSelectionTimeout='30000 ms', maxWaitQueueSize=500}
+2019-02-27 13:44:31,188 INFO  org.mongodb.driver.connection - Opened connection [connectionId{localValue:5, serverValue:4724}] to localhost:27017
+2019-02-27 13:44:31,188 INFO  c.c.dashboard.config.MongoConfig - Connecting to Mongo: Mongo{options=MongoClientOptions{description='null', readPreference=primary, writeConcern=WriteConcern{w=1, wtimeout=0, fsync=false, j=false, codecRegistry=org.bson.codecs.configuration.ProvidersCodecRegistry@64caea34, minConnectionsPerHost=0, maxConnectionsPerHost=100, threadsAllowedToBlockForConnectionMultiplier=5, serverSelectionTimeout=30000, maxWaitTime=120000, maxConnectionIdleTime=0, maxConnectionLifeTime=0, connectTimeout=10000, socketTimeout=0, socketKeepAlive=false, sslEnabled=false, sslInvalidHostNamesAllowed=false, alwaysUseMBeans=false, heartbeatFrequency=10000, minHeartbeatFrequency=500, heartbeatConnectTimeout=20000, heartbeatSocketTimeout=20000, localThreshold=15, requiredReplicaSetName='null', dbDecoderFactory=com.mongodb.DefaultDBDecoder$1@2d096fb2, dbEncoderFactory=com.mongodb.DefaultDBEncoder$1@6864fa1e, socketFactory=javax.net.DefaultSocketFactory@2dbed7b, cursorFinalizerEnabled=true, connectionPoolSettings=ConnectionPoolSettings{maxSize=100, minSize=0, maxWaitQueueSize=500, maxWaitTimeMS=120000, maxConnectionLifeTimeMS=0, maxConnectionIdleTimeMS=0, maintenanceInitialDelayMS=0, maintenanceFrequencyMS=60000}, socketSettings=SocketSettings{connectTimeoutMS=10000, readTimeoutMS=0, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}, serverSettings=ServerSettings{heartbeatFrequencyMS=10000, minHeartbeatFrequencyMS=500}, heartbeatSocketSettings=SocketSettings{connectTimeoutMS=20000, readTimeoutMS=20000, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}}}
+2019-02-27 13:44:31,189 INFO  org.mongodb.driver.cluster - Monitor thread successfully connected to server with description ServerDescription{address=localhost:27017, type=STANDALONE, state=CONNECTED, ok=true, version=ServerVersion{versionList=[3, 4, 19]}, minWireVersion=0, maxWireVersion=5, electionId=null, maxDocumentSize=16777216, roundTripTimeNanos=305507}
+2019-02-27 13:44:31,848 INFO  o.s.j.e.a.AnnotationMBeanExporter - Registering beans for JMX exposure on startup
+2019-02-27 13:44:31,855 INFO  o.s.j.e.a.AnnotationMBeanExporter - Bean with name 'configurationPropertiesRebinder' has been autodetected for JMX exposure
+2019-02-27 13:44:31,856 INFO  o.s.j.e.a.AnnotationMBeanExporter - Bean with name 'environmentManager' has been autodetected for JMX exposure
+2019-02-27 13:44:31,857 INFO  o.s.j.e.a.AnnotationMBeanExporter - Bean with name 'refreshScope' has been autodetected for JMX exposure
+2019-02-27 13:44:31,859 INFO  o.s.j.e.a.AnnotationMBeanExporter - Located managed bean 'environmentManager': registering with JMX server as MBean [org.springframework.cloud.context.environment:name=environmentManager,type=EnvironmentManager]
+2019-02-27 13:44:31,869 INFO  o.s.j.e.a.AnnotationMBeanExporter - Located managed bean 'refreshScope': registering with JMX server as MBean [org.springframework.cloud.context.scope.refresh:name=refreshScope,type=RefreshScope]
+2019-02-27 13:44:31,875 INFO  o.s.j.e.a.AnnotationMBeanExporter - Located managed bean 'configurationPropertiesRebinder': registering with JMX server as MBean [org.springframework.cloud.context.properties:name=configurationPropertiesRebinder,context=480f79d0,type=ConfigurationPropertiesRebinder]
+2019-02-27 13:44:31,913 INFO  com.capitalone.dashboard.Application - Started Application in 4.694 seconds (JVM running for 5.282)
+2019-02-27 13:45:00,000 INFO  c.c.d.collector.CollectorTask - Running Collector: Jira
+2019-02-27 13:45:00,030 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-27 13:45:00,030 INFO  c.c.d.collector.CollectorTask - https://jira.citiustech.com
+2019-02-27 13:45:00,030 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-27 13:45:00,039 INFO  c.c.d.collector.FeatureCollectorTask - JIRA Collector is set to work in Board mode
+2019-02-27 13:45:00,039 INFO  c.c.d.collector.FeatureCollectorTask - Hours since last run = 430904. Collector is about to refresh Team/Board information
+2019-02-27 13:45:00,642 INFO  c.c.d.collector.DefaultJiraClient - JIRA Collector collected 22 boards
+2019-02-27 13:45:00,643 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:1-CT-PG Board
+2019-02-27 13:45:00,654 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:18-CT BIC Engineering
+2019-02-27 13:45:00,657 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:23-CT Support Desk Board
+2019-02-27 13:45:00,659 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:38-CT BIC Engineering Administration
+2019-02-27 13:45:00,661 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:41-Test Board 2
+2019-02-27 13:45:00,663 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:44-Copy of CT Support Desk Board
+2019-02-27 13:45:00,665 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:45-CT Solutions Support Service Desk
+2019-02-27 13:45:00,668 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:46-CT BIC Solutions Impl. Defect Tracking
+2019-02-27 13:45:00,670 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:54-Cambia Metadata
+2019-02-27 13:45:00,672 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:55-Scrum Board
+2019-02-27 13:45:00,674 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:76-CT BIC Support Quest
+2019-02-27 13:45:00,676 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:126-Change Request Dashboard
+2019-02-27 13:45:00,678 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:128-TJP board
+2019-02-27 13:45:00,680 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:200-Test Board
+2019-02-27 13:45:00,682 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:201-Test agile board
+2019-02-27 13:45:00,684 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:202-Demo test
+2019-02-27 13:45:00,686 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:206-TEST PROJECT 1
+2019-02-27 13:45:00,688 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:219-EVP board
+2019-02-27 13:45:00,690 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:232-TPB board
+2019-02-27 13:45:00,693 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:233-Jeevan_Test_Board
+2019-02-27 13:45:00,695 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:242-Amerihealth-2019
+2019-02-27 13:45:00,697 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:246-CEN board
+2019-02-27 13:45:00,700 INFO  c.c.d.collector.CollectorTask - Board Data Collected. Added  22        0s
+2019-02-27 13:45:00,909 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10604-CT BIC Support Davita
+2019-02-27 13:45:00,913 INFO  c.c.d.collector.FeatureCollectorTask - Adding :11101-CT BIC Engineering - XRAY
+2019-02-27 13:45:00,915 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10802-CT BIC Support Activity Tracker
+2019-02-27 13:45:00,917 INFO  c.c.d.collector.FeatureCollectorTask - Adding :12403-CT BIC Support Team Health Project
+2019-02-27 13:45:00,918 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10500-CT BIC Engineering Administration
+2019-02-27 13:45:00,920 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10313-CT BIC Engineering
+2019-02-27 13:45:00,922 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10605-CT BIC Support IntrinsiQ
+2019-02-27 13:45:00,923 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10606-CT BIC Support Quest
+2019-02-27 13:45:00,925 INFO  c.c.d.collector.FeatureCollectorTask - Adding :12800-Test JIRA project
+2019-02-27 13:45:00,926 INFO  c.c.d.collector.FeatureCollectorTask - Adding :15100-Test Project Kanban board
+2019-02-27 13:45:00,928 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10607-CT BIC Support CQ-IQ
+2019-02-27 13:45:00,929 INFO  c.c.d.collector.FeatureCollectorTask - Adding :14907-Test Agile Project
+2019-02-27 13:45:00,931 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10600-CT BIC Support Advisory Board
+2019-02-27 13:45:00,932 INFO  c.c.d.collector.FeatureCollectorTask - Adding :14903-CT BIC Support FLB
+2019-02-27 13:45:00,934 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10315-CT BIC Support VUMC
+2019-02-27 13:45:00,935 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10601-CT BIC Support Alignment Health
+2019-02-27 13:45:00,937 INFO  c.c.d.collector.FeatureCollectorTask - Adding :12405-CT BIC Support Centra Health Project
+2019-02-27 13:45:00,938 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10700-CT Solutions Impl. Defect Tracking
+2019-02-27 13:45:00,940 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10603-CT BIC Support CCNC
+2019-02-27 13:45:00,942 INFO  c.c.d.collector.FeatureCollectorTask - Adding :15401-CentriCT
+2019-02-27 13:45:00,943 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10311-CT BIC Support Medhost
+2019-02-27 13:45:00,945 INFO  c.c.d.collector.CollectorTask - Project Data Collected 21        0s
+2019-02-27 13:45:00,966 INFO  c.c.d.collector.FeatureCollectorTask - Refreshing issues for Board ID:246
+2019-02-27 13:45:01,154 INFO  c.c.d.collector.FeatureCollectorTask - Refreshing issues for Board ID:18
+2019-02-27 13:46:17,879 INFO  o.s.c.a.AnnotationConfigApplicationContext - Closing org.springframework.context.annotation.AnnotationConfigApplicationContext@480f79d0: startup date [Wed Feb 27 13:44:28 IST 2019]; parent: org.springframework.context.annotation.AnnotationConfigApplicationContext@3fe1824b
+2019-02-27 13:46:17,894 INFO  o.s.j.e.a.AnnotationMBeanExporter - Unregistering JMX-exposed beans on shutdown
+2019-02-27 13:46:17,895 INFO  o.s.j.e.a.AnnotationMBeanExporter - Unregistering JMX-exposed beans
+2019-02-27 13:46:17,917 INFO  o.s.s.c.ThreadPoolTaskScheduler - Shutting down ExecutorService 'taskScheduler'
+2019-02-27 13:46:56,196 INFO  o.s.c.a.AnnotationConfigApplicationContext - Refreshing org.springframework.context.annotation.AnnotationConfigApplicationContext@30f6328b: startup date [Wed Feb 27 13:46:56 IST 2019]; root of context hierarchy
+2019-02-27 13:46:56,374 INFO  o.s.b.f.a.AutowiredAnnotationBeanPostProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-02-27 13:46:56,448 INFO  o.s.c.s.PostProcessorRegistrationDelegate$BeanPostProcessorChecker - Bean 'configurationPropertiesRebinderAutoConfiguration' of type [class org.springframework.cloud.autoconfigure.ConfigurationPropertiesRebinderAutoConfiguration$$EnhancerBySpringCGLIB$$38e69b9c] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
+2019-02-27 13:46:56,752 INFO  o.s.c.c.c.ConfigServicePropertySourceLocator - Fetching config from server at: http://localhost:8888
+2019-02-27 13:46:56,863 WARN  o.s.c.c.c.ConfigServicePropertySourceLocator - Could not locate PropertySource: I/O error on GET request for "http://localhost:8888/application/default": Connection refused (Connection refused); nested exception is java.net.ConnectException: Connection refused (Connection refused)
+2019-02-27 13:46:56,865 INFO  com.capitalone.dashboard.Application - No profiles are active
+2019-02-27 13:46:56,878 INFO  o.s.c.a.AnnotationConfigApplicationContext - Refreshing org.springframework.context.annotation.AnnotationConfigApplicationContext@65986d7e: startup date [Wed Feb 27 13:46:56 IST 2019]; parent: org.springframework.context.annotation.AnnotationConfigApplicationContext@30f6328b
+2019-02-27 13:46:58,043 INFO  o.s.cloud.context.scope.GenericScope - BeanFactory id=73603fe0-9b59-323b-bc1d-654033049f3c
+2019-02-27 13:46:58,047 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Post-processing PropertySource instances
+2019-02-27 13:46:58,055 INFO  c.u.j.c.StringEncryptorConfiguration - String Encryptor custom Bean not found with name 'jasyptStringEncryptor'. Initializing String Encryptor based on properties with name 'jasyptStringEncryptor'
+2019-02-27 13:46:58,061 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource commandLineArgs [org.springframework.core.env.SimpleCommandLinePropertySource] to EncryptableEnumerablePropertySourceWrapper
+2019-02-27 13:46:58,061 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource systemProperties [org.springframework.core.env.MapPropertySource] to EncryptableMapPropertySourceWrapper
+2019-02-27 13:46:58,062 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource systemEnvironment [org.springframework.core.env.SystemEnvironmentPropertySource] to EncryptableMapPropertySourceWrapper
+2019-02-27 13:46:58,062 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource random [org.springframework.boot.context.config.RandomValuePropertySource] to EncryptablePropertySourceWrapper
+2019-02-27 13:46:58,062 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource applicationConfig: [file:../jira.properties] [org.springframework.core.env.PropertiesPropertySource] to EncryptableMapPropertySourceWrapper
+2019-02-27 13:46:58,062 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource springCloudClientHostInfo [org.springframework.core.env.MapPropertySource] to EncryptableMapPropertySourceWrapper
+2019-02-27 13:46:58,062 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource defaultProperties [org.springframework.core.env.MapPropertySource] to EncryptableMapPropertySourceWrapper
+2019-02-27 13:46:58,065 INFO  o.s.b.f.a.AutowiredAnnotationBeanPostProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-02-27 13:46:58,095 INFO  o.s.c.s.PostProcessorRegistrationDelegate$BeanPostProcessorChecker - Bean 'org.springframework.cloud.autoconfigure.ConfigurationPropertiesRebinderAutoConfiguration' of type [class org.springframework.cloud.autoconfigure.ConfigurationPropertiesRebinderAutoConfiguration$$EnhancerBySpringCGLIB$$38e69b9c] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
+2019-02-27 13:46:58,186 INFO  o.s.s.c.ThreadPoolTaskScheduler - Initializing ExecutorService  'taskScheduler'
+2019-02-27 13:46:58,227 INFO  c.c.dashboard.config.MongoConfig - ReplicaSetfalse
+2019-02-27 13:46:58,286 INFO  c.c.dashboard.config.MongoConfig - Initializing Mongo Client server at: localhost:27017
+2019-02-27 13:46:58,306 INFO  org.mongodb.driver.cluster - Cluster created with settings {hosts=[localhost:27017], mode=SINGLE, requiredClusterType=UNKNOWN, serverSelectionTimeout='30000 ms', maxWaitQueueSize=500}
+2019-02-27 13:46:58,359 INFO  c.c.dashboard.config.MongoConfig - Connecting to Mongo: Mongo{options=MongoClientOptions{description='null', readPreference=primary, writeConcern=WriteConcern{w=1, wtimeout=0, fsync=false, j=false, codecRegistry=org.bson.codecs.configuration.ProvidersCodecRegistry@44b78506, minConnectionsPerHost=0, maxConnectionsPerHost=100, threadsAllowedToBlockForConnectionMultiplier=5, serverSelectionTimeout=30000, maxWaitTime=120000, maxConnectionIdleTime=0, maxConnectionLifeTime=0, connectTimeout=10000, socketTimeout=0, socketKeepAlive=false, sslEnabled=false, sslInvalidHostNamesAllowed=false, alwaysUseMBeans=false, heartbeatFrequency=10000, minHeartbeatFrequency=500, heartbeatConnectTimeout=20000, heartbeatSocketTimeout=20000, localThreshold=15, requiredReplicaSetName='null', dbDecoderFactory=com.mongodb.DefaultDBDecoder$1@eeab515, dbEncoderFactory=com.mongodb.DefaultDBEncoder$1@74c6013f, socketFactory=javax.net.DefaultSocketFactory@7db623ed, cursorFinalizerEnabled=true, connectionPoolSettings=ConnectionPoolSettings{maxSize=100, minSize=0, maxWaitQueueSize=500, maxWaitTimeMS=120000, maxConnectionLifeTimeMS=0, maxConnectionIdleTimeMS=0, maintenanceInitialDelayMS=0, maintenanceFrequencyMS=60000}, socketSettings=SocketSettings{connectTimeoutMS=10000, readTimeoutMS=0, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}, serverSettings=ServerSettings{heartbeatFrequencyMS=10000, minHeartbeatFrequencyMS=500}, heartbeatSocketSettings=SocketSettings{connectTimeoutMS=20000, readTimeoutMS=20000, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}}}
+2019-02-27 13:46:58,398 INFO  org.mongodb.driver.connection - Opened connection [connectionId{localValue:1, serverValue:4729}] to localhost:27017
+2019-02-27 13:46:58,400 INFO  org.mongodb.driver.cluster - Monitor thread successfully connected to server with description ServerDescription{address=localhost:27017, type=STANDALONE, state=CONNECTED, ok=true, version=ServerVersion{versionList=[3, 4, 19]}, minWireVersion=0, maxWireVersion=5, electionId=null, maxDocumentSize=16777216, roundTripTimeNanos=1986146}
+2019-02-27 13:46:58,517 INFO  org.mongodb.driver.connection - Opened connection [connectionId{localValue:2, serverValue:4730}] to localhost:27017
+2019-02-27 13:46:59,058 INFO  c.c.dashboard.config.MongoConfig - ReplicaSetfalse
+2019-02-27 13:46:59,058 INFO  c.c.dashboard.config.MongoConfig - Initializing Mongo Client server at: localhost:27017
+2019-02-27 13:46:59,059 INFO  org.mongodb.driver.cluster - Cluster created with settings {hosts=[localhost:27017], mode=SINGLE, requiredClusterType=UNKNOWN, serverSelectionTimeout='30000 ms', maxWaitQueueSize=500}
+2019-02-27 13:46:59,059 INFO  c.c.dashboard.config.MongoConfig - Connecting to Mongo: Mongo{options=MongoClientOptions{description='null', readPreference=primary, writeConcern=WriteConcern{w=1, wtimeout=0, fsync=false, j=false, codecRegistry=org.bson.codecs.configuration.ProvidersCodecRegistry@44b78506, minConnectionsPerHost=0, maxConnectionsPerHost=100, threadsAllowedToBlockForConnectionMultiplier=5, serverSelectionTimeout=30000, maxWaitTime=120000, maxConnectionIdleTime=0, maxConnectionLifeTime=0, connectTimeout=10000, socketTimeout=0, socketKeepAlive=false, sslEnabled=false, sslInvalidHostNamesAllowed=false, alwaysUseMBeans=false, heartbeatFrequency=10000, minHeartbeatFrequency=500, heartbeatConnectTimeout=20000, heartbeatSocketTimeout=20000, localThreshold=15, requiredReplicaSetName='null', dbDecoderFactory=com.mongodb.DefaultDBDecoder$1@eeab515, dbEncoderFactory=com.mongodb.DefaultDBEncoder$1@74c6013f, socketFactory=javax.net.DefaultSocketFactory@7db623ed, cursorFinalizerEnabled=true, connectionPoolSettings=ConnectionPoolSettings{maxSize=100, minSize=0, maxWaitQueueSize=500, maxWaitTimeMS=120000, maxConnectionLifeTimeMS=0, maxConnectionIdleTimeMS=0, maintenanceInitialDelayMS=0, maintenanceFrequencyMS=60000}, socketSettings=SocketSettings{connectTimeoutMS=10000, readTimeoutMS=0, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}, serverSettings=ServerSettings{heartbeatFrequencyMS=10000, minHeartbeatFrequencyMS=500}, heartbeatSocketSettings=SocketSettings{connectTimeoutMS=20000, readTimeoutMS=20000, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}}}
+2019-02-27 13:46:59,063 INFO  org.mongodb.driver.connection - Opened connection [connectionId{localValue:3, serverValue:4731}] to localhost:27017
+2019-02-27 13:46:59,066 INFO  org.mongodb.driver.cluster - Monitor thread successfully connected to server with description ServerDescription{address=localhost:27017, type=STANDALONE, state=CONNECTED, ok=true, version=ServerVersion{versionList=[3, 4, 19]}, minWireVersion=0, maxWireVersion=5, electionId=null, maxDocumentSize=16777216, roundTripTimeNanos=1035424}
+2019-02-27 13:46:59,066 INFO  c.c.dashboard.config.MongoConfig - ReplicaSetfalse
+2019-02-27 13:46:59,066 INFO  c.c.dashboard.config.MongoConfig - Initializing Mongo Client server at: localhost:27017
+2019-02-27 13:46:59,066 INFO  org.mongodb.driver.cluster - Cluster created with settings {hosts=[localhost:27017], mode=SINGLE, requiredClusterType=UNKNOWN, serverSelectionTimeout='30000 ms', maxWaitQueueSize=500}
+2019-02-27 13:46:59,071 INFO  c.c.dashboard.config.MongoConfig - Connecting to Mongo: Mongo{options=MongoClientOptions{description='null', readPreference=primary, writeConcern=WriteConcern{w=1, wtimeout=0, fsync=false, j=false, codecRegistry=org.bson.codecs.configuration.ProvidersCodecRegistry@44b78506, minConnectionsPerHost=0, maxConnectionsPerHost=100, threadsAllowedToBlockForConnectionMultiplier=5, serverSelectionTimeout=30000, maxWaitTime=120000, maxConnectionIdleTime=0, maxConnectionLifeTime=0, connectTimeout=10000, socketTimeout=0, socketKeepAlive=false, sslEnabled=false, sslInvalidHostNamesAllowed=false, alwaysUseMBeans=false, heartbeatFrequency=10000, minHeartbeatFrequency=500, heartbeatConnectTimeout=20000, heartbeatSocketTimeout=20000, localThreshold=15, requiredReplicaSetName='null', dbDecoderFactory=com.mongodb.DefaultDBDecoder$1@eeab515, dbEncoderFactory=com.mongodb.DefaultDBEncoder$1@74c6013f, socketFactory=javax.net.DefaultSocketFactory@7db623ed, cursorFinalizerEnabled=true, connectionPoolSettings=ConnectionPoolSettings{maxSize=100, minSize=0, maxWaitQueueSize=500, maxWaitTimeMS=120000, maxConnectionLifeTimeMS=0, maxConnectionIdleTimeMS=0, maintenanceInitialDelayMS=0, maintenanceFrequencyMS=60000}, socketSettings=SocketSettings{connectTimeoutMS=10000, readTimeoutMS=0, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}, serverSettings=ServerSettings{heartbeatFrequencyMS=10000, minHeartbeatFrequencyMS=500}, heartbeatSocketSettings=SocketSettings{connectTimeoutMS=20000, readTimeoutMS=20000, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}}}
+2019-02-27 13:46:59,085 INFO  org.mongodb.driver.connection - Opened connection [connectionId{localValue:4, serverValue:4732}] to localhost:27017
+2019-02-27 13:46:59,085 INFO  org.mongodb.driver.cluster - Monitor thread successfully connected to server with description ServerDescription{address=localhost:27017, type=STANDALONE, state=CONNECTED, ok=true, version=ServerVersion{versionList=[3, 4, 19]}, minWireVersion=0, maxWireVersion=5, electionId=null, maxDocumentSize=16777216, roundTripTimeNanos=327508}
+2019-02-27 13:46:59,626 INFO  c.c.dashboard.config.MongoConfig - ReplicaSetfalse
+2019-02-27 13:46:59,627 INFO  c.c.dashboard.config.MongoConfig - Initializing Mongo Client server at: localhost:27017
+2019-02-27 13:46:59,628 INFO  org.mongodb.driver.cluster - Cluster created with settings {hosts=[localhost:27017], mode=SINGLE, requiredClusterType=UNKNOWN, serverSelectionTimeout='30000 ms', maxWaitQueueSize=500}
+2019-02-27 13:46:59,629 INFO  c.c.dashboard.config.MongoConfig - Connecting to Mongo: Mongo{options=MongoClientOptions{description='null', readPreference=primary, writeConcern=WriteConcern{w=1, wtimeout=0, fsync=false, j=false, codecRegistry=org.bson.codecs.configuration.ProvidersCodecRegistry@44b78506, minConnectionsPerHost=0, maxConnectionsPerHost=100, threadsAllowedToBlockForConnectionMultiplier=5, serverSelectionTimeout=30000, maxWaitTime=120000, maxConnectionIdleTime=0, maxConnectionLifeTime=0, connectTimeout=10000, socketTimeout=0, socketKeepAlive=false, sslEnabled=false, sslInvalidHostNamesAllowed=false, alwaysUseMBeans=false, heartbeatFrequency=10000, minHeartbeatFrequency=500, heartbeatConnectTimeout=20000, heartbeatSocketTimeout=20000, localThreshold=15, requiredReplicaSetName='null', dbDecoderFactory=com.mongodb.DefaultDBDecoder$1@eeab515, dbEncoderFactory=com.mongodb.DefaultDBEncoder$1@74c6013f, socketFactory=javax.net.DefaultSocketFactory@7db623ed, cursorFinalizerEnabled=true, connectionPoolSettings=ConnectionPoolSettings{maxSize=100, minSize=0, maxWaitQueueSize=500, maxWaitTimeMS=120000, maxConnectionLifeTimeMS=0, maxConnectionIdleTimeMS=0, maintenanceInitialDelayMS=0, maintenanceFrequencyMS=60000}, socketSettings=SocketSettings{connectTimeoutMS=10000, readTimeoutMS=0, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}, serverSettings=ServerSettings{heartbeatFrequencyMS=10000, minHeartbeatFrequencyMS=500}, heartbeatSocketSettings=SocketSettings{connectTimeoutMS=20000, readTimeoutMS=20000, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}}}
+2019-02-27 13:46:59,631 INFO  org.mongodb.driver.connection - Opened connection [connectionId{localValue:5, serverValue:4733}] to localhost:27017
+2019-02-27 13:46:59,632 INFO  org.mongodb.driver.cluster - Monitor thread successfully connected to server with description ServerDescription{address=localhost:27017, type=STANDALONE, state=CONNECTED, ok=true, version=ServerVersion{versionList=[3, 4, 19]}, minWireVersion=0, maxWireVersion=5, electionId=null, maxDocumentSize=16777216, roundTripTimeNanos=220805}
+2019-02-27 13:47:00,000 INFO  c.c.d.collector.CollectorTask - Running Collector: Jira
+2019-02-27 13:47:00,007 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-27 13:47:00,008 INFO  c.c.d.collector.CollectorTask - https://jira.citiustech.com
+2019-02-27 13:47:00,008 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-27 13:47:00,024 INFO  c.c.d.collector.FeatureCollectorTask - JIRA Collector is set to work in Board mode
+2019-02-27 13:47:00,024 INFO  c.c.d.collector.FeatureCollectorTask - Hours since last run = 430904. Collector is about to refresh Team/Board information
+2019-02-27 13:47:00,691 INFO  c.c.d.collector.DefaultJiraClient - JIRA Collector collected 22 boards
+2019-02-27 13:47:00,694 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:1-CT-PG Board
+2019-02-27 13:47:00,717 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:18-CT BIC Engineering
+2019-02-27 13:47:00,719 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:23-CT Support Desk Board
+2019-02-27 13:47:00,721 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:38-CT BIC Engineering Administration
+2019-02-27 13:47:00,727 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:41-Test Board 2
+2019-02-27 13:47:00,731 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:44-Copy of CT Support Desk Board
+2019-02-27 13:47:00,737 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:45-CT Solutions Support Service Desk
+2019-02-27 13:47:00,743 INFO  o.s.j.e.a.AnnotationMBeanExporter - Registering beans for JMX exposure on startup
+2019-02-27 13:47:00,751 INFO  o.s.j.e.a.AnnotationMBeanExporter - Bean with name 'configurationPropertiesRebinder' has been autodetected for JMX exposure
+2019-02-27 13:47:00,756 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:46-CT BIC Solutions Impl. Defect Tracking
+2019-02-27 13:47:00,758 INFO  o.s.j.e.a.AnnotationMBeanExporter - Bean with name 'environmentManager' has been autodetected for JMX exposure
+2019-02-27 13:47:00,759 INFO  o.s.j.e.a.AnnotationMBeanExporter - Bean with name 'refreshScope' has been autodetected for JMX exposure
+2019-02-27 13:47:00,767 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:54-Cambia Metadata
+2019-02-27 13:47:00,767 INFO  o.s.j.e.a.AnnotationMBeanExporter - Located managed bean 'environmentManager': registering with JMX server as MBean [org.springframework.cloud.context.environment:name=environmentManager,type=EnvironmentManager]
+2019-02-27 13:47:00,788 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:55-Scrum Board
+2019-02-27 13:47:00,791 INFO  o.s.j.e.a.AnnotationMBeanExporter - Located managed bean 'refreshScope': registering with JMX server as MBean [org.springframework.cloud.context.scope.refresh:name=refreshScope,type=RefreshScope]
+2019-02-27 13:47:00,791 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:76-CT BIC Support Quest
+2019-02-27 13:47:00,798 INFO  o.s.j.e.a.AnnotationMBeanExporter - Located managed bean 'configurationPropertiesRebinder': registering with JMX server as MBean [org.springframework.cloud.context.properties:name=configurationPropertiesRebinder,context=65986d7e,type=ConfigurationPropertiesRebinder]
+2019-02-27 13:47:00,801 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:126-Change Request Dashboard
+2019-02-27 13:47:00,804 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:128-TJP board
+2019-02-27 13:47:00,806 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:200-Test Board
+2019-02-27 13:47:00,815 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:201-Test agile board
+2019-02-27 13:47:00,818 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:202-Demo test
+2019-02-27 13:47:00,821 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:206-TEST PROJECT 1
+2019-02-27 13:47:00,823 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:219-EVP board
+2019-02-27 13:47:00,836 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:232-TPB board
+2019-02-27 13:47:00,838 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:233-Jeevan_Test_Board
+2019-02-27 13:47:00,841 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:242-Amerihealth-2019
+2019-02-27 13:47:00,842 INFO  com.capitalone.dashboard.Application - Started Application in 5.178 seconds (JVM running for 5.812)
+2019-02-27 13:47:00,843 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:246-CEN board
+2019-02-27 13:47:00,848 INFO  c.c.d.collector.CollectorTask - Board Data Collected. Added  22        0s
+2019-02-27 13:47:01,064 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10604-CT BIC Support Davita
+2019-02-27 13:47:01,072 INFO  c.c.d.collector.FeatureCollectorTask - Adding :11101-CT BIC Engineering - XRAY
+2019-02-27 13:47:01,077 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10802-CT BIC Support Activity Tracker
+2019-02-27 13:47:01,081 INFO  c.c.d.collector.FeatureCollectorTask - Adding :12403-CT BIC Support Team Health Project
+2019-02-27 13:47:01,085 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10500-CT BIC Engineering Administration
+2019-02-27 13:47:01,088 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10313-CT BIC Engineering
+2019-02-27 13:47:01,093 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10605-CT BIC Support IntrinsiQ
+2019-02-27 13:47:01,096 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10606-CT BIC Support Quest
+2019-02-27 13:47:01,099 INFO  c.c.d.collector.FeatureCollectorTask - Adding :12800-Test JIRA project
+2019-02-27 13:47:01,101 INFO  c.c.d.collector.FeatureCollectorTask - Adding :15100-Test Project Kanban board
+2019-02-27 13:47:01,103 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10607-CT BIC Support CQ-IQ
+2019-02-27 13:47:01,106 INFO  c.c.d.collector.FeatureCollectorTask - Adding :14907-Test Agile Project
+2019-02-27 13:47:01,111 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10600-CT BIC Support Advisory Board
+2019-02-27 13:47:01,114 INFO  c.c.d.collector.FeatureCollectorTask - Adding :14903-CT BIC Support FLB
+2019-02-27 13:47:01,117 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10315-CT BIC Support VUMC
+2019-02-27 13:47:01,120 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10601-CT BIC Support Alignment Health
+2019-02-27 13:47:01,123 INFO  c.c.d.collector.FeatureCollectorTask - Adding :12405-CT BIC Support Centra Health Project
+2019-02-27 13:47:01,125 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10700-CT Solutions Impl. Defect Tracking
+2019-02-27 13:47:01,129 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10603-CT BIC Support CCNC
+2019-02-27 13:47:01,132 INFO  c.c.d.collector.FeatureCollectorTask - Adding :15401-CentriCT
+2019-02-27 13:47:01,138 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10311-CT BIC Support Medhost
+2019-02-27 13:47:01,141 INFO  c.c.d.collector.CollectorTask - Project Data Collected 21        0s
+2019-02-27 13:47:01,162 INFO  c.c.d.collector.FeatureCollectorTask - Refreshing issues for Board ID:246
+2019-02-27 13:47:01,417 INFO  c.c.d.collector.FeatureCollectorTask - Refreshing issues for Board ID:18
+2019-02-27 13:47:50,124 INFO  o.s.c.a.AnnotationConfigApplicationContext - Closing org.springframework.context.annotation.AnnotationConfigApplicationContext@65986d7e: startup date [Wed Feb 27 13:46:56 IST 2019]; parent: org.springframework.context.annotation.AnnotationConfigApplicationContext@30f6328b
+2019-02-27 13:47:50,138 INFO  o.s.j.e.a.AnnotationMBeanExporter - Unregistering JMX-exposed beans on shutdown
+2019-02-27 13:47:50,141 INFO  o.s.j.e.a.AnnotationMBeanExporter - Unregistering JMX-exposed beans
+2019-02-27 13:47:50,157 INFO  o.s.s.c.ThreadPoolTaskScheduler - Shutting down ExecutorService 'taskScheduler'
+2019-02-27 13:48:32,768 INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 5.2.2.Final
+2019-02-27 13:48:32,862 INFO  o.s.c.a.AnnotationConfigApplicationContext - Refreshing org.springframework.context.annotation.AnnotationConfigApplicationContext@3fe1824b: startup date [Wed Feb 27 13:48:32 IST 2019]; root of context hierarchy
+2019-02-27 13:48:33,053 INFO  o.s.b.f.a.AutowiredAnnotationBeanPostProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-02-27 13:48:33,130 INFO  o.s.c.s.PostProcessorRegistrationDelegate$BeanPostProcessorChecker - Bean 'configurationPropertiesRebinderAutoConfiguration' of type [class org.springframework.cloud.autoconfigure.ConfigurationPropertiesRebinderAutoConfiguration$$EnhancerBySpringCGLIB$$1a2aea30] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
+2019-02-27 13:48:33,428 INFO  o.s.c.c.c.ConfigServicePropertySourceLocator - Fetching config from server at: http://localhost:8888
+2019-02-27 13:48:33,544 WARN  o.s.c.c.c.ConfigServicePropertySourceLocator - Could not locate PropertySource: I/O error on GET request for "http://localhost:8888/application/default": Connection refused (Connection refused); nested exception is java.net.ConnectException: Connection refused (Connection refused)
+2019-02-27 13:48:33,545 INFO  com.capitalone.dashboard.Application - No profiles are active
+2019-02-27 13:48:33,560 INFO  o.s.c.a.AnnotationConfigApplicationContext - Refreshing org.springframework.context.annotation.AnnotationConfigApplicationContext@480f79d0: startup date [Wed Feb 27 13:48:33 IST 2019]; parent: org.springframework.context.annotation.AnnotationConfigApplicationContext@3fe1824b
+2019-02-27 13:48:34,700 INFO  o.s.cloud.context.scope.GenericScope - BeanFactory id=73603fe0-9b59-323b-bc1d-654033049f3c
+2019-02-27 13:48:34,704 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Post-processing PropertySource instances
+2019-02-27 13:48:34,713 INFO  c.u.j.c.StringEncryptorConfiguration - String Encryptor custom Bean not found with name 'jasyptStringEncryptor'. Initializing String Encryptor based on properties with name 'jasyptStringEncryptor'
+2019-02-27 13:48:34,718 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource commandLineArgs [org.springframework.core.env.SimpleCommandLinePropertySource] to EncryptableEnumerablePropertySourceWrapper
+2019-02-27 13:48:34,718 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource systemProperties [org.springframework.core.env.MapPropertySource] to EncryptableMapPropertySourceWrapper
+2019-02-27 13:48:34,718 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource systemEnvironment [org.springframework.core.env.SystemEnvironmentPropertySource] to EncryptableMapPropertySourceWrapper
+2019-02-27 13:48:34,718 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource random [org.springframework.boot.context.config.RandomValuePropertySource] to EncryptablePropertySourceWrapper
+2019-02-27 13:48:34,718 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource applicationConfig: [file:../jira.properties] [org.springframework.core.env.PropertiesPropertySource] to EncryptableMapPropertySourceWrapper
+2019-02-27 13:48:34,719 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource springCloudClientHostInfo [org.springframework.core.env.MapPropertySource] to EncryptableMapPropertySourceWrapper
+2019-02-27 13:48:34,719 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource defaultProperties [org.springframework.core.env.MapPropertySource] to EncryptableMapPropertySourceWrapper
+2019-02-27 13:48:34,722 INFO  o.s.b.f.a.AutowiredAnnotationBeanPostProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-02-27 13:48:34,754 INFO  o.s.c.s.PostProcessorRegistrationDelegate$BeanPostProcessorChecker - Bean 'org.springframework.cloud.autoconfigure.ConfigurationPropertiesRebinderAutoConfiguration' of type [class org.springframework.cloud.autoconfigure.ConfigurationPropertiesRebinderAutoConfiguration$$EnhancerBySpringCGLIB$$1a2aea30] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
+2019-02-27 13:48:34,852 INFO  o.s.s.c.ThreadPoolTaskScheduler - Initializing ExecutorService  'taskScheduler'
+2019-02-27 13:48:34,896 INFO  c.c.dashboard.config.MongoConfig - ReplicaSetfalse
+2019-02-27 13:48:34,955 INFO  c.c.dashboard.config.MongoConfig - Initializing Mongo Client server at: localhost:27017
+2019-02-27 13:48:34,980 INFO  org.mongodb.driver.cluster - Cluster created with settings {hosts=[localhost:27017], mode=SINGLE, requiredClusterType=UNKNOWN, serverSelectionTimeout='30000 ms', maxWaitQueueSize=500}
+2019-02-27 13:48:35,035 INFO  c.c.dashboard.config.MongoConfig - Connecting to Mongo: Mongo{options=MongoClientOptions{description='null', readPreference=primary, writeConcern=WriteConcern{w=1, wtimeout=0, fsync=false, j=false, codecRegistry=org.bson.codecs.configuration.ProvidersCodecRegistry@64caea34, minConnectionsPerHost=0, maxConnectionsPerHost=100, threadsAllowedToBlockForConnectionMultiplier=5, serverSelectionTimeout=30000, maxWaitTime=120000, maxConnectionIdleTime=0, maxConnectionLifeTime=0, connectTimeout=10000, socketTimeout=0, socketKeepAlive=false, sslEnabled=false, sslInvalidHostNamesAllowed=false, alwaysUseMBeans=false, heartbeatFrequency=10000, minHeartbeatFrequency=500, heartbeatConnectTimeout=20000, heartbeatSocketTimeout=20000, localThreshold=15, requiredReplicaSetName='null', dbDecoderFactory=com.mongodb.DefaultDBDecoder$1@2d096fb2, dbEncoderFactory=com.mongodb.DefaultDBEncoder$1@6864fa1e, socketFactory=javax.net.DefaultSocketFactory@2dbed7b, cursorFinalizerEnabled=true, connectionPoolSettings=ConnectionPoolSettings{maxSize=100, minSize=0, maxWaitQueueSize=500, maxWaitTimeMS=120000, maxConnectionLifeTimeMS=0, maxConnectionIdleTimeMS=0, maintenanceInitialDelayMS=0, maintenanceFrequencyMS=60000}, socketSettings=SocketSettings{connectTimeoutMS=10000, readTimeoutMS=0, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}, serverSettings=ServerSettings{heartbeatFrequencyMS=10000, minHeartbeatFrequencyMS=500}, heartbeatSocketSettings=SocketSettings{connectTimeoutMS=20000, readTimeoutMS=20000, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}}}
+2019-02-27 13:48:35,071 INFO  org.mongodb.driver.connection - Opened connection [connectionId{localValue:1, serverValue:4738}] to localhost:27017
+2019-02-27 13:48:35,076 INFO  org.mongodb.driver.cluster - Monitor thread successfully connected to server with description ServerDescription{address=localhost:27017, type=STANDALONE, state=CONNECTED, ok=true, version=ServerVersion{versionList=[3, 4, 19]}, minWireVersion=0, maxWireVersion=5, electionId=null, maxDocumentSize=16777216, roundTripTimeNanos=1467234}
+2019-02-27 13:48:35,183 INFO  org.mongodb.driver.connection - Opened connection [connectionId{localValue:2, serverValue:4739}] to localhost:27017
+2019-02-27 13:48:35,724 INFO  c.c.dashboard.config.MongoConfig - ReplicaSetfalse
+2019-02-27 13:48:35,724 INFO  c.c.dashboard.config.MongoConfig - Initializing Mongo Client server at: localhost:27017
+2019-02-27 13:48:35,725 INFO  org.mongodb.driver.cluster - Cluster created with settings {hosts=[localhost:27017], mode=SINGLE, requiredClusterType=UNKNOWN, serverSelectionTimeout='30000 ms', maxWaitQueueSize=500}
+2019-02-27 13:48:35,725 INFO  c.c.dashboard.config.MongoConfig - Connecting to Mongo: Mongo{options=MongoClientOptions{description='null', readPreference=primary, writeConcern=WriteConcern{w=1, wtimeout=0, fsync=false, j=false, codecRegistry=org.bson.codecs.configuration.ProvidersCodecRegistry@64caea34, minConnectionsPerHost=0, maxConnectionsPerHost=100, threadsAllowedToBlockForConnectionMultiplier=5, serverSelectionTimeout=30000, maxWaitTime=120000, maxConnectionIdleTime=0, maxConnectionLifeTime=0, connectTimeout=10000, socketTimeout=0, socketKeepAlive=false, sslEnabled=false, sslInvalidHostNamesAllowed=false, alwaysUseMBeans=false, heartbeatFrequency=10000, minHeartbeatFrequency=500, heartbeatConnectTimeout=20000, heartbeatSocketTimeout=20000, localThreshold=15, requiredReplicaSetName='null', dbDecoderFactory=com.mongodb.DefaultDBDecoder$1@2d096fb2, dbEncoderFactory=com.mongodb.DefaultDBEncoder$1@6864fa1e, socketFactory=javax.net.DefaultSocketFactory@2dbed7b, cursorFinalizerEnabled=true, connectionPoolSettings=ConnectionPoolSettings{maxSize=100, minSize=0, maxWaitQueueSize=500, maxWaitTimeMS=120000, maxConnectionLifeTimeMS=0, maxConnectionIdleTimeMS=0, maintenanceInitialDelayMS=0, maintenanceFrequencyMS=60000}, socketSettings=SocketSettings{connectTimeoutMS=10000, readTimeoutMS=0, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}, serverSettings=ServerSettings{heartbeatFrequencyMS=10000, minHeartbeatFrequencyMS=500}, heartbeatSocketSettings=SocketSettings{connectTimeoutMS=20000, readTimeoutMS=20000, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}}}
+2019-02-27 13:48:35,731 INFO  org.mongodb.driver.connection - Opened connection [connectionId{localValue:3, serverValue:4740}] to localhost:27017
+2019-02-27 13:48:35,732 INFO  c.c.dashboard.config.MongoConfig - ReplicaSetfalse
+2019-02-27 13:48:35,732 INFO  c.c.dashboard.config.MongoConfig - Initializing Mongo Client server at: localhost:27017
+2019-02-27 13:48:35,732 INFO  org.mongodb.driver.cluster - Cluster created with settings {hosts=[localhost:27017], mode=SINGLE, requiredClusterType=UNKNOWN, serverSelectionTimeout='30000 ms', maxWaitQueueSize=500}
+2019-02-27 13:48:35,734 INFO  org.mongodb.driver.cluster - Monitor thread successfully connected to server with description ServerDescription{address=localhost:27017, type=STANDALONE, state=CONNECTED, ok=true, version=ServerVersion{versionList=[3, 4, 19]}, minWireVersion=0, maxWireVersion=5, electionId=null, maxDocumentSize=16777216, roundTripTimeNanos=987823}
+2019-02-27 13:48:35,735 INFO  c.c.dashboard.config.MongoConfig - Connecting to Mongo: Mongo{options=MongoClientOptions{description='null', readPreference=primary, writeConcern=WriteConcern{w=1, wtimeout=0, fsync=false, j=false, codecRegistry=org.bson.codecs.configuration.ProvidersCodecRegistry@64caea34, minConnectionsPerHost=0, maxConnectionsPerHost=100, threadsAllowedToBlockForConnectionMultiplier=5, serverSelectionTimeout=30000, maxWaitTime=120000, maxConnectionIdleTime=0, maxConnectionLifeTime=0, connectTimeout=10000, socketTimeout=0, socketKeepAlive=false, sslEnabled=false, sslInvalidHostNamesAllowed=false, alwaysUseMBeans=false, heartbeatFrequency=10000, minHeartbeatFrequency=500, heartbeatConnectTimeout=20000, heartbeatSocketTimeout=20000, localThreshold=15, requiredReplicaSetName='null', dbDecoderFactory=com.mongodb.DefaultDBDecoder$1@2d096fb2, dbEncoderFactory=com.mongodb.DefaultDBEncoder$1@6864fa1e, socketFactory=javax.net.DefaultSocketFactory@2dbed7b, cursorFinalizerEnabled=true, connectionPoolSettings=ConnectionPoolSettings{maxSize=100, minSize=0, maxWaitQueueSize=500, maxWaitTimeMS=120000, maxConnectionLifeTimeMS=0, maxConnectionIdleTimeMS=0, maintenanceInitialDelayMS=0, maintenanceFrequencyMS=60000}, socketSettings=SocketSettings{connectTimeoutMS=10000, readTimeoutMS=0, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}, serverSettings=ServerSettings{heartbeatFrequencyMS=10000, minHeartbeatFrequencyMS=500}, heartbeatSocketSettings=SocketSettings{connectTimeoutMS=20000, readTimeoutMS=20000, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}}}
+2019-02-27 13:48:35,749 INFO  org.mongodb.driver.connection - Opened connection [connectionId{localValue:4, serverValue:4741}] to localhost:27017
+2019-02-27 13:48:35,750 INFO  org.mongodb.driver.cluster - Monitor thread successfully connected to server with description ServerDescription{address=localhost:27017, type=STANDALONE, state=CONNECTED, ok=true, version=ServerVersion{versionList=[3, 4, 19]}, minWireVersion=0, maxWireVersion=5, electionId=null, maxDocumentSize=16777216, roundTripTimeNanos=354208}
+2019-02-27 13:48:36,206 INFO  c.c.dashboard.config.MongoConfig - ReplicaSetfalse
+2019-02-27 13:48:36,207 INFO  c.c.dashboard.config.MongoConfig - Initializing Mongo Client server at: localhost:27017
+2019-02-27 13:48:36,207 INFO  org.mongodb.driver.cluster - Cluster created with settings {hosts=[localhost:27017], mode=SINGLE, requiredClusterType=UNKNOWN, serverSelectionTimeout='30000 ms', maxWaitQueueSize=500}
+2019-02-27 13:48:36,208 INFO  c.c.dashboard.config.MongoConfig - Connecting to Mongo: Mongo{options=MongoClientOptions{description='null', readPreference=primary, writeConcern=WriteConcern{w=1, wtimeout=0, fsync=false, j=false, codecRegistry=org.bson.codecs.configuration.ProvidersCodecRegistry@64caea34, minConnectionsPerHost=0, maxConnectionsPerHost=100, threadsAllowedToBlockForConnectionMultiplier=5, serverSelectionTimeout=30000, maxWaitTime=120000, maxConnectionIdleTime=0, maxConnectionLifeTime=0, connectTimeout=10000, socketTimeout=0, socketKeepAlive=false, sslEnabled=false, sslInvalidHostNamesAllowed=false, alwaysUseMBeans=false, heartbeatFrequency=10000, minHeartbeatFrequency=500, heartbeatConnectTimeout=20000, heartbeatSocketTimeout=20000, localThreshold=15, requiredReplicaSetName='null', dbDecoderFactory=com.mongodb.DefaultDBDecoder$1@2d096fb2, dbEncoderFactory=com.mongodb.DefaultDBEncoder$1@6864fa1e, socketFactory=javax.net.DefaultSocketFactory@2dbed7b, cursorFinalizerEnabled=true, connectionPoolSettings=ConnectionPoolSettings{maxSize=100, minSize=0, maxWaitQueueSize=500, maxWaitTimeMS=120000, maxConnectionLifeTimeMS=0, maxConnectionIdleTimeMS=0, maintenanceInitialDelayMS=0, maintenanceFrequencyMS=60000}, socketSettings=SocketSettings{connectTimeoutMS=10000, readTimeoutMS=0, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}, serverSettings=ServerSettings{heartbeatFrequencyMS=10000, minHeartbeatFrequencyMS=500}, heartbeatSocketSettings=SocketSettings{connectTimeoutMS=20000, readTimeoutMS=20000, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}}}
+2019-02-27 13:48:36,211 INFO  org.mongodb.driver.connection - Opened connection [connectionId{localValue:5, serverValue:4742}] to localhost:27017
+2019-02-27 13:48:36,211 INFO  org.mongodb.driver.cluster - Monitor thread successfully connected to server with description ServerDescription{address=localhost:27017, type=STANDALONE, state=CONNECTED, ok=true, version=ServerVersion{versionList=[3, 4, 19]}, minWireVersion=0, maxWireVersion=5, electionId=null, maxDocumentSize=16777216, roundTripTimeNanos=314807}
+2019-02-27 13:48:36,921 INFO  o.s.j.e.a.AnnotationMBeanExporter - Registering beans for JMX exposure on startup
+2019-02-27 13:48:36,928 INFO  o.s.j.e.a.AnnotationMBeanExporter - Bean with name 'configurationPropertiesRebinder' has been autodetected for JMX exposure
+2019-02-27 13:48:36,928 INFO  o.s.j.e.a.AnnotationMBeanExporter - Bean with name 'environmentManager' has been autodetected for JMX exposure
+2019-02-27 13:48:36,929 INFO  o.s.j.e.a.AnnotationMBeanExporter - Bean with name 'refreshScope' has been autodetected for JMX exposure
+2019-02-27 13:48:36,930 INFO  o.s.j.e.a.AnnotationMBeanExporter - Located managed bean 'environmentManager': registering with JMX server as MBean [org.springframework.cloud.context.environment:name=environmentManager,type=EnvironmentManager]
+2019-02-27 13:48:36,940 INFO  o.s.j.e.a.AnnotationMBeanExporter - Located managed bean 'refreshScope': registering with JMX server as MBean [org.springframework.cloud.context.scope.refresh:name=refreshScope,type=RefreshScope]
+2019-02-27 13:48:36,945 INFO  o.s.j.e.a.AnnotationMBeanExporter - Located managed bean 'configurationPropertiesRebinder': registering with JMX server as MBean [org.springframework.cloud.context.properties:name=configurationPropertiesRebinder,context=480f79d0,type=ConfigurationPropertiesRebinder]
+2019-02-27 13:48:36,986 INFO  com.capitalone.dashboard.Application - Started Application in 4.606 seconds (JVM running for 5.18)
+2019-02-27 13:48:40,000 INFO  c.c.d.collector.CollectorTask - Running Collector: Jira
+2019-02-27 13:48:40,014 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-27 13:48:40,014 INFO  c.c.d.collector.CollectorTask - https://jira.citiustech.com
+2019-02-27 13:48:40,014 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-27 13:48:40,022 INFO  c.c.d.collector.FeatureCollectorTask - JIRA Collector is set to work in Team mode
+2019-02-27 13:48:40,022 INFO  c.c.d.collector.FeatureCollectorTask - Hours since last run = 430904. Collector is about to refresh Team/Board information
+2019-02-27 13:48:40,573 ERROR c.c.d.collector.FeatureCollectorTask - Failed to collect jira information
+org.springframework.web.client.HttpClientErrorException: 404 null
+	at org.springframework.web.client.DefaultResponseErrorHandler.handleError(DefaultResponseErrorHandler.java:91) ~[spring-web-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at org.springframework.web.client.RestTemplate.handleResponse(RestTemplate.java:641) ~[spring-web-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at org.springframework.web.client.RestTemplate.doExecute(RestTemplate.java:597) ~[spring-web-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at org.springframework.web.client.RestTemplate.execute(RestTemplate.java:557) ~[spring-web-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at org.springframework.web.client.RestTemplate.exchange(RestTemplate.java:475) ~[spring-web-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at com.capitalone.dashboard.collector.DefaultJiraClient.makeRestCall(DefaultJiraClient.java:785) ~[jira-feature-collector.jar!/:3.0.1]
+	at com.capitalone.dashboard.collector.DefaultJiraClient.getTeams(DefaultJiraClient.java:220) ~[jira-feature-collector.jar!/:3.0.1]
+	at com.capitalone.dashboard.collector.FeatureCollectorTask.updateTeamInformation(FeatureCollectorTask.java:170) [jira-feature-collector.jar!/:3.0.1]
+	at com.capitalone.dashboard.collector.FeatureCollectorTask.collect(FeatureCollectorTask.java:137) [jira-feature-collector.jar!/:3.0.1]
+	at com.capitalone.dashboard.collector.FeatureCollectorTask.collect(FeatureCollectorTask.java:46) [jira-feature-collector.jar!/:3.0.1]
+	at com.capitalone.dashboard.collector.CollectorTask.run(CollectorTask.java:63) [core-3.1.0.jar!/:3.0.1]
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54) [spring-context-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at org.springframework.scheduling.concurrent.ReschedulingRunnable.run(ReschedulingRunnable.java:81) [spring-context-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511) [na:1.8.0_191]
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266) [na:1.8.0_191]
+	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.access$201(ScheduledThreadPoolExecutor.java:180) [na:1.8.0_191]
+	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:293) [na:1.8.0_191]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149) [na:1.8.0_191]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624) [na:1.8.0_191]
+	at java.lang.Thread.run(Thread.java:748) [na:1.8.0_191]
+2019-02-27 13:48:45,000 INFO  c.c.d.collector.CollectorTask - Running Collector: Jira
+2019-02-27 13:48:45,006 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-27 13:48:45,006 INFO  c.c.d.collector.CollectorTask - https://jira.citiustech.com
+2019-02-27 13:48:45,006 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-27 13:48:45,006 INFO  c.c.d.collector.FeatureCollectorTask - JIRA Collector is set to work in Team mode
+2019-02-27 13:48:45,006 INFO  c.c.d.collector.FeatureCollectorTask - Hours since last run = 430904. Collector is about to refresh Team/Board information
+2019-02-27 13:48:45,144 ERROR c.c.d.collector.FeatureCollectorTask - Failed to collect jira information
+org.springframework.web.client.HttpClientErrorException: 404 null
+	at org.springframework.web.client.DefaultResponseErrorHandler.handleError(DefaultResponseErrorHandler.java:91) ~[spring-web-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at org.springframework.web.client.RestTemplate.handleResponse(RestTemplate.java:641) ~[spring-web-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at org.springframework.web.client.RestTemplate.doExecute(RestTemplate.java:597) ~[spring-web-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at org.springframework.web.client.RestTemplate.execute(RestTemplate.java:557) ~[spring-web-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at org.springframework.web.client.RestTemplate.exchange(RestTemplate.java:475) ~[spring-web-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at com.capitalone.dashboard.collector.DefaultJiraClient.makeRestCall(DefaultJiraClient.java:785) ~[jira-feature-collector.jar!/:3.0.1]
+	at com.capitalone.dashboard.collector.DefaultJiraClient.getTeams(DefaultJiraClient.java:220) ~[jira-feature-collector.jar!/:3.0.1]
+	at com.capitalone.dashboard.collector.FeatureCollectorTask.updateTeamInformation(FeatureCollectorTask.java:170) [jira-feature-collector.jar!/:3.0.1]
+	at com.capitalone.dashboard.collector.FeatureCollectorTask.collect(FeatureCollectorTask.java:137) [jira-feature-collector.jar!/:3.0.1]
+	at com.capitalone.dashboard.collector.FeatureCollectorTask.collect(FeatureCollectorTask.java:46) [jira-feature-collector.jar!/:3.0.1]
+	at com.capitalone.dashboard.collector.CollectorTask.run(CollectorTask.java:63) [core-3.1.0.jar!/:3.0.1]
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54) [spring-context-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at org.springframework.scheduling.concurrent.ReschedulingRunnable.run(ReschedulingRunnable.java:81) [spring-context-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511) [na:1.8.0_191]
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266) [na:1.8.0_191]
+	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.access$201(ScheduledThreadPoolExecutor.java:180) [na:1.8.0_191]
+	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:293) [na:1.8.0_191]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149) [na:1.8.0_191]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624) [na:1.8.0_191]
+	at java.lang.Thread.run(Thread.java:748) [na:1.8.0_191]
+2019-02-27 13:48:50,000 INFO  c.c.d.collector.CollectorTask - Running Collector: Jira
+2019-02-27 13:48:50,005 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-27 13:48:50,006 INFO  c.c.d.collector.CollectorTask - https://jira.citiustech.com
+2019-02-27 13:48:50,006 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-27 13:48:50,006 INFO  c.c.d.collector.FeatureCollectorTask - JIRA Collector is set to work in Team mode
+2019-02-27 13:48:50,006 INFO  c.c.d.collector.FeatureCollectorTask - Hours since last run = 430904. Collector is about to refresh Team/Board information
+2019-02-27 13:48:50,139 ERROR c.c.d.collector.FeatureCollectorTask - Failed to collect jira information
+org.springframework.web.client.HttpClientErrorException: 404 null
+	at org.springframework.web.client.DefaultResponseErrorHandler.handleError(DefaultResponseErrorHandler.java:91) ~[spring-web-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at org.springframework.web.client.RestTemplate.handleResponse(RestTemplate.java:641) ~[spring-web-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at org.springframework.web.client.RestTemplate.doExecute(RestTemplate.java:597) ~[spring-web-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at org.springframework.web.client.RestTemplate.execute(RestTemplate.java:557) ~[spring-web-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at org.springframework.web.client.RestTemplate.exchange(RestTemplate.java:475) ~[spring-web-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at com.capitalone.dashboard.collector.DefaultJiraClient.makeRestCall(DefaultJiraClient.java:785) ~[jira-feature-collector.jar!/:3.0.1]
+	at com.capitalone.dashboard.collector.DefaultJiraClient.getTeams(DefaultJiraClient.java:220) ~[jira-feature-collector.jar!/:3.0.1]
+	at com.capitalone.dashboard.collector.FeatureCollectorTask.updateTeamInformation(FeatureCollectorTask.java:170) [jira-feature-collector.jar!/:3.0.1]
+	at com.capitalone.dashboard.collector.FeatureCollectorTask.collect(FeatureCollectorTask.java:137) [jira-feature-collector.jar!/:3.0.1]
+	at com.capitalone.dashboard.collector.FeatureCollectorTask.collect(FeatureCollectorTask.java:46) [jira-feature-collector.jar!/:3.0.1]
+	at com.capitalone.dashboard.collector.CollectorTask.run(CollectorTask.java:63) [core-3.1.0.jar!/:3.0.1]
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54) [spring-context-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at org.springframework.scheduling.concurrent.ReschedulingRunnable.run(ReschedulingRunnable.java:81) [spring-context-4.2.5.RELEASE.jar!/:4.2.5.RELEASE]
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511) [na:1.8.0_191]
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266) [na:1.8.0_191]
+	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.access$201(ScheduledThreadPoolExecutor.java:180) [na:1.8.0_191]
+	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:293) [na:1.8.0_191]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149) [na:1.8.0_191]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624) [na:1.8.0_191]
+	at java.lang.Thread.run(Thread.java:748) [na:1.8.0_191]
+2019-02-27 13:48:52,130 INFO  o.s.c.a.AnnotationConfigApplicationContext - Closing org.springframework.context.annotation.AnnotationConfigApplicationContext@480f79d0: startup date [Wed Feb 27 13:48:33 IST 2019]; parent: org.springframework.context.annotation.AnnotationConfigApplicationContext@3fe1824b
+2019-02-27 13:48:52,138 INFO  o.s.j.e.a.AnnotationMBeanExporter - Unregistering JMX-exposed beans on shutdown
+2019-02-27 13:48:52,138 INFO  o.s.j.e.a.AnnotationMBeanExporter - Unregistering JMX-exposed beans
+2019-02-27 13:48:52,155 INFO  o.s.s.c.ThreadPoolTaskScheduler - Shutting down ExecutorService 'taskScheduler'
+2019-02-27 13:49:08,025 INFO  o.s.c.a.AnnotationConfigApplicationContext - Refreshing org.springframework.context.annotation.AnnotationConfigApplicationContext@3f9d00a3: startup date [Wed Feb 27 13:49:08 IST 2019]; root of context hierarchy
+2019-02-27 13:49:08,205 INFO  o.s.b.f.a.AutowiredAnnotationBeanPostProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-02-27 13:49:08,279 INFO  o.s.c.s.PostProcessorRegistrationDelegate$BeanPostProcessorChecker - Bean 'configurationPropertiesRebinderAutoConfiguration' of type [class org.springframework.cloud.autoconfigure.ConfigurationPropertiesRebinderAutoConfiguration$$EnhancerBySpringCGLIB$$17e76e6f] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
+2019-02-27 13:49:08,559 INFO  o.s.c.c.c.ConfigServicePropertySourceLocator - Fetching config from server at: http://localhost:8888
+2019-02-27 13:49:08,673 WARN  o.s.c.c.c.ConfigServicePropertySourceLocator - Could not locate PropertySource: I/O error on GET request for "http://localhost:8888/application/default": Connection refused (Connection refused); nested exception is java.net.ConnectException: Connection refused (Connection refused)
+2019-02-27 13:49:08,675 INFO  com.capitalone.dashboard.Application - No profiles are active
+2019-02-27 13:49:08,688 INFO  o.s.c.a.AnnotationConfigApplicationContext - Refreshing org.springframework.context.annotation.AnnotationConfigApplicationContext@9000051: startup date [Wed Feb 27 13:49:08 IST 2019]; parent: org.springframework.context.annotation.AnnotationConfigApplicationContext@3f9d00a3
+2019-02-27 13:49:09,897 INFO  o.s.cloud.context.scope.GenericScope - BeanFactory id=73603fe0-9b59-323b-bc1d-654033049f3c
+2019-02-27 13:49:09,901 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Post-processing PropertySource instances
+2019-02-27 13:49:09,910 INFO  c.u.j.c.StringEncryptorConfiguration - String Encryptor custom Bean not found with name 'jasyptStringEncryptor'. Initializing String Encryptor based on properties with name 'jasyptStringEncryptor'
+2019-02-27 13:49:09,917 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource commandLineArgs [org.springframework.core.env.SimpleCommandLinePropertySource] to EncryptableEnumerablePropertySourceWrapper
+2019-02-27 13:49:09,918 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource systemProperties [org.springframework.core.env.MapPropertySource] to EncryptableMapPropertySourceWrapper
+2019-02-27 13:49:09,918 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource systemEnvironment [org.springframework.core.env.SystemEnvironmentPropertySource] to EncryptableMapPropertySourceWrapper
+2019-02-27 13:49:09,918 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource random [org.springframework.boot.context.config.RandomValuePropertySource] to EncryptablePropertySourceWrapper
+2019-02-27 13:49:09,918 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource applicationConfig: [file:../jira.properties] [org.springframework.core.env.PropertiesPropertySource] to EncryptableMapPropertySourceWrapper
+2019-02-27 13:49:09,918 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource springCloudClientHostInfo [org.springframework.core.env.MapPropertySource] to EncryptableMapPropertySourceWrapper
+2019-02-27 13:49:09,918 INFO  c.u.j.EnableEncryptablePropertySourcesPostProcessor - Converting PropertySource defaultProperties [org.springframework.core.env.MapPropertySource] to EncryptableMapPropertySourceWrapper
+2019-02-27 13:49:09,922 INFO  o.s.b.f.a.AutowiredAnnotationBeanPostProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-02-27 13:49:09,966 INFO  o.s.c.s.PostProcessorRegistrationDelegate$BeanPostProcessorChecker - Bean 'org.springframework.cloud.autoconfigure.ConfigurationPropertiesRebinderAutoConfiguration' of type [class org.springframework.cloud.autoconfigure.ConfigurationPropertiesRebinderAutoConfiguration$$EnhancerBySpringCGLIB$$17e76e6f] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
+2019-02-27 13:49:10,062 INFO  o.s.s.c.ThreadPoolTaskScheduler - Initializing ExecutorService  'taskScheduler'
+2019-02-27 13:49:10,104 INFO  c.c.dashboard.config.MongoConfig - ReplicaSetfalse
+2019-02-27 13:49:10,169 INFO  c.c.dashboard.config.MongoConfig - Initializing Mongo Client server at: localhost:27017
+2019-02-27 13:49:10,194 INFO  org.mongodb.driver.cluster - Cluster created with settings {hosts=[localhost:27017], mode=SINGLE, requiredClusterType=UNKNOWN, serverSelectionTimeout='30000 ms', maxWaitQueueSize=500}
+2019-02-27 13:49:10,246 INFO  c.c.dashboard.config.MongoConfig - Connecting to Mongo: Mongo{options=MongoClientOptions{description='null', readPreference=primary, writeConcern=WriteConcern{w=1, wtimeout=0, fsync=false, j=false, codecRegistry=org.bson.codecs.configuration.ProvidersCodecRegistry@87f8615d, minConnectionsPerHost=0, maxConnectionsPerHost=100, threadsAllowedToBlockForConnectionMultiplier=5, serverSelectionTimeout=30000, maxWaitTime=120000, maxConnectionIdleTime=0, maxConnectionLifeTime=0, connectTimeout=10000, socketTimeout=0, socketKeepAlive=false, sslEnabled=false, sslInvalidHostNamesAllowed=false, alwaysUseMBeans=false, heartbeatFrequency=10000, minHeartbeatFrequency=500, heartbeatConnectTimeout=20000, heartbeatSocketTimeout=20000, localThreshold=15, requiredReplicaSetName='null', dbDecoderFactory=com.mongodb.DefaultDBDecoder$1@1c9037c3, dbEncoderFactory=com.mongodb.DefaultDBEncoder$1@768f5219, socketFactory=javax.net.DefaultSocketFactory@55ec56ef, cursorFinalizerEnabled=true, connectionPoolSettings=ConnectionPoolSettings{maxSize=100, minSize=0, maxWaitQueueSize=500, maxWaitTimeMS=120000, maxConnectionLifeTimeMS=0, maxConnectionIdleTimeMS=0, maintenanceInitialDelayMS=0, maintenanceFrequencyMS=60000}, socketSettings=SocketSettings{connectTimeoutMS=10000, readTimeoutMS=0, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}, serverSettings=ServerSettings{heartbeatFrequencyMS=10000, minHeartbeatFrequencyMS=500}, heartbeatSocketSettings=SocketSettings{connectTimeoutMS=20000, readTimeoutMS=20000, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}}}
+2019-02-27 13:49:10,279 INFO  org.mongodb.driver.connection - Opened connection [connectionId{localValue:1, serverValue:4743}] to localhost:27017
+2019-02-27 13:49:10,281 INFO  org.mongodb.driver.cluster - Monitor thread successfully connected to server with description ServerDescription{address=localhost:27017, type=STANDALONE, state=CONNECTED, ok=true, version=ServerVersion{versionList=[3, 4, 19]}, minWireVersion=0, maxWireVersion=5, electionId=null, maxDocumentSize=16777216, roundTripTimeNanos=1587336}
+2019-02-27 13:49:10,413 INFO  org.mongodb.driver.connection - Opened connection [connectionId{localValue:2, serverValue:4744}] to localhost:27017
+2019-02-27 13:49:10,958 INFO  c.c.dashboard.config.MongoConfig - ReplicaSetfalse
+2019-02-27 13:49:10,958 INFO  c.c.dashboard.config.MongoConfig - Initializing Mongo Client server at: localhost:27017
+2019-02-27 13:49:10,959 INFO  org.mongodb.driver.cluster - Cluster created with settings {hosts=[localhost:27017], mode=SINGLE, requiredClusterType=UNKNOWN, serverSelectionTimeout='30000 ms', maxWaitQueueSize=500}
+2019-02-27 13:49:10,959 INFO  c.c.dashboard.config.MongoConfig - Connecting to Mongo: Mongo{options=MongoClientOptions{description='null', readPreference=primary, writeConcern=WriteConcern{w=1, wtimeout=0, fsync=false, j=false, codecRegistry=org.bson.codecs.configuration.ProvidersCodecRegistry@87f8615d, minConnectionsPerHost=0, maxConnectionsPerHost=100, threadsAllowedToBlockForConnectionMultiplier=5, serverSelectionTimeout=30000, maxWaitTime=120000, maxConnectionIdleTime=0, maxConnectionLifeTime=0, connectTimeout=10000, socketTimeout=0, socketKeepAlive=false, sslEnabled=false, sslInvalidHostNamesAllowed=false, alwaysUseMBeans=false, heartbeatFrequency=10000, minHeartbeatFrequency=500, heartbeatConnectTimeout=20000, heartbeatSocketTimeout=20000, localThreshold=15, requiredReplicaSetName='null', dbDecoderFactory=com.mongodb.DefaultDBDecoder$1@1c9037c3, dbEncoderFactory=com.mongodb.DefaultDBEncoder$1@768f5219, socketFactory=javax.net.DefaultSocketFactory@55ec56ef, cursorFinalizerEnabled=true, connectionPoolSettings=ConnectionPoolSettings{maxSize=100, minSize=0, maxWaitQueueSize=500, maxWaitTimeMS=120000, maxConnectionLifeTimeMS=0, maxConnectionIdleTimeMS=0, maintenanceInitialDelayMS=0, maintenanceFrequencyMS=60000}, socketSettings=SocketSettings{connectTimeoutMS=10000, readTimeoutMS=0, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}, serverSettings=ServerSettings{heartbeatFrequencyMS=10000, minHeartbeatFrequencyMS=500}, heartbeatSocketSettings=SocketSettings{connectTimeoutMS=20000, readTimeoutMS=20000, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}}}
+2019-02-27 13:49:10,963 INFO  org.mongodb.driver.connection - Opened connection [connectionId{localValue:3, serverValue:4745}] to localhost:27017
+2019-02-27 13:49:10,968 INFO  org.mongodb.driver.cluster - Monitor thread successfully connected to server with description ServerDescription{address=localhost:27017, type=STANDALONE, state=CONNECTED, ok=true, version=ServerVersion{versionList=[3, 4, 19]}, minWireVersion=0, maxWireVersion=5, electionId=null, maxDocumentSize=16777216, roundTripTimeNanos=3188474}
+2019-02-27 13:49:10,969 INFO  c.c.dashboard.config.MongoConfig - ReplicaSetfalse
+2019-02-27 13:49:10,969 INFO  c.c.dashboard.config.MongoConfig - Initializing Mongo Client server at: localhost:27017
+2019-02-27 13:49:10,969 INFO  org.mongodb.driver.cluster - Cluster created with settings {hosts=[localhost:27017], mode=SINGLE, requiredClusterType=UNKNOWN, serverSelectionTimeout='30000 ms', maxWaitQueueSize=500}
+2019-02-27 13:49:10,970 INFO  c.c.dashboard.config.MongoConfig - Connecting to Mongo: Mongo{options=MongoClientOptions{description='null', readPreference=primary, writeConcern=WriteConcern{w=1, wtimeout=0, fsync=false, j=false, codecRegistry=org.bson.codecs.configuration.ProvidersCodecRegistry@87f8615d, minConnectionsPerHost=0, maxConnectionsPerHost=100, threadsAllowedToBlockForConnectionMultiplier=5, serverSelectionTimeout=30000, maxWaitTime=120000, maxConnectionIdleTime=0, maxConnectionLifeTime=0, connectTimeout=10000, socketTimeout=0, socketKeepAlive=false, sslEnabled=false, sslInvalidHostNamesAllowed=false, alwaysUseMBeans=false, heartbeatFrequency=10000, minHeartbeatFrequency=500, heartbeatConnectTimeout=20000, heartbeatSocketTimeout=20000, localThreshold=15, requiredReplicaSetName='null', dbDecoderFactory=com.mongodb.DefaultDBDecoder$1@1c9037c3, dbEncoderFactory=com.mongodb.DefaultDBEncoder$1@768f5219, socketFactory=javax.net.DefaultSocketFactory@55ec56ef, cursorFinalizerEnabled=true, connectionPoolSettings=ConnectionPoolSettings{maxSize=100, minSize=0, maxWaitQueueSize=500, maxWaitTimeMS=120000, maxConnectionLifeTimeMS=0, maxConnectionIdleTimeMS=0, maintenanceInitialDelayMS=0, maintenanceFrequencyMS=60000}, socketSettings=SocketSettings{connectTimeoutMS=10000, readTimeoutMS=0, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}, serverSettings=ServerSettings{heartbeatFrequencyMS=10000, minHeartbeatFrequencyMS=500}, heartbeatSocketSettings=SocketSettings{connectTimeoutMS=20000, readTimeoutMS=20000, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}}}
+2019-02-27 13:49:10,976 INFO  org.mongodb.driver.connection - Opened connection [connectionId{localValue:4, serverValue:4746}] to localhost:27017
+2019-02-27 13:49:10,976 INFO  org.mongodb.driver.cluster - Monitor thread successfully connected to server with description ServerDescription{address=localhost:27017, type=STANDALONE, state=CONNECTED, ok=true, version=ServerVersion{versionList=[3, 4, 19]}, minWireVersion=0, maxWireVersion=5, electionId=null, maxDocumentSize=16777216, roundTripTimeNanos=403910}
+2019-02-27 13:49:11,431 INFO  c.c.dashboard.config.MongoConfig - ReplicaSetfalse
+2019-02-27 13:49:11,432 INFO  c.c.dashboard.config.MongoConfig - Initializing Mongo Client server at: localhost:27017
+2019-02-27 13:49:11,432 INFO  org.mongodb.driver.cluster - Cluster created with settings {hosts=[localhost:27017], mode=SINGLE, requiredClusterType=UNKNOWN, serverSelectionTimeout='30000 ms', maxWaitQueueSize=500}
+2019-02-27 13:49:11,433 INFO  c.c.dashboard.config.MongoConfig - Connecting to Mongo: Mongo{options=MongoClientOptions{description='null', readPreference=primary, writeConcern=WriteConcern{w=1, wtimeout=0, fsync=false, j=false, codecRegistry=org.bson.codecs.configuration.ProvidersCodecRegistry@87f8615d, minConnectionsPerHost=0, maxConnectionsPerHost=100, threadsAllowedToBlockForConnectionMultiplier=5, serverSelectionTimeout=30000, maxWaitTime=120000, maxConnectionIdleTime=0, maxConnectionLifeTime=0, connectTimeout=10000, socketTimeout=0, socketKeepAlive=false, sslEnabled=false, sslInvalidHostNamesAllowed=false, alwaysUseMBeans=false, heartbeatFrequency=10000, minHeartbeatFrequency=500, heartbeatConnectTimeout=20000, heartbeatSocketTimeout=20000, localThreshold=15, requiredReplicaSetName='null', dbDecoderFactory=com.mongodb.DefaultDBDecoder$1@1c9037c3, dbEncoderFactory=com.mongodb.DefaultDBEncoder$1@768f5219, socketFactory=javax.net.DefaultSocketFactory@55ec56ef, cursorFinalizerEnabled=true, connectionPoolSettings=ConnectionPoolSettings{maxSize=100, minSize=0, maxWaitQueueSize=500, maxWaitTimeMS=120000, maxConnectionLifeTimeMS=0, maxConnectionIdleTimeMS=0, maintenanceInitialDelayMS=0, maintenanceFrequencyMS=60000}, socketSettings=SocketSettings{connectTimeoutMS=10000, readTimeoutMS=0, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}, serverSettings=ServerSettings{heartbeatFrequencyMS=10000, minHeartbeatFrequencyMS=500}, heartbeatSocketSettings=SocketSettings{connectTimeoutMS=20000, readTimeoutMS=20000, keepAlive=false, receiveBufferSize=0, sendBufferSize=0}}}
+2019-02-27 13:49:11,435 INFO  org.mongodb.driver.connection - Opened connection [connectionId{localValue:5, serverValue:4747}] to localhost:27017
+2019-02-27 13:49:11,436 INFO  org.mongodb.driver.cluster - Monitor thread successfully connected to server with description ServerDescription{address=localhost:27017, type=STANDALONE, state=CONNECTED, ok=true, version=ServerVersion{versionList=[3, 4, 19]}, minWireVersion=0, maxWireVersion=5, electionId=null, maxDocumentSize=16777216, roundTripTimeNanos=367308}
+2019-02-27 13:49:12,131 INFO  o.s.j.e.a.AnnotationMBeanExporter - Registering beans for JMX exposure on startup
+2019-02-27 13:49:12,138 INFO  o.s.j.e.a.AnnotationMBeanExporter - Bean with name 'configurationPropertiesRebinder' has been autodetected for JMX exposure
+2019-02-27 13:49:12,139 INFO  o.s.j.e.a.AnnotationMBeanExporter - Bean with name 'environmentManager' has been autodetected for JMX exposure
+2019-02-27 13:49:12,139 INFO  o.s.j.e.a.AnnotationMBeanExporter - Bean with name 'refreshScope' has been autodetected for JMX exposure
+2019-02-27 13:49:12,141 INFO  o.s.j.e.a.AnnotationMBeanExporter - Located managed bean 'environmentManager': registering with JMX server as MBean [org.springframework.cloud.context.environment:name=environmentManager,type=EnvironmentManager]
+2019-02-27 13:49:12,151 INFO  o.s.j.e.a.AnnotationMBeanExporter - Located managed bean 'refreshScope': registering with JMX server as MBean [org.springframework.cloud.context.scope.refresh:name=refreshScope,type=RefreshScope]
+2019-02-27 13:49:12,157 INFO  o.s.j.e.a.AnnotationMBeanExporter - Located managed bean 'configurationPropertiesRebinder': registering with JMX server as MBean [org.springframework.cloud.context.properties:name=configurationPropertiesRebinder,context=9000051,type=ConfigurationPropertiesRebinder]
+2019-02-27 13:49:12,195 INFO  com.capitalone.dashboard.Application - Started Application in 4.668 seconds (JVM running for 5.277)
+2019-02-27 13:49:15,000 INFO  c.c.d.collector.CollectorTask - Running Collector: Jira
+2019-02-27 13:49:15,008 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-27 13:49:15,008 INFO  c.c.d.collector.CollectorTask - https://jira.citiustech.com
+2019-02-27 13:49:15,008 INFO  c.c.d.collector.CollectorTask - -----------------------------------
+2019-02-27 13:49:15,015 INFO  c.c.d.collector.FeatureCollectorTask - JIRA Collector is set to work in Board mode
+2019-02-27 13:49:15,016 INFO  c.c.d.collector.FeatureCollectorTask - Hours since last run = 430904. Collector is about to refresh Team/Board information
+2019-02-27 13:49:15,589 INFO  c.c.d.collector.DefaultJiraClient - JIRA Collector collected 22 boards
+2019-02-27 13:49:15,590 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:1-CT-PG Board
+2019-02-27 13:49:15,596 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:18-CT BIC Engineering
+2019-02-27 13:49:15,600 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:23-CT Support Desk Board
+2019-02-27 13:49:15,602 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:38-CT BIC Engineering Administration
+2019-02-27 13:49:15,605 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:41-Test Board 2
+2019-02-27 13:49:15,607 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:44-Copy of CT Support Desk Board
+2019-02-27 13:49:15,610 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:45-CT Solutions Support Service Desk
+2019-02-27 13:49:15,612 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:46-CT BIC Solutions Impl. Defect Tracking
+2019-02-27 13:49:15,614 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:54-Cambia Metadata
+2019-02-27 13:49:15,617 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:55-Scrum Board
+2019-02-27 13:49:15,619 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:76-CT BIC Support Quest
+2019-02-27 13:49:15,621 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:126-Change Request Dashboard
+2019-02-27 13:49:15,624 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:128-TJP board
+2019-02-27 13:49:15,626 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:200-Test Board
+2019-02-27 13:49:15,629 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:201-Test agile board
+2019-02-27 13:49:15,631 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:202-Demo test
+2019-02-27 13:49:15,634 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:206-TEST PROJECT 1
+2019-02-27 13:49:15,636 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:219-EVP board
+2019-02-27 13:49:15,639 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:232-TPB board
+2019-02-27 13:49:15,641 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:233-Jeevan_Test_Board
+2019-02-27 13:49:15,643 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:242-Amerihealth-2019
+2019-02-27 13:49:15,645 INFO  c.c.d.collector.FeatureCollectorTask - Adding Board:246-CEN board
+2019-02-27 13:49:15,649 INFO  c.c.d.collector.CollectorTask - Board Data Collected. Added  22        0s
+2019-02-27 13:49:15,868 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10604-CT BIC Support Davita
+2019-02-27 13:49:15,873 INFO  c.c.d.collector.FeatureCollectorTask - Adding :11101-CT BIC Engineering - XRAY
+2019-02-27 13:49:15,876 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10802-CT BIC Support Activity Tracker
+2019-02-27 13:49:15,878 INFO  c.c.d.collector.FeatureCollectorTask - Adding :12403-CT BIC Support Team Health Project
+2019-02-27 13:49:15,880 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10500-CT BIC Engineering Administration
+2019-02-27 13:49:15,882 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10313-CT BIC Engineering
+2019-02-27 13:49:15,884 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10605-CT BIC Support IntrinsiQ
+2019-02-27 13:49:15,886 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10606-CT BIC Support Quest
+2019-02-27 13:49:15,888 INFO  c.c.d.collector.FeatureCollectorTask - Adding :12800-Test JIRA project
+2019-02-27 13:49:15,890 INFO  c.c.d.collector.FeatureCollectorTask - Adding :15100-Test Project Kanban board
+2019-02-27 13:49:15,892 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10607-CT BIC Support CQ-IQ
+2019-02-27 13:49:15,894 INFO  c.c.d.collector.FeatureCollectorTask - Adding :14907-Test Agile Project
+2019-02-27 13:49:15,896 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10600-CT BIC Support Advisory Board
+2019-02-27 13:49:15,899 INFO  c.c.d.collector.FeatureCollectorTask - Adding :14903-CT BIC Support FLB
+2019-02-27 13:49:15,901 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10315-CT BIC Support VUMC
+2019-02-27 13:49:15,903 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10601-CT BIC Support Alignment Health
+2019-02-27 13:49:15,905 INFO  c.c.d.collector.FeatureCollectorTask - Adding :12405-CT BIC Support Centra Health Project
+2019-02-27 13:49:15,907 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10700-CT Solutions Impl. Defect Tracking
+2019-02-27 13:49:15,909 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10603-CT BIC Support CCNC
+2019-02-27 13:49:15,911 INFO  c.c.d.collector.FeatureCollectorTask - Adding :15401-CentriCT
+2019-02-27 13:49:15,913 INFO  c.c.d.collector.FeatureCollectorTask - Adding :10311-CT BIC Support Medhost
+2019-02-27 13:49:15,915 INFO  c.c.d.collector.CollectorTask - Project Data Collected 21        0s
+2019-02-27 13:49:15,939 INFO  c.c.d.collector.FeatureCollectorTask - Refreshing issues for Board ID:246
+2019-02-27 13:49:16,139 INFO  c.c.d.collector.FeatureCollectorTask - Refreshing issues for Board ID:18
+2019-02-27 13:50:44,515 INFO  o.s.c.a.AnnotationConfigApplicationContext - Closing org.springframework.context.annotation.AnnotationConfigApplicationContext@9000051: startup date [Wed Feb 27 13:49:08 IST 2019]; parent: org.springframework.context.annotation.AnnotationConfigApplicationContext@3f9d00a3
+2019-02-27 13:50:44,522 INFO  o.s.j.e.a.AnnotationMBeanExporter - Unregistering JMX-exposed beans on shutdown
+2019-02-27 13:50:44,522 INFO  o.s.j.e.a.AnnotationMBeanExporter - Unregistering JMX-exposed beans
+2019-02-27 13:50:44,549 INFO  o.s.s.c.ThreadPoolTaskScheduler - Shutting down ExecutorService 'taskScheduler'
+2019-02-27 13:50:46,999 INFO  o.s.c.a.AnnotationConfigApplicationContext - Refreshing org.springframework.context.annotation.AnnotationConfigApplicationContext@3fe1824b: startup date [Wed Feb 27 13:50:46 IST 2019]; root of context hierarchy
+2019-02-27 13:50:47,194 INFO  o.s.b.f.a.AutowiredAnnotationBeanPostProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-02-27 13:50:47,270 INFO  o.s.c.s.PostProcessorRegistrationDelegate$BeanPostProcessorChecker - Bean 'configurationPropertiesRebinderAutoConfiguration' of type [class org.springframework.cloud.autoconfigure.ConfigurationPropertiesRebinderAutoConfiguration$$EnhancerBySpringCGLIB$$1a2aea30] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)

@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>TestResultSettings.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:jira-xray-testresult-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard</a> &gt; <span class="el_source">TestResultSettings.java</span></div><h1>TestResultSettings.java</h1><pre class="source lang-java linenums">/*************************DA-BOARD-LICENSE-START*********************************
+ * Copyright 2014 CapitalOne, LLC.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *************************DA-BOARD-LICENSE-END*********************************/
+
+package com.capitalone.dashboard;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+@Component
+@ConfigurationProperties(prefix = &quot;feature&quot;)
+<span class="nc" id="L24">public class TestResultSettings {</span>
+	private String cron;
+	private int pageSize;
+	private String deltaStartDate;
+	private String deltaCollectorItemStartDate;
+	private String masterStartDate;
+	private int scheduledPriorMin;
+	private String queryFolder;
+	private String storyQuery;
+
+	// Jira-connection details
+	private String jiraBaseUrl;
+	private String jiraQueryEndpoint;
+	private String jiraCredentials;
+	private String jiraOauthAuthtoken;
+	private String jiraOauthRefreshtoken;
+	private String jiraOauthRedirecturi;
+	private String jiraOauthExpiretime;
+	private String jiraProxyUrl;
+	private String jiraProxyPort;
+	/**
+	 * In Jira, general IssueType IDs are associated to various &quot;issue&quot;
+	 * attributes. However, there is one attribute which this collector's
+	 * queries rely on that change between different instantiations of Jira.
+	 * Please provide a numerical ID reference to your instance's IssueType for
+	 * the lowest level of Issues (e.g., &quot;user story&quot;) specific to your Jira
+	 * instance.
+	 * &lt;p&gt;
+	 * &lt;/p&gt;
+	 * &lt;strong&gt;Note:&lt;/strong&gt; You can retrieve your instance's IssueType ID
+	 * listings via the following URI:
+	 * https://[your-jira-domain-name]/rest/api/2/issuetype/
+	 * Multiple comma-separated values can be specified.
+	 */
+	private String[] jiraIssueTypeNames;
+
+	public String getCron() {
+<span class="nc" id="L61">		return this.cron;</span>
+	}
+
+	public void setCron(String cron) {
+<span class="nc" id="L65">		this.cron = cron;</span>
+<span class="nc" id="L66">	}</span>
+
+	public int getPageSize() {
+<span class="nc" id="L69">		return pageSize;</span>
+	}
+
+	public void setPageSize(int pageSize) {
+<span class="nc" id="L73">		this.pageSize = pageSize;</span>
+<span class="nc" id="L74">	}</span>
+
+	public String getDeltaStartDate() {
+<span class="nc" id="L77">		return this.deltaStartDate;</span>
+	}
+
+	public void setDeltaStartDate(String deltaStartDate) {
+<span class="nc" id="L81">		this.deltaStartDate = deltaStartDate;</span>
+<span class="nc" id="L82">	}</span>
+
+	public void setDeltaCollectorItemStartDate(String deltaCollectorItemStartDate) {
+<span class="nc" id="L85">		this.deltaCollectorItemStartDate = deltaCollectorItemStartDate;</span>
+<span class="nc" id="L86">	}</span>
+
+	public String getDeltaCollectorItemStartDate() {
+<span class="nc" id="L89">		return this.deltaCollectorItemStartDate;</span>
+	}
+
+	public String getMasterStartDate() {
+<span class="nc" id="L93">		return this.masterStartDate;</span>
+	}
+
+	public void setMasterStartDate(String masterStartDate) {
+<span class="nc" id="L97">		this.masterStartDate = masterStartDate;</span>
+<span class="nc" id="L98">	}</span>
+
+	public int getScheduledPriorMin() {
+<span class="nc" id="L101">		return this.scheduledPriorMin;</span>
+	}
+
+	public void setScheduledPriorMin(int scheduledPriorMin) {
+<span class="nc" id="L105">		this.scheduledPriorMin = scheduledPriorMin;</span>
+<span class="nc" id="L106">	}</span>
+
+	public String getQueryFolder() {
+<span class="nc" id="L109">		return this.queryFolder;</span>
+	}
+
+	public void setQueryFolder(String queryFolder) {
+<span class="nc" id="L113">		this.queryFolder = queryFolder;</span>
+<span class="nc" id="L114">	}</span>
+
+	public String getStoryQuery() {
+<span class="nc" id="L117">		return this.storyQuery;</span>
+	}
+
+	public void setStoryQuery(String storyQuery) {
+<span class="nc" id="L121">		this.storyQuery = storyQuery;</span>
+<span class="nc" id="L122">	}</span>
+
+	public String getJiraBaseUrl() {
+<span class="nc" id="L125">		return this.jiraBaseUrl;</span>
+	}
+
+	public void setJiraBaseUrl(String jiraBaseUrl) {
+<span class="nc" id="L129">		this.jiraBaseUrl = jiraBaseUrl;</span>
+<span class="nc" id="L130">	}</span>
+	
+	public String getJiraQueryEndpoint() {
+<span class="nc" id="L133">		return this.jiraQueryEndpoint;</span>
+	}
+
+	public void setJiraQueryEndpoint(String jiraQueryEndpoint) {
+<span class="nc" id="L137">		this.jiraQueryEndpoint = jiraQueryEndpoint;</span>
+<span class="nc" id="L138">	}</span>
+
+	public String getJiraCredentials() {
+<span class="nc" id="L141">		return this.jiraCredentials;</span>
+	}
+
+	public void setJiraCredentials(String jiraCredentials) {
+<span class="nc" id="L145">		this.jiraCredentials = jiraCredentials;</span>
+<span class="nc" id="L146">	}</span>
+
+	public String getJiraOauthAuthtoken() {
+<span class="nc" id="L149">		return this.jiraOauthAuthtoken;</span>
+	}
+
+	public void setJiraOauthAuthtoken(String jiraOauthAuthtoken) {
+<span class="nc" id="L153">		this.jiraOauthAuthtoken = jiraOauthAuthtoken;</span>
+<span class="nc" id="L154">	}</span>
+
+	public String getJiraOauthRefreshtoken() {
+<span class="nc" id="L157">		return this.jiraOauthRefreshtoken;</span>
+	}
+
+	public void setJiraOauthRefreshtoken(String jiraOauthRefreshtoken) {
+<span class="nc" id="L161">		this.jiraOauthRefreshtoken = jiraOauthRefreshtoken;</span>
+<span class="nc" id="L162">	}</span>
+
+	public String getJiraOauthRedirecturi() {
+<span class="nc" id="L165">		return this.jiraOauthRedirecturi;</span>
+	}
+
+	public void setJiraOauthRedirecturi(String jiraOauthRedirecturi) {
+<span class="nc" id="L169">		this.jiraOauthRedirecturi = jiraOauthRedirecturi;</span>
+<span class="nc" id="L170">	}</span>
+
+	public String getJiraOauthExpiretime() {
+<span class="nc" id="L173">		return this.jiraOauthExpiretime;</span>
+	}
+
+	public void setJiraOauthExpiretime(String jiraOauthExpiretime) {
+<span class="nc" id="L177">		this.jiraOauthExpiretime = jiraOauthExpiretime;</span>
+<span class="nc" id="L178">	}</span>
+
+	public String getJiraProxyUrl() {
+<span class="nc" id="L181">		return this.jiraProxyUrl;</span>
+	}
+
+	public void setJiraProxyUrl(String jiraProxyUrl) {
+<span class="nc" id="L185">		this.jiraProxyUrl = jiraProxyUrl;</span>
+<span class="nc" id="L186">	}</span>
+
+	public String getJiraProxyPort() {
+<span class="nc" id="L189">		return this.jiraProxyPort;</span>
+	}
+
+	public void setJiraProxyPort(String jiraProxyPort) {
+<span class="nc" id="L193">		this.jiraProxyPort = jiraProxyPort;</span>
+<span class="nc" id="L194">	}</span>
+	
+	public String[] getJiraIssueTypeNames() {
+<span class="nc" id="L197">		return jiraIssueTypeNames;</span>
+	}
+
+	public void setJiraIssueTypeNames(String[] jiraIssueTypeNames) {
+<span class="nc" id="L201">		this.jiraIssueTypeNames = jiraIssueTypeNames;</span>
+<span class="nc" id="L202">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

@@ -1,0 +1,8 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+com.capitalone.dashboard:appdynamics-performance-collector,com.capitalone.dashboard,Application,8,0,0,0,3,0,2,0,2,0
+com.capitalone.dashboard:appdynamics-performance-collector,com.capitalone.dashboard.collector,AppdynamicsCollectorTask,298,0,22,0,65,0,21,0,10,0
+com.capitalone.dashboard:appdynamics-performance-collector,com.capitalone.dashboard.collector,AppdynamicsSettings,53,13,0,0,19,4,12,3,12,3
+com.capitalone.dashboard:appdynamics-performance-collector,com.capitalone.dashboard.collector,DefaultAppdynamicsClient,243,774,26,32,53,156,19,27,1,16
+com.capitalone.dashboard:appdynamics-performance-collector,com.capitalone.dashboard.collector,RestOperationsSupplier,18,0,0,0,5,0,2,0,2,0
+com.capitalone.dashboard:appdynamics-performance-collector,com.capitalone.dashboard.model,AppdynamicsCollector,79,0,0,0,22,0,4,0,4,0
+com.capitalone.dashboard:appdynamics-performance-collector,com.capitalone.dashboard.model,AppdynamicsApplication,63,34,6,0,14,9,10,6,7,6

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ArtifactoryCollector.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:artifactory-artifact-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.model</a> &gt; <span class="el_source">ArtifactoryCollector.java</span></div><h1>ArtifactoryCollector.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.model;
+
+import com.capitalone.dashboard.collector.ArtifactorySettings;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+/**
+ * Collector implementation for XLDeploy that stores Artifactory server URLs.
+ */
+<span class="nc" id="L14">public class ArtifactoryCollector extends Collector {</span>
+<span class="nc" id="L15">    private List&lt;String&gt; artifactoryServers = new ArrayList&lt;&gt;();</span>
+
+    public List&lt;String&gt; getArtifactoryServers() {
+<span class="nc" id="L18">        return artifactoryServers;</span>
+    }
+
+    public static ArtifactoryCollector prototype(ArtifactorySettings settings) {
+<span class="nc" id="L22">        ArtifactoryCollector protoType = new ArtifactoryCollector();</span>
+<span class="nc" id="L23">        protoType.setName(&quot;Artifactory&quot;);</span>
+<span class="nc" id="L24">        protoType.setCollectorType(CollectorType.Artifact);</span>
+<span class="nc" id="L25">        protoType.setOnline(true);</span>
+<span class="nc" id="L26">        protoType.setEnabled(true);</span>
+<span class="nc" id="L27">        protoType.getArtifactoryServers().addAll(settings.getServers().stream().map(ServerSetting::getUrl).collect(Collectors.toList()));</span>
+<span class="nc" id="L28">        Map&lt;String, Object&gt; options = new HashMap&lt;&gt;();</span>
+
+<span class="nc bnc" id="L30" title="All 3 branches missed.">        switch (settings.getMode()) {</span>
+            case REPO_BASED:
+<span class="nc" id="L32">                options.put(ArtifactoryRepo.INSTANCE_URL, &quot;&quot;);</span>
+<span class="nc" id="L33">                options.put(ArtifactoryRepo.REPO_NAME, &quot;&quot;);</span>
+<span class="nc" id="L34">                options.put(ArtifactoryRepo.REPO_URL, &quot;&quot;);</span>
+<span class="nc" id="L35">                break;</span>
+
+            case ARTIFACT_BASED:
+<span class="nc" id="L38">                options.put(ArtifactItem.INSTANCE_URL, &quot;&quot;);</span>
+<span class="nc" id="L39">                options.put(ArtifactItem.REPO_NAME, &quot;&quot;);</span>
+<span class="nc" id="L40">                options.put(ArtifactItem.ARTIFACT_NAME, &quot;&quot;);</span>
+<span class="nc" id="L41">                options.put(ArtifactItem.PATH, &quot;&quot;);</span>
+<span class="nc" id="L42">                break;</span>
+
+            default:
+        }
+<span class="nc" id="L46">        protoType.setAllFields(options);</span>
+<span class="nc" id="L47">        protoType.setUniqueFields(options);</span>
+<span class="nc" id="L48">        return protoType;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>RallySettings.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:rally-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">RallySettings.java</span></div><h1>RallySettings.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+/**
+ * Bean to hold settings specific to the Sonar collector.
+ */
+@Component
+@ConfigurationProperties(prefix = &quot;rally&quot;)
+<span class="fc" id="L13">public class RallySettings {</span>
+    private String cron;
+    private List&lt;String&gt; servers;
+    private List&lt;String&gt; usernames;
+    private List&lt;String&gt; passwords;
+    private String httpProxyPort;
+    private String httpProxyHost;
+    private String httpsProxyPort;
+    private String httpsProxyHost;
+    
+    
+    public String getHttpProxyPort() {
+<span class="nc" id="L25">		return httpProxyPort;</span>
+	}
+
+	public void setHttpProxyPort(String httpProxyPort) {
+<span class="nc" id="L29">		this.httpProxyPort = httpProxyPort;</span>
+<span class="nc" id="L30">	}</span>
+
+	public String getHttpProxyHost() {
+<span class="nc" id="L33">		return httpProxyHost;</span>
+	}
+
+	public void setHttpProxyHost(String httpProxyHost) {
+<span class="nc" id="L37">		this.httpProxyHost = httpProxyHost;</span>
+<span class="nc" id="L38">	}</span>
+
+	public String getHttpsProxyPort() {
+<span class="nc" id="L41">		return httpsProxyPort;</span>
+	}
+
+	public void setHttpsProxyPort(String httpsProxyPort) {
+<span class="nc" id="L45">		this.httpsProxyPort = httpsProxyPort;</span>
+<span class="nc" id="L46">	}</span>
+
+	public String getHttpsProxyHost() {
+<span class="nc" id="L49">		return httpsProxyHost;</span>
+	}
+
+	public void setHttpsProxyHost(String httpsProxyHost) {
+<span class="nc" id="L53">		this.httpsProxyHost = httpsProxyHost;</span>
+<span class="nc" id="L54">	}</span>
+
+	public List&lt;String&gt; getUsernames() {
+<span class="nc" id="L57">		return usernames;</span>
+	}
+
+	public void setUsernames(List&lt;String&gt; usernames) {
+<span class="nc" id="L61">		this.usernames = usernames;</span>
+<span class="nc" id="L62">	}</span>
+
+	public List&lt;String&gt; getPasswords() {
+<span class="nc" id="L65">		return passwords;</span>
+	}
+
+	public void setPasswords(List&lt;String&gt; passwords) {
+<span class="nc" id="L69">		this.passwords = passwords;</span>
+<span class="nc" id="L70">	}</span>
+
+	public String getCron() {
+<span class="nc" id="L73">        return cron;</span>
+    }
+
+    public void setCron(String cron) {
+<span class="nc" id="L77">        this.cron = cron;</span>
+<span class="nc" id="L78">    }</span>
+
+    public List&lt;String&gt; getServers() {
+<span class="nc" id="L81">        return servers;</span>
+    }
+
+    public void setServers(List&lt;String&gt; servers) {
+<span class="nc" id="L85">        this.servers = servers;</span>
+<span class="nc" id="L86">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

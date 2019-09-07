@@ -1,0 +1,11 @@
+/home/Devops/Hygieia/collectors/library-policy/nexus-iq-collector/src/main/java/com/capitalone/dashboard/model/NexusIQCollector.java
+/home/Devops/Hygieia/collectors/library-policy/nexus-iq-collector/src/main/java/com/capitalone/dashboard/collector/RestOperationsSupplier.java
+/home/Devops/Hygieia/collectors/library-policy/nexus-iq-collector/src/main/java/com/capitalone/dashboard/model/NexusIQApplication.java
+/home/Devops/Hygieia/collectors/library-policy/nexus-iq-collector/src/main/java/com/capitalone/dashboard/collector/DefaultNexusIQClient.java
+/home/Devops/Hygieia/collectors/library-policy/nexus-iq-collector/src/main/java/com/capitalone/dashboard/collector/NexusIQCollectorTask.java
+/home/Devops/Hygieia/collectors/library-policy/nexus-iq-collector/src/main/java/com/capitalone/dashboard/repository/NexusIQApplicationRepository.java
+/home/Devops/Hygieia/collectors/library-policy/nexus-iq-collector/src/main/java/com/capitalone/dashboard/collector/NexusIQSettings.java
+/home/Devops/Hygieia/collectors/library-policy/nexus-iq-collector/src/main/java/com/capitalone/dashboard/repository/NexusIQCollectorRepository.java
+/home/Devops/Hygieia/collectors/library-policy/nexus-iq-collector/src/main/java/com/capitalone/dashboard/Application.java
+/home/Devops/Hygieia/collectors/library-policy/nexus-iq-collector/src/main/java/com/capitalone/dashboard/model/LibraryPolicyReport.java
+/home/Devops/Hygieia/collectors/library-policy/nexus-iq-collector/src/main/java/com/capitalone/dashboard/collector/NexusIQClient.java

@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ScoreSettingsService.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:score-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard</a> &gt; <span class="el_source">ScoreSettingsService.java</span></div><h1>ScoreSettingsService.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard;
+
+import com.capitalone.dashboard.collector.ScoreSettings;
+import com.capitalone.dashboard.model.score.ScoreValueType;
+import com.capitalone.dashboard.model.score.settings.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+/**
+ * Service to fetch initialized settings used for score calculation
+ */
+@Service
+public class ScoreSettingsService {
+
+<span class="nc" id="L17">  private static final Logger LOGGER = LoggerFactory.getLogger(ScoreSettingsService.class);</span>
+
+  private final ScoreSettings scoreSettings;
+
+  private ScoreCriteriaSettings dashboardScoreCriteriaSettings;
+
+  @Autowired
+  public ScoreSettingsService(
+    ScoreSettings scoreSettings
+<span class="nc" id="L26">  ) {</span>
+<span class="nc" id="L27">    this.scoreSettings = scoreSettings;</span>
+<span class="nc" id="L28">    initScoreSettings();</span>
+<span class="nc" id="L29">    generateDashboardScoreSettings();</span>
+
+<span class="nc" id="L31">  }</span>
+
+  /**
+   * Generate Score Criteria Settings from Score Settings
+   */
+  public final void generateDashboardScoreSettings() {
+<span class="nc" id="L37">    ScoreCriteriaSettings dashboardScoreCriteriaSettings = new ScoreCriteriaSettings();</span>
+<span class="nc" id="L38">    dashboardScoreCriteriaSettings.setMaxScore(</span>
+<span class="nc" id="L39">      this.scoreSettings.getMaxScore()</span>
+    );
+<span class="nc" id="L41">    dashboardScoreCriteriaSettings.setType(ScoreValueType.DASHBOARD);</span>
+<span class="nc" id="L42">    dashboardScoreCriteriaSettings.setComponentAlert(</span>
+<span class="nc" id="L43">      ComponentAlert.cloneComponentAlert(this.scoreSettings.getComponentAlert())</span>
+    );
+<span class="nc" id="L45">    dashboardScoreCriteriaSettings.setBuild(</span>
+<span class="nc" id="L46">      BuildScoreSettings.cloneBuildScoreSettings(this.scoreSettings.getBuildWidget())</span>
+    );
+<span class="nc" id="L48">    dashboardScoreCriteriaSettings.setDeploy(</span>
+<span class="nc" id="L49">      DeployScoreSettings.cloneDeployScoreSettings(this.scoreSettings.getDeployWidget())</span>
+    );
+<span class="nc" id="L51">    dashboardScoreCriteriaSettings.setQuality(</span>
+<span class="nc" id="L52">      QualityScoreSettings.cloneQualityScoreSettings(this.scoreSettings.getQualityWidget())</span>
+    );
+<span class="nc" id="L54">    dashboardScoreCriteriaSettings.setScm(</span>
+<span class="nc" id="L55">      ScmScoreSettings.cloneScmScoreSettings(this.scoreSettings.getScmWidget())</span>
+    );
+
+<span class="nc" id="L58">    LOGGER.debug(&quot;Generate Score Dashboard Settings dashboardScoreCriteriaSettings {}&quot;, dashboardScoreCriteriaSettings);</span>
+
+<span class="nc" id="L60">    this.dashboardScoreCriteriaSettings = dashboardScoreCriteriaSettings;</span>
+<span class="nc" id="L61">  }</span>
+
+  public ScoreCriteriaSettings getDashboardScoreCriteriaSettings() {
+<span class="nc" id="L64">    return this.dashboardScoreCriteriaSettings;</span>
+  }
+
+  /**
+   * Initialize score settings for widgets
+   * &lt;p&gt;&lt;ul&gt;
+   * &lt;li&gt;Build
+   * &lt;li&gt;Deploy
+   * &lt;li&gt;Quality
+   * &lt;li&gt;Github SCM
+   * &lt;/ul&gt;&lt;p&gt;
+   */
+  public final void initScoreSettings() {
+<span class="nc" id="L77">    ScoreCriteria criteria = this.scoreSettings.getCriteria();</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">    if (null == criteria) {</span>
+<span class="nc" id="L79">      criteria = new ScoreCriteria();</span>
+<span class="nc" id="L80">      this.scoreSettings.setCriteria(criteria);</span>
+    }
+
+    //Initialize criteria values for no data found and no widget found conditions
+    //Default value is 0 score for no data found and no widget found
+<span class="nc bnc" id="L85" title="All 2 branches missed.">    if (null == criteria.getNoDataFound()) {</span>
+<span class="nc" id="L86">      criteria.setNoDataFound(ScoreTypeValue.zeroScore());</span>
+    }
+<span class="nc bnc" id="L88" title="All 2 branches missed.">    if (null == criteria.getNoWidgetFound()) {</span>
+<span class="nc" id="L89">      criteria.setNoWidgetFound(ScoreTypeValue.zeroScore());</span>
+    }
+
+<span class="nc" id="L92">    initBuildScoreSettings();</span>
+<span class="nc" id="L93">    initDeployScoreSettings();</span>
+<span class="nc" id="L94">    initQualityScoreSettings();</span>
+<span class="nc" id="L95">    initGithubScmScoreSettings();</span>
+
+<span class="nc" id="L97">    LOGGER.debug(&quot;Initialized scoreSettings {}&quot;, this.scoreSettings);</span>
+<span class="nc" id="L98">  }</span>
+
+  /**
+   * Initialize build score settings
+   * &lt;p&gt;
+   *  If build widget settings are present merge it with default score settings
+   *  Initialize settings for children scores in build widget
+   */
+  private void initBuildScoreSettings() {
+<span class="nc" id="L107">    BuildScoreSettings buildScoreSettings = this.scoreSettings.getBuildWidget();</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">    if (null != buildScoreSettings) {</span>
+<span class="nc" id="L109">      buildScoreSettings.setCriteria(</span>
+<span class="nc" id="L110">        Utils.mergeCriteria(this.scoreSettings.getCriteria(), buildScoreSettings.getCriteria())</span>
+      );
+
+<span class="nc" id="L113">      initBuildScoreChildrenSettings(buildScoreSettings);</span>
+
+    }
+<span class="nc" id="L116">  }</span>
+
+  /**
+   * Initialize Settings for child components in build widget
+   * 1. Build Status criteria settings
+   * 2. Build Duration criteria settings
+   *
+   * @param buildScoreSettings
+   */
+  private void initBuildScoreChildrenSettings(BuildScoreSettings buildScoreSettings) {
+<span class="nc" id="L126">    ScoreComponentSettings buildStatusSettings = Utils.getInstanceIfNull(</span>
+<span class="nc" id="L127">      buildScoreSettings.getStatus(),</span>
+      ScoreComponentSettings.class
+    );
+<span class="nc" id="L130">    buildStatusSettings.setCriteria(</span>
+<span class="nc" id="L131">      Utils.mergeCriteria(buildScoreSettings.getCriteria(), buildStatusSettings.getCriteria())</span>
+    );
+<span class="nc" id="L133">    buildScoreSettings.setStatus(buildStatusSettings);</span>
+
+<span class="nc" id="L135">    BuildScoreSettings.BuildDurationScoreSettings buildDurationSettings = Utils.getInstanceIfNull(</span>
+<span class="nc" id="L136">      buildScoreSettings.getDuration(),</span>
+      BuildScoreSettings.BuildDurationScoreSettings.class
+    );
+
+<span class="nc" id="L140">    buildDurationSettings.setCriteria(</span>
+<span class="nc" id="L141">      Utils.mergeCriteria(buildScoreSettings.getCriteria(), buildDurationSettings.getCriteria())</span>
+    );
+<span class="nc" id="L143">    buildScoreSettings.setDuration(buildDurationSettings);</span>
+<span class="nc" id="L144">  }</span>
+
+  /**
+   * Initialize deploy score settings
+   * &lt;p&gt;
+   *  If build widget settings are present merge it with default score settings
+   *  deploy settings for children scores in deploy widget
+   */
+  private void initDeployScoreSettings() {
+<span class="nc" id="L153">    DeployScoreSettings deployScoreSettings = this.scoreSettings.getDeployWidget();</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">    if (null != deployScoreSettings) {</span>
+
+<span class="nc" id="L156">      deployScoreSettings.setCriteria(</span>
+<span class="nc" id="L157">        Utils.mergeCriteria(this.scoreSettings.getCriteria(), deployScoreSettings.getCriteria())</span>
+      );
+<span class="nc" id="L159">      initDeployScoreChildrenSettings(deployScoreSettings);</span>
+
+    }
+<span class="nc" id="L162">  }</span>
+
+  /**
+   * Initialize Settings for child components in deploy widget
+   * 1. Deploys Success criteria settings
+   * 2. Instances Online criteria settings
+   * @param deployScoreSettings
+   */
+  private void initDeployScoreChildrenSettings(DeployScoreSettings deployScoreSettings) {
+<span class="nc" id="L171">    ScoreComponentSettings deploySuccessSettings = Utils.getInstanceIfNull(deployScoreSettings.getDeploySuccess(), ScoreComponentSettings.class);</span>
+<span class="nc" id="L172">    deploySuccessSettings.setCriteria(</span>
+<span class="nc" id="L173">      Utils.mergeCriteria(deployScoreSettings.getCriteria(), deploySuccessSettings.getCriteria())</span>
+    );
+<span class="nc" id="L175">    deployScoreSettings.setDeploySuccess(deploySuccessSettings);</span>
+
+<span class="nc" id="L177">    ScoreComponentSettings instanceOnlineSettings = Utils.getInstanceIfNull(deployScoreSettings.getIntancesOnline(), ScoreComponentSettings.class);</span>
+<span class="nc" id="L178">    instanceOnlineSettings.setCriteria(</span>
+<span class="nc" id="L179">      Utils.mergeCriteria(deployScoreSettings.getCriteria(), instanceOnlineSettings.getCriteria())</span>
+    );
+<span class="nc" id="L181">    deployScoreSettings.setIntancesOnline(instanceOnlineSettings);</span>
+
+<span class="nc" id="L183">  }</span>
+
+  /**
+   * Initialize quality score settings
+   * &lt;p&gt;
+   *  If quality widget settings are present merge it with default score settings
+   *  Initialize settings for children scores in quality widget
+   */
+  private void initQualityScoreSettings() {
+<span class="nc" id="L192">    QualityScoreSettings qualityScoreSettings = this.scoreSettings.getQualityWidget();</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">    if (null != qualityScoreSettings) {</span>
+<span class="nc" id="L194">      qualityScoreSettings.setCriteria(</span>
+<span class="nc" id="L195">        Utils.mergeCriteria(this.scoreSettings.getCriteria(), qualityScoreSettings.getCriteria())</span>
+      );
+
+<span class="nc" id="L198">      initQualityScoreChildrenSettings(qualityScoreSettings);</span>
+    }
+<span class="nc" id="L200">  }</span>
+
+  /**
+   * Initialize Settings for child components in quality widget
+   * 1. Code Coverage criteria settings
+   * 2. Unit Tests criteria settings
+   * 3. Violations criteria settings
+   *
+   * @param qualityScoreSettings
+   */
+  private void initQualityScoreChildrenSettings(QualityScoreSettings qualityScoreSettings) {
+<span class="nc" id="L211">    ScoreComponentSettings qualityCCSettings = Utils.getInstanceIfNull(qualityScoreSettings.getCodeCoverage(), ScoreComponentSettings.class);</span>
+<span class="nc" id="L212">    qualityCCSettings.setCriteria(</span>
+<span class="nc" id="L213">      Utils.mergeCriteria(qualityScoreSettings.getCriteria(), qualityCCSettings.getCriteria())</span>
+    );
+<span class="nc" id="L215">    qualityScoreSettings.setCodeCoverage(qualityCCSettings);</span>
+
+<span class="nc" id="L217">    ScoreComponentSettings qualityUTSettings = Utils.getInstanceIfNull(qualityScoreSettings.getUnitTests(), ScoreComponentSettings.class);</span>
+<span class="nc" id="L218">    qualityUTSettings.setCriteria(</span>
+<span class="nc" id="L219">      Utils.mergeCriteria(qualityScoreSettings.getCriteria(), qualityUTSettings.getCriteria())</span>
+    );
+<span class="nc" id="L221">    qualityScoreSettings.setUnitTests(qualityUTSettings);</span>
+
+<span class="nc" id="L223">    QualityScoreSettings.ViolationsScoreSettings violationsSettings = Utils.getInstanceIfNull(qualityScoreSettings.getViolations(), QualityScoreSettings.ViolationsScoreSettings.class);</span>
+<span class="nc" id="L224">    violationsSettings.setCriteria(</span>
+<span class="nc" id="L225">      Utils.mergeCriteria(qualityScoreSettings.getCriteria(), violationsSettings.getCriteria())</span>
+    );
+<span class="nc" id="L227">    qualityScoreSettings.setViolations(violationsSettings);</span>
+<span class="nc" id="L228">  }</span>
+
+  /**
+   * Initialize github scm score settings
+   * &lt;p&gt;
+   *  If github scm widget settings are present merge it with default score settings
+   *  Initialize settings for children scores in github scm widget
+   */
+  private void initGithubScmScoreSettings() {
+<span class="nc" id="L237">    ScmScoreSettings scmScoreSettings = this.scoreSettings.getScmWidget();</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">    if (null != scmScoreSettings) {</span>
+<span class="nc" id="L239">      scmScoreSettings.setCriteria(</span>
+<span class="nc" id="L240">        Utils.mergeCriteria(this.scoreSettings.getCriteria(), scmScoreSettings.getCriteria())</span>
+      );
+
+<span class="nc" id="L243">      initGithubScmScoreChildrenSettings(scmScoreSettings);</span>
+    }
+<span class="nc" id="L245">  }</span>
+
+  /**
+   * Initialize Settings for child components in scm widget
+   * 1. Commits Per Day criteria settings
+   * @param scmScoreSettings
+   */
+  private void initGithubScmScoreChildrenSettings(ScmScoreSettings scmScoreSettings) {
+<span class="nc" id="L253">    ScoreComponentSettings commitsPerDaySettings = Utils.getInstanceIfNull(scmScoreSettings.getCommitsPerDay(), ScoreComponentSettings.class);</span>
+<span class="nc" id="L254">    commitsPerDaySettings.setCriteria(</span>
+<span class="nc" id="L255">      Utils.mergeCriteria(scmScoreSettings.getCriteria(), commitsPerDaySettings.getCriteria())</span>
+    );
+<span class="nc" id="L257">    scmScoreSettings.setCommitsPerDay(commitsPerDaySettings);</span>
+<span class="nc" id="L258">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

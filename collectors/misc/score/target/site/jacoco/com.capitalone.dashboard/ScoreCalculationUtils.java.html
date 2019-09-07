@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ScoreCalculationUtils.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:score-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard</a> &gt; <span class="el_source">ScoreCalculationUtils.java</span></div><h1>ScoreCalculationUtils.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import com.capitalone.dashboard.model.score.settings.PropagateType;
+import com.capitalone.dashboard.model.score.settings.ScoreTypeValue;
+import com.capitalone.dashboard.model.score.settings.ComponentAlert;
+import com.capitalone.dashboard.exception.PropagateScoreException;
+import com.capitalone.dashboard.model.*;
+import com.capitalone.dashboard.model.score.ScoreComponentMetric;
+import com.capitalone.dashboard.model.score.ScoreComponentMetricBase;
+import com.capitalone.dashboard.model.score.ScoreMetric;
+import com.capitalone.dashboard.model.score.ScoreValueType;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.capitalone.dashboard.model.score.settings.ScoreType;
+
+<span class="nc" id="L24">public class ScoreCalculationUtils {</span>
+  @SuppressWarnings({&quot;unused&quot;, &quot;PMD.UnusedPrivateField&quot;})
+<span class="fc" id="L26">  private static final Logger LOGGER = LoggerFactory.getLogger(ScoreCalculationUtils.class);</span>
+
+  public static void normalizeWeightForScore(List&lt;ScoreWeight&gt; scoreWeights, PropagateType propagateValue) {
+    //Find list of scores that should be considered while normalizing weight. They should be processed
+<span class="fc" id="L30">    Pair&lt;List&lt;ScoreWeight&gt;, List&lt;ScoreWeight&gt;&gt; scoreWeightsPair = filterToNormalizeWeights(scoreWeights, propagateValue);</span>
+
+<span class="fc" id="L32">    List&lt;ScoreWeight&gt; scoreWeightsProcessed = scoreWeightsPair.getLeft();</span>
+<span class="pc bpc" id="L33" title="1 of 4 branches missed.">    if (null == scoreWeightsProcessed || scoreWeightsProcessed.isEmpty()) {</span>
+<span class="fc" id="L34">      return;</span>
+    }
+
+<span class="fc bfc" id="L37" title="All 2 branches covered.">    if (scoreWeightsProcessed.size() == 1) {</span>
+<span class="fc" id="L38">      scoreWeightsProcessed.get(0).setWeight(100);</span>
+<span class="fc" id="L39">      setWeight(scoreWeightsPair.getRight(), 0);</span>
+<span class="fc" id="L40">      return;</span>
+    }
+
+<span class="fc" id="L43">    int totalWeight = 0;</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">    for (ScoreWeight scoreWeight : scoreWeightsProcessed) {</span>
+<span class="fc" id="L45">      totalWeight += scoreWeight.getWeight();</span>
+<span class="fc" id="L46">    }</span>
+
+<span class="fc" id="L48">    int scoreWeightsSize = scoreWeightsProcessed.size();</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">    if (totalWeight == 0) {</span>
+<span class="fc" id="L50">      int equalWeight = 100 / scoreWeightsSize;</span>
+<span class="fc" id="L51">      int sumOfWeights = 0;</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">      for (int i = 0; i &lt; scoreWeightsSize; i++) {</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (i &lt; (scoreWeightsSize - 1)) {</span>
+<span class="fc" id="L54">          scoreWeightsProcessed.get(i).setWeight(equalWeight);</span>
+<span class="fc" id="L55">          sumOfWeights += equalWeight;</span>
+        } else {
+<span class="fc" id="L57">          scoreWeightsProcessed.get(i).setWeight(100 - sumOfWeights);</span>
+        }
+      }
+<span class="fc" id="L60">    } else {</span>
+<span class="fc" id="L61">      double ratioWith100 = 100 / (double) totalWeight;</span>
+<span class="fc" id="L62">      int sumOfWeights = 0;</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">      for (int i = 0; i &lt; scoreWeightsSize; i++) {</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (i &lt; (scoreWeightsSize - 1)) {</span>
+<span class="fc" id="L65">          int weightForComponent = (int) Math.round(scoreWeightsProcessed.get(i).getWeight() * ratioWith100);</span>
+<span class="fc" id="L66">          scoreWeightsProcessed.get(i).setWeight(weightForComponent);</span>
+<span class="fc" id="L67">          sumOfWeights += weightForComponent;</span>
+<span class="fc" id="L68">        } else {</span>
+<span class="fc" id="L69">          scoreWeightsProcessed.get(i).setWeight(100 - sumOfWeights);</span>
+        }
+      }
+    }
+
+<span class="fc" id="L74">    setWeight(scoreWeightsPair.getRight(), 0);</span>
+<span class="fc" id="L75">  }</span>
+
+  private static void setWeight(List&lt;ScoreWeight&gt; scoreWeights, int weight) {
+<span class="fc bfc" id="L78" title="All 2 branches covered.">    if (CollectionUtils.isEmpty(scoreWeights)) {</span>
+<span class="fc" id="L79">      return;</span>
+    }
+<span class="fc bfc" id="L81" title="All 2 branches covered.">    for (ScoreWeight scoreWeight : scoreWeights) {</span>
+<span class="fc" id="L82">      scoreWeight.setWeight(weight);</span>
+<span class="fc" id="L83">    }</span>
+<span class="fc" id="L84">  }</span>
+
+  public static Pair&lt;List&lt;ScoreWeight&gt;, List&lt;ScoreWeight&gt;&gt; filterToNormalizeWeights(List&lt;ScoreWeight&gt; scoreWeights, PropagateType propagateValue) {
+<span class="pc bpc" id="L87" title="2 of 4 branches missed.">    if (null == scoreWeights || scoreWeights.isEmpty()) {</span>
+<span class="nc" id="L88">      return Pair.of(scoreWeights, Collections.EMPTY_LIST);</span>
+    }
+
+<span class="fc" id="L91">    List&lt;ScoreWeight&gt; filterProcessedWeights = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L92">    List&lt;ScoreWeight&gt; filterNotProcessedWeights = new ArrayList&lt;&gt;();</span>
+
+    //Check for the score to propagate
+    //If there is a case where the score is propagated because of criteria met
+    //consider score for only propagated ones and fiter remaining
+<span class="fc bfc" id="L97" title="All 2 branches covered.">    for (ScoreWeight scoreWeight : scoreWeights) {</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">      if ((scoreWeight.getState() == ScoreWeight.ProcessingState.criteria_failed ||</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">        scoreWeight.getState() == ScoreWeight.ProcessingState.criteria_passed) &amp;&amp;</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">        scoreWeight.getPropagate().getValue() &gt;= propagateValue.getValue()) {</span>
+<span class="fc" id="L101">        filterProcessedWeights.add(scoreWeight);</span>
+      } else {
+<span class="fc" id="L103">        filterNotProcessedWeights.add(scoreWeight);</span>
+      }
+<span class="fc" id="L105">    }</span>
+
+<span class="fc bfc" id="L107" title="All 2 branches covered.">    if (CollectionUtils.isNotEmpty(filterProcessedWeights)) {</span>
+<span class="fc" id="L108">      return Pair.of(filterProcessedWeights, filterNotProcessedWeights);</span>
+    }
+
+    //Check for the criterias which have score
+    //If there is a case where the score is processed or criteria met
+    //consider those and fiter remaining
+<span class="fc" id="L114">    filterProcessedWeights = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L115">    filterNotProcessedWeights = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">    for (ScoreWeight scoreWeight : scoreWeights) {</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">      if ((scoreWeight.getState() == ScoreWeight.ProcessingState.complete ||</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        scoreWeight.getState() == ScoreWeight.ProcessingState.criteria_failed ||</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">        scoreWeight.getState() == ScoreWeight.ProcessingState.criteria_passed) &amp;&amp;</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">        scoreWeight.getScore().getScoreType() != ScoreType.no_score) {</span>
+<span class="fc" id="L121">        filterProcessedWeights.add(scoreWeight);</span>
+      } else {
+<span class="fc" id="L123">        filterNotProcessedWeights.add(scoreWeight);</span>
+      }
+<span class="fc" id="L125">    }</span>
+
+<span class="fc" id="L127">    return Pair.of(filterProcessedWeights, filterNotProcessedWeights);</span>
+  }
+
+  public static Double calculateComponentScore(List&lt;ScoreWeight&gt; scoreWeights) {
+<span class="fc" id="L131">    return calculateComponentScoreWithMaxLimit(scoreWeights, Constants.MAX_SCORE);</span>
+  }
+
+  public static Double calculateComponentScoreWithMaxLimit(List&lt;ScoreWeight&gt; scoreWeights, int maxScore) {
+<span class="pc bpc" id="L135" title="2 of 4 branches missed.">    if (null == scoreWeights || scoreWeights.isEmpty()) {</span>
+<span class="nc" id="L136">      return null;</span>
+    }
+
+<span class="fc" id="L139">    double maxScoreRatio = maxScore / (double) 100;</span>
+<span class="fc" id="L140">    double score = Constants.ZERO_SCORE;</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">    for (ScoreWeight scoreWeight : scoreWeights) {</span>
+<span class="fc" id="L142">      score += (scoreWeight.getScore().getScoreValue() * scoreWeight.getWeight() * maxScoreRatio) / ((double) scoreWeight.getTotal());</span>
+<span class="fc" id="L143">    }</span>
+
+<span class="fc" id="L145">    return score;</span>
+  }
+
+  public static Double convertBaseMaxScore(Double score, int currentMaxScore, int newMaxScore) {
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">    if (null == score) {</span>
+<span class="nc" id="L150">      return Constants.ZERO_SCORE;</span>
+    }
+<span class="fc" id="L152">    return (score * (double) newMaxScore) / (double) currentMaxScore;</span>
+  }
+
+
+  public static ScoreMetric generateScoreMetric(ScoreWeight dashboardScore, int maxScore, ObjectId collectorItemId, ObjectId dashboardId) {
+<span class="fc" id="L157">    ScoreMetric scoreMetric = new ScoreMetric();</span>
+<span class="fc" id="L158">    scoreMetric.setTotal(String.valueOf(maxScore));</span>
+<span class="fc" id="L159">    scoreMetric.setCollectorItemId(collectorItemId);</span>
+<span class="fc" id="L160">    scoreMetric.setType(ScoreValueType.DASHBOARD);</span>
+<span class="fc" id="L161">    scoreMetric.setScoreTypeId(dashboardId);</span>
+<span class="fc" id="L162">    scoreMetric.setTimestamp(System.currentTimeMillis());</span>
+<span class="fc" id="L163">    scoreMetric.setScore(</span>
+<span class="fc" id="L164">      Utils.roundAlloc(</span>
+<span class="fc" id="L165">        convertBaseMaxScore(</span>
+<span class="fc" id="L166">          dashboardScore.getScore().getScoreValue(),</span>
+<span class="fc" id="L167">          dashboardScore.getTotal(),</span>
+          maxScore
+        )
+        )
+      );
+<span class="fc" id="L172">    scoreMetric.setNoScore(dashboardScore.getScore().isNoScore());</span>
+
+<span class="fc" id="L174">    List&lt;ScoreComponentMetric&gt; scoreComponentMetrics = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L175">    updateComponentMetrics(dashboardScore.getChildren(), scoreComponentMetrics, maxScore);</span>
+<span class="fc" id="L176">    scoreMetric.setComponentMetrics(scoreComponentMetrics);</span>
+
+<span class="fc" id="L178">    return scoreMetric;</span>
+  }
+
+
+  public static void updateComponentMetrics(List&lt;ScoreWeight&gt; childrenScore, List&lt;ScoreComponentMetric&gt; scoreComponentMetrics, int maxScore) {
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">    if (CollectionUtils.isEmpty(childrenScore)) {</span>
+<span class="nc" id="L184">      return;</span>
+    }
+
+<span class="fc bfc" id="L187" title="All 2 branches covered.">    for (ScoreWeight childScore : childrenScore) {</span>
+<span class="fc" id="L188">      ScoreComponentMetric scoreComponentMetric = new ScoreComponentMetric();</span>
+
+<span class="fc" id="L190">      updateComponentScore(scoreComponentMetric, childScore, maxScore);</span>
+<span class="fc" id="L191">      scoreComponentMetric.setAlert(childScore.isAlert());</span>
+
+<span class="fc" id="L193">      List&lt;ScoreWeight&gt; childrenOfChild = childScore.getChildren();</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">      if (CollectionUtils.isNotEmpty(childrenOfChild)) {</span>
+<span class="fc" id="L195">        List&lt;ScoreComponentMetricBase&gt; childScoreComponentMetrics = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L196">        scoreComponentMetric.setChildren(childScoreComponentMetrics);</span>
+<span class="fc" id="L197">        updateComponentChildrenMetrics(childrenOfChild, childScoreComponentMetrics, maxScore);</span>
+      }
+
+<span class="fc" id="L200">      scoreComponentMetrics.add(scoreComponentMetric);</span>
+<span class="fc" id="L201">    }</span>
+<span class="fc" id="L202">  }</span>
+
+
+  public static void updateComponentChildrenMetrics(List&lt;ScoreWeight&gt; childrenScore, List&lt;ScoreComponentMetricBase&gt; scoreComponentMetrics, int maxScore) {
+<span class="pc bpc" id="L206" title="1 of 2 branches missed.">    if (CollectionUtils.isEmpty(childrenScore)) {</span>
+<span class="nc" id="L207">      return;</span>
+    }
+
+<span class="fc bfc" id="L210" title="All 2 branches covered.">    for (ScoreWeight childScore : childrenScore) {</span>
+<span class="fc" id="L211">      ScoreComponentMetricBase scoreComponentMetric = new ScoreComponentMetricBase();</span>
+<span class="fc" id="L212">      updateComponentScore(scoreComponentMetric, childScore, maxScore);</span>
+<span class="fc" id="L213">      scoreComponentMetrics.add(scoreComponentMetric);</span>
+<span class="fc" id="L214">    }</span>
+<span class="fc" id="L215">  }</span>
+
+
+  private static void updateComponentScore(ScoreComponentMetricBase scoreComponentMetric, ScoreWeight childScore, int maxScore) {
+<span class="fc" id="L219">    scoreComponentMetric.setTotal(String.valueOf(maxScore));</span>
+<span class="fc" id="L220">    scoreComponentMetric.setScore(</span>
+<span class="fc" id="L221">      Utils.roundAlloc(</span>
+<span class="fc" id="L222">        convertBaseMaxScore(</span>
+<span class="fc" id="L223">          childScore.getScore().getScoreValue(),</span>
+<span class="fc" id="L224">          childScore.getTotal(),</span>
+          maxScore
+        )
+      )
+    );
+<span class="fc" id="L229">    scoreComponentMetric.setNoScore(childScore.getScore().isNoScore());</span>
+<span class="fc" id="L230">    scoreComponentMetric.setWeight(String.valueOf(childScore.getWeight()));</span>
+<span class="fc" id="L231">    scoreComponentMetric.setRefId(childScore.getRefId());</span>
+<span class="fc" id="L232">    scoreComponentMetric.setDisplayId(childScore.getId());</span>
+<span class="fc" id="L233">    scoreComponentMetric.setDisplayName(childScore.getName());</span>
+<span class="fc" id="L234">    scoreComponentMetric.setMessage(childScore.getMessage());</span>
+<span class="fc" id="L235">    scoreComponentMetric.setState(childScore.getState().name());</span>
+<span class="fc" id="L236">    scoreComponentMetric.setPropagate(childScore.getPropagate().name());</span>
+<span class="fc" id="L237">  }</span>
+
+  public static ScoreTypeValue calculateComponentScoreTypeValue(List&lt;ScoreWeight&gt; componentScores, PropagateType propagateType)
+  throws PropagateScoreException {
+<span class="fc" id="L241">    ScoreCalculationUtils.normalizeWeightForScore(componentScores, propagateType);</span>
+<span class="fc" id="L242">    ScoreWeight propagatedScore = propagatedScore(componentScores, propagateType);</span>
+<span class="fc bfc" id="L243" title="All 2 branches covered.">    if (null != propagatedScore) {</span>
+<span class="fc" id="L244">      throw new PropagateScoreException(propagatedScore.getName() + &quot; - &quot; + propagatedScore.getMessage(), propagatedScore.getScore(), propagatedScore.getState());</span>
+    }
+
+<span class="fc" id="L247">    Double componentScore = ScoreCalculationUtils.calculateComponentScore(componentScores);</span>
+<span class="fc" id="L248">    return new ScoreTypeValue(componentScore);</span>
+  }
+
+  public static ScoreWeight propagatedScore(List&lt;ScoreWeight&gt; scoreComponents, PropagateType propagateType) {
+
+<span class="fc bfc" id="L253" title="All 2 branches covered.">    for (ScoreWeight scoreComponent : scoreComponents) {</span>
+<span class="fc bfc" id="L254" title="All 2 branches covered.">      if (scoreComponent.getPropagate().getValue() &gt;= propagateType.getValue()) {</span>
+<span class="fc" id="L255">        return scoreComponent;</span>
+      }
+<span class="fc" id="L257">    }</span>
+
+<span class="fc" id="L259">    return null;</span>
+  }
+
+  public static boolean isComponentAlert(ComponentAlert alert, Double compareValue) {
+<span class="nc" id="L263">    int compareResult = compareValue.compareTo(alert.getValue());</span>
+<span class="nc bnc" id="L264" title="All 6 branches missed.">    switch (alert.getComparator()) {</span>
+      case equals:
+<span class="nc bnc" id="L266" title="All 2 branches missed.">        if (compareResult == 0) {</span>
+<span class="nc" id="L267">          return true;</span>
+        }
+<span class="nc" id="L269">        return false;</span>
+      case less:
+<span class="nc bnc" id="L271" title="All 2 branches missed.">        if (compareResult == -1) {</span>
+<span class="nc" id="L272">          return true;</span>
+        }
+<span class="nc" id="L274">        return false;</span>
+      case greater:
+<span class="nc bnc" id="L276" title="All 2 branches missed.">        if (compareResult == 1) {</span>
+<span class="nc" id="L277">          return true;</span>
+        }
+<span class="nc" id="L279">        return false;</span>
+      case less_or_equal:
+<span class="nc bnc" id="L281" title="All 4 branches missed.">        if (compareResult == 0 || compareResult == -1) {</span>
+<span class="nc" id="L282">          return true;</span>
+        }
+<span class="nc" id="L284">        return false;</span>
+      case greater_or_equal:
+<span class="nc bnc" id="L286" title="All 4 branches missed.">        if (compareResult == 0 || compareResult == 1) {</span>
+<span class="nc" id="L287">          return true;</span>
+        }
+<span class="nc" id="L289">        return false;</span>
+      default:
+<span class="nc" id="L291">        return false;</span>
+    }
+
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

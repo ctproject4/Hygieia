@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GitlabMilestone.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:gitlab-feature-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.gitlab.model</a> &gt; <span class="el_source">GitlabMilestone.java</span></div><h1>GitlabMilestone.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.gitlab.model;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+<span class="fc" id="L5">public class GitlabMilestone {</span>
+
+	private Long id;
+	@JsonProperty(&quot;project_id&quot;)
+	private Long projectId;
+	private String title;
+	private String description;
+	private String state;
+	@JsonProperty(&quot;due_date&quot;)
+	private String dueDate;
+	private String iid;
+	@JsonProperty(&quot;created_at&quot;)
+	private String createdAt;
+	@JsonProperty(&quot;updated_at&quot;)
+	private String updatedAt;
+
+	public Long getId() {
+<span class="fc" id="L22">		return id;</span>
+	}
+
+	public void setId(Long id) {
+<span class="fc" id="L26">		this.id = id;</span>
+<span class="fc" id="L27">	}</span>
+
+	public Long getProjectId() {
+<span class="nc" id="L30">		return projectId;</span>
+	}
+
+	public void setProjectId(Long projectId) {
+<span class="nc" id="L34">		this.projectId = projectId;</span>
+<span class="nc" id="L35">	}</span>
+
+	public String getTitle() {
+<span class="fc" id="L38">		return title;</span>
+	}
+
+	public void setTitle(String title) {
+<span class="nc" id="L42">		this.title = title;</span>
+<span class="nc" id="L43">	}</span>
+
+	public String getDescription() {
+<span class="nc" id="L46">		return description;</span>
+	}
+
+	public void setDescription(String description) {
+<span class="nc" id="L50">		this.description = description;</span>
+<span class="nc" id="L51">	}</span>
+
+	public String getState() {
+<span class="nc" id="L54">		return state;</span>
+	}
+
+	public void setState(String state) {
+<span class="nc" id="L58">		this.state = state;</span>
+<span class="nc" id="L59">	}</span>
+
+	public String getDueDate() {
+<span class="fc" id="L62">		return dueDate;</span>
+	}
+
+	public void setDueDate(String dueDate) {
+<span class="fc" id="L66">		this.dueDate = dueDate;</span>
+<span class="fc" id="L67">	}</span>
+
+	public String getIid() {
+<span class="nc" id="L70">		return iid;</span>
+	}
+
+	public void setIid(String iid) {
+<span class="nc" id="L74">		this.iid = iid;</span>
+<span class="nc" id="L75">	}</span>
+
+	public String getCreatedAt() {
+<span class="fc" id="L78">		return createdAt;</span>
+	}
+
+	public void setCreatedAt(String createdAt) {
+<span class="nc" id="L82">		this.createdAt = createdAt;</span>
+<span class="nc" id="L83">	}</span>
+
+	public String getUpdatedAt() {
+<span class="fc" id="L86">		return updatedAt;</span>
+	}
+
+	public void setUpdatedAt(String updatedAt) {
+<span class="fc" id="L90">		this.updatedAt = updatedAt;</span>
+<span class="fc" id="L91">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

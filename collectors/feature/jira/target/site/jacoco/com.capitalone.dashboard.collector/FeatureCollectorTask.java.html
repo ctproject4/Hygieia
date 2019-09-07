@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>FeatureCollectorTask.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:jira-feature-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">FeatureCollectorTask.java</span></div><h1>FeatureCollectorTask.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+import com.capitalone.dashboard.model.Collector;
+import com.capitalone.dashboard.model.Epic;
+import com.capitalone.dashboard.model.Feature;
+import com.capitalone.dashboard.model.FeatureBoard;
+import com.capitalone.dashboard.model.FeatureCollector;
+import com.capitalone.dashboard.model.FeatureEpicResult;
+import com.capitalone.dashboard.model.JiraMode;
+import com.capitalone.dashboard.model.Scope;
+import com.capitalone.dashboard.model.Team;
+import com.capitalone.dashboard.repository.BaseCollectorRepository;
+import com.capitalone.dashboard.repository.FeatureBoardRepository;
+import com.capitalone.dashboard.repository.FeatureCollectorRepository;
+import com.capitalone.dashboard.repository.FeatureRepository;
+import com.capitalone.dashboard.repository.ScopeRepository;
+import com.capitalone.dashboard.repository.TeamRepository;
+import com.capitalone.dashboard.util.FeatureCollectorConstants;
+import com.capitalone.dashboard.utils.Utilities;
+import org.apache.commons.lang3.StringUtils;
+import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
+
+/**
+ * Collects {@link FeatureCollector} data from feature content source system.
+ *
+ * @author KFK884
+ */
+@Component
+public class FeatureCollectorTask extends CollectorTask&lt;FeatureCollector&gt; {
+<span class="fc" id="L48">    private static final Logger LOGGER = LoggerFactory.getLogger(FeatureCollectorTask.class);</span>
+    private final FeatureRepository featureRepository;
+    private final FeatureBoardRepository featureBoardRepository;
+    private final TeamRepository teamRepository;
+    private final ScopeRepository projectRepository;
+    private final FeatureCollectorRepository featureCollectorRepository;
+    private final FeatureSettings featureSettings;
+    private final JiraClient jiraClient;
+
+    /**
+     * Default constructor for the collector task. This will construct this
+     * collector task with all repository, scheduling, and settings
+     * configurations custom to this collector.
+     *
+     * @param taskScheduler   A task scheduler artifact
+     * @param teamRepository  The repository being use for feature collection
+     * @param featureSettings The settings being used for feature collection from the source
+     *                        system
+     */
+    @Autowired
+    public FeatureCollectorTask(TaskScheduler taskScheduler, FeatureRepository featureRepository,
+                                TeamRepository teamRepository, ScopeRepository projectRepository,
+                                FeatureCollectorRepository featureCollectorRepository, FeatureSettings featureSettings,
+                                JiraClient jiraClient, FeatureBoardRepository featureBoardRepository) {
+<span class="fc" id="L72">        super(taskScheduler, FeatureCollectorConstants.JIRA);</span>
+<span class="fc" id="L73">        this.featureCollectorRepository = featureCollectorRepository;</span>
+<span class="fc" id="L74">        this.teamRepository = teamRepository;</span>
+<span class="fc" id="L75">        this.projectRepository = projectRepository;</span>
+<span class="fc" id="L76">        this.featureRepository = featureRepository;</span>
+<span class="fc" id="L77">        this.featureSettings = featureSettings;</span>
+<span class="fc" id="L78">        this.jiraClient = jiraClient;</span>
+<span class="fc" id="L79">        this.featureBoardRepository = featureBoardRepository;</span>
+<span class="fc" id="L80">    }</span>
+
+    /**
+     * Accessor method for the collector prototype object
+     */
+    @Override
+    public FeatureCollector getCollector() {
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        JiraMode mode = featureSettings.isJiraBoardAsTeam() ? JiraMode.Board : JiraMode.Team;</span>
+<span class="fc" id="L88">        FeatureCollector collector = FeatureCollector.prototype(mode);</span>
+<span class="fc" id="L89">        FeatureCollector existing = featureCollectorRepository.findByName(collector.getName());</span>
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">        if (existing != null) {</span>
+<span class="fc" id="L91">            collector.setLastRefreshTime(existing.getLastRefreshTime());</span>
+        }
+<span class="fc" id="L93">        return collector;</span>
+    }
+
+    /**
+     * Accessor method for the collector repository
+     */
+    @Override
+    public BaseCollectorRepository&lt;FeatureCollector&gt; getCollectorRepository() {
+<span class="fc" id="L101">        return featureCollectorRepository;</span>
+    }
+
+    /**
+     * Accessor method for the current chronology setting, for the scheduler
+     */
+    @Override
+    public String getCron() {
+<span class="fc" id="L109">        return featureSettings.getCron();</span>
+    }
+
+    /**
+     * The collection action. This is the task which will run on a schedule to
+     * gather data from the feature content source system and update the
+     * repository with retrieved data.
+     */
+    @Override
+    public void collect(FeatureCollector collector) {
+<span class="fc" id="L119">        logBanner(featureSettings.getJiraBaseUrl());</span>
+
+<span class="fc" id="L121">        String proxyUrl = featureSettings.getJiraProxyUrl();</span>
+<span class="fc" id="L122">        String proxyPort = featureSettings.getJiraProxyPort();</span>
+
+<span class="pc bpc" id="L124" title="3 of 4 branches missed.">        if (!StringUtils.isEmpty(proxyUrl) &amp;&amp; !StringUtils.isEmpty(proxyPort)) {</span>
+<span class="nc" id="L125">            System.setProperty(&quot;http.proxyHost&quot;, proxyUrl);</span>
+<span class="nc" id="L126">            System.setProperty(&quot;https.proxyHost&quot;, proxyUrl);</span>
+<span class="nc" id="L127">            System.setProperty(&quot;http.proxyPort&quot;, proxyPort);</span>
+<span class="nc" id="L128">            System.setProperty(&quot;https.proxyPort&quot;, proxyPort);</span>
+        }
+
+        try {
+<span class="fc" id="L132">            long startTime = System.currentTimeMillis();</span>
+<span class="fc" id="L133">            long diff = TimeUnit.MILLISECONDS.toHours(startTime - collector.getLastRefreshTime());</span>
+<span class="fc" id="L134">            LOGGER.info(&quot;JIRA Collector is set to work in &quot; + collector.getMode() + &quot; mode&quot;);</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">            if (diff &gt; featureSettings.getRefreshTeamAndProjectHours()) {</span>
+<span class="fc" id="L136">                LOGGER.info(&quot;Hours since last run = &quot; + diff + &quot;. Collector is about to refresh Team/Board information&quot;);</span>
+<span class="fc" id="L137">                List&lt;Team&gt; teams = updateTeamInformation(collector);</span>
+<span class="fc" id="L138">                Set&lt;Scope&gt; scopes = updateProjectInformation(collector);</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">                if (collector.getLastExecuted() &gt; 0) {</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">                    if (featureSettings.isCollectorItemOnlyUpdate()) {</span>
+<span class="nc" id="L141">                        refreshValidIssues(collector, getBoardList(collector.getId()), getScopeList(collector.getId()));</span>
+                    } else {
+<span class="fc" id="L143">                        refreshValidIssues(collector, teams, scopes);</span>
+                    }
+                }
+
+<span class="fc" id="L147">                collector.setLastRefreshTime(System.currentTimeMillis());</span>
+<span class="fc" id="L148">                featureCollectorRepository.save(collector);</span>
+<span class="fc" id="L149">                LOGGER.info(&quot;Collected &quot; + teams.size() + &quot; teams and &quot; + scopes.size() + &quot; projects&quot;);</span>
+<span class="fc" id="L150">            } else {</span>
+<span class="nc" id="L151">                LOGGER.info(&quot;Hours since last run = &quot; + diff + &quot;. Collector is only collecting updated/new issues.&quot;);</span>
+            }
+<span class="fc" id="L153">            updateStoryInformation(collector);</span>
+<span class="fc" id="L154">            log(&quot;Finished&quot;, startTime);</span>
+<span class="nc" id="L155">        } catch (Exception e) {</span>
+            // catch exception here so we don't blow up the collector completely
+<span class="nc" id="L157">            LOGGER.error(&quot;Failed to collect jira information&quot;, e);</span>
+<span class="fc" id="L158">        }</span>
+<span class="fc" id="L159">    }</span>
+
+
+    /**
+     * Update team information
+     *
+     * @param collector
+     * @return list of teams collected
+     */
+    protected List&lt;Team&gt; updateTeamInformation(FeatureCollector collector) {
+<span class="fc" id="L169">        long projectDataStart = System.currentTimeMillis();</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">        List&lt;Team&gt; teams = featureSettings.isJiraBoardAsTeam() ? jiraClient.getBoards() : jiraClient.getTeams();</span>
+        //Add or update teams that we got from api
+<span class="fc" id="L172">        teams.forEach(newTeam -&gt; {</span>
+<span class="fc" id="L173">            String teamId = newTeam.getTeamId();</span>
+<span class="fc" id="L174">            newTeam.setCollectorId(collector.getId());</span>
+<span class="fc" id="L175">            LOGGER.info(String.format(&quot;Adding %s:%s-%s&quot;, collector.getMode(), teamId, newTeam.getName()));</span>
+<span class="fc" id="L176">            Team existing = teamRepository.findByTeamId(teamId);</span>
+<span class="fc bfc" id="L177" title="All 2 branches covered.">            if (existing == null) {</span>
+<span class="fc" id="L178">                teamRepository.save(newTeam);</span>
+            } else {
+<span class="fc" id="L180">                newTeam.setId(existing.getId());</span>
+<span class="fc" id="L181">                teamRepository.save(newTeam);</span>
+            }
+<span class="fc" id="L183">        });</span>
+<span class="fc" id="L184">        log(collector.getMode() + &quot; Data Collected. Added &quot;, projectDataStart, teams.size());</span>
+<span class="fc" id="L185">        projectDataStart = System.currentTimeMillis();</span>
+
+        // Delete the ones that are gone from JIRA
+<span class="fc" id="L188">        List&lt;Team&gt; existingTeams = teamRepository.findByCollectorId(collector.getId());</span>
+<span class="fc" id="L189">        Set&lt;String&gt; newTeamIds = teams.stream().map(Team::getTeamId).collect(Collectors.toSet());</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">        Set&lt;Team&gt; toDelete = existingTeams.stream().filter(e -&gt; !newTeamIds.contains(e.getTeamId())).collect(Collectors.toSet());</span>
+
+<span class="pc bpc" id="L192" title="1 of 2 branches missed.">        if (!CollectionUtils.isEmpty(toDelete)) {</span>
+<span class="fc" id="L193">            toDelete.forEach(td -&gt; {</span>
+<span class="fc" id="L194">                LOGGER.info(String.format(&quot;Deleting %s:%s-%s&quot;, collector.getMode(), td.getTeamId(), td.getName()));</span>
+<span class="fc" id="L195">            });</span>
+<span class="fc" id="L196">            teamRepository.delete(toDelete);</span>
+<span class="fc" id="L197">            log(collector.getMode() + &quot; Data Collected. Deleted &quot;, projectDataStart, toDelete.size());</span>
+        }
+<span class="fc" id="L199">        return teams;</span>
+    }
+
+    /**
+     * Update project information
+     *
+     * @param collector
+     * @return List of projects
+     */
+    protected Set&lt;Scope&gt; updateProjectInformation(Collector collector) {
+<span class="fc" id="L209">        long projectDataStart = System.currentTimeMillis();</span>
+        //Add or update teams that we got from api
+<span class="fc" id="L211">        Set&lt;Scope&gt; projects = jiraClient.getProjects();</span>
+
+<span class="fc" id="L213">        projects.forEach(jiraScope -&gt; {</span>
+<span class="fc" id="L214">            LOGGER.info(String.format(&quot;Adding :%s-%s&quot;, jiraScope.getpId(), jiraScope.getName()));</span>
+<span class="fc" id="L215">            jiraScope.setCollectorId(collector.getId());</span>
+<span class="fc" id="L216">            Scope existing = projectRepository.findByCollectorIdAndPId(collector.getId(), jiraScope.getpId());</span>
+<span class="fc bfc" id="L217" title="All 2 branches covered.">            if (existing == null) {</span>
+<span class="fc" id="L218">                projectRepository.save(jiraScope);</span>
+            } else {
+<span class="fc" id="L220">                jiraScope.setId(existing.getId());</span>
+<span class="fc" id="L221">                projectRepository.save(jiraScope);</span>
+            }
+<span class="fc" id="L223">        });</span>
+<span class="fc" id="L224">        log(&quot;Project Data Collected&quot;, projectDataStart, projects.size());</span>
+
+        // Delete the ones that are gone from JIRA
+<span class="fc" id="L227">        List&lt;Scope&gt; existingProjects = projectRepository.findByCollectorId(collector.getId());</span>
+<span class="fc" id="L228">        Set&lt;String&gt; newProjectIds = projects.stream().map(Scope::getpId).collect(Collectors.toSet());</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">        Set&lt;Scope&gt; toDelete = existingProjects.stream().filter(e -&gt; !newProjectIds.contains(e.getpId())).collect(Collectors.toSet());</span>
+<span class="fc bfc" id="L230" title="All 2 branches covered.">        if (!CollectionUtils.isEmpty(toDelete)) {</span>
+<span class="fc" id="L231">            toDelete.forEach(td -&gt; {</span>
+<span class="fc" id="L232">                LOGGER.info(String.format(&quot;Deleting :%s-%s&quot;, td.getpId(), td.getName()));</span>
+<span class="fc" id="L233">            });</span>
+<span class="fc" id="L234">            projectRepository.delete(toDelete);</span>
+<span class="fc" id="L235">            log( &quot;Project Data Collected. Deleted &quot;, projectDataStart, toDelete.size());</span>
+        }
+<span class="fc" id="L237">        return projects;</span>
+    }
+
+
+    /**
+     * Update story/feature information for all the projects one at a time
+     *
+     * @param collector
+     */
+    protected void updateStoryInformation(FeatureCollector collector) {
+<span class="fc" id="L247">        long storyDataStart = System.currentTimeMillis();</span>
+<span class="fc" id="L248">        AtomicLong count = new AtomicLong();</span>
+
+<span class="pc bpc" id="L250" title="1 of 2 branches missed.">        if (Objects.equals(collector.getMode(), JiraMode.Team)) {</span>
+<span class="nc" id="L251">            List&lt;Scope&gt; projects = new ArrayList&lt;&gt;(getScopeList(collector.getId()));</span>
+<span class="nc" id="L252">            projects.forEach(project -&gt; {</span>
+<span class="nc" id="L253">                LOGGER.info(&quot;Collecting &quot; + count.incrementAndGet() + &quot; of &quot; + projects.size() + &quot; projects.&quot;);</span>
+
+<span class="nc" id="L255">                long lastCollection = System.currentTimeMillis();</span>
+<span class="nc" id="L256">                FeatureEpicResult featureEpicResult = jiraClient.getIssues(project);</span>
+<span class="nc" id="L257">                List&lt;Feature&gt; features = featureEpicResult.getFeatureList();</span>
+<span class="nc" id="L258">                saveFeatures(features, collector);</span>
+<span class="nc" id="L259">                updateFeaturesWithLatestEpics(featureEpicResult.getEpicList(), collector);</span>
+<span class="nc" id="L260">                log(&quot;Story Data Collected since &quot; + LocalDateTime.ofInstant(Instant.ofEpochMilli(project.getLastCollected()), ZoneId.systemDefault()), storyDataStart, features.size());</span>
+
+<span class="nc" id="L262">                project.setLastCollected(lastCollection); //set it after everything is successfully done</span>
+<span class="nc" id="L263">                projectRepository.save(project);</span>
+
+<span class="nc" id="L265">            });</span>
+<span class="nc" id="L266">        } else {</span>
+<span class="fc" id="L267">            List&lt;Team&gt; boards = getBoardList(collector.getId());</span>
+<span class="fc" id="L268">            boards.forEach(board -&gt; {</span>
+<span class="fc" id="L269">                LOGGER.info(&quot;Collecting &quot; + count.incrementAndGet() + &quot; of &quot; + boards.size() + &quot; boards.&quot;);</span>
+<span class="fc" id="L270">                long lastCollection = System.currentTimeMillis();</span>
+<span class="fc" id="L271">                FeatureEpicResult featureEpicResult = jiraClient.getIssues(board);</span>
+<span class="fc" id="L272">                List&lt;Feature&gt; features = featureEpicResult.getFeatureList();</span>
+<span class="fc" id="L273">                saveFeatures(features, collector);</span>
+<span class="fc" id="L274">                updateFeaturesWithLatestEpics(featureEpicResult.getEpicList(), collector);</span>
+<span class="fc" id="L275">                log(&quot;Story Data Collected since &quot; + LocalDateTime.ofInstant(Instant.ofEpochMilli(board.getLastCollected()), ZoneId.systemDefault()), storyDataStart, features.size());</span>
+
+<span class="fc" id="L277">                board.setLastCollected(lastCollection); //set it after everything is successfully done</span>
+<span class="fc" id="L278">                teamRepository.save(board);</span>
+<span class="fc" id="L279">                FeatureBoard featureBoard = featureBoardRepository.findFeatureBoard(collector.getId(), board.getTeamId());</span>
+<span class="pc bpc" id="L280" title="1 of 2 branches missed.">                if(featureBoard != null){</span>
+<span class="nc" id="L281">                     featureBoard.setLastUpdated(System.currentTimeMillis());</span>
+<span class="nc" id="L282">                     featureBoardRepository.save(featureBoard);</span>
+                }
+<span class="fc" id="L284">            });</span>
+        }
+
+<span class="fc" id="L287">    }</span>
+
+    /**
+     * Returns a full team list or partial based on whether or not isCollectorItemOnlyUpdate is true
+     * @param collectorId
+     * @return
+     */
+    private List&lt;Team&gt; getBoardList(ObjectId collectorId) {
+        List&lt;Team&gt; boards;
+<span class="pc bpc" id="L296" title="1 of 2 branches missed.">        if(featureSettings.isCollectorItemOnlyUpdate()){</span>
+<span class="nc" id="L297">            Set&lt;Team&gt; uniqueTeams = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">            for(FeatureBoard featureBoard: enabledFeatureBoards(collectorId)){</span>
+<span class="nc" id="L299">                Team team = teamRepository.findByTeamId(featureBoard.getTeamId());</span>
+<span class="nc bnc" id="L300" title="All 2 branches missed.">                if(team != null){</span>
+<span class="nc" id="L301">                    uniqueTeams.add(team);</span>
+                }
+<span class="nc" id="L303">            }</span>
+
+<span class="nc" id="L305">            boards = new ArrayList&lt;&gt;(uniqueTeams);</span>
+<span class="nc" id="L306">        }else {</span>
+<span class="fc" id="L307">            boards = teamRepository.findByCollectorId(collectorId);</span>
+        }
+<span class="fc" id="L309">        return boards;</span>
+    }
+    /**
+     * Returns a full project list or partial based on whether or not isCollectorItemOnlyUpdate is true
+     * @param collectorId
+     * @return
+     */
+    private Set&lt;Scope&gt; getScopeList(ObjectId collectorId) {
+<span class="nc" id="L317">        Set&lt;Scope&gt; projects = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L318" title="All 2 branches missed.">        if(featureSettings.isCollectorItemOnlyUpdate()){</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">            for(FeatureBoard featureBoard: enabledFeatureBoards(collectorId)){</span>
+<span class="nc" id="L320">                Scope scope = projectRepository.findByCollectorIdAndPId(collectorId, featureBoard.getProjectId());</span>
+<span class="nc bnc" id="L321" title="All 2 branches missed.">                if(scope != null){</span>
+<span class="nc" id="L322">                    projects.add(scope);</span>
+                }
+<span class="nc" id="L324">            }</span>
+        }else {
+<span class="nc" id="L326">            projects = new HashSet&lt;&gt;(projectRepository.findByCollectorId(collectorId));</span>
+        }
+<span class="nc" id="L328">        return projects;</span>
+    }
+
+    private List&lt;FeatureBoard&gt; enabledFeatureBoards(ObjectId collectorId) {
+<span class="nc" id="L332">        return featureBoardRepository.findEnabledFeatureBoards(collectorId);</span>
+    }
+    /**
+     * Save features to repository
+     *
+     * @param features
+     * @param collector
+     */
+
+    private void saveFeatures(List&lt;Feature&gt; features, FeatureCollector collector) {
+<span class="fc" id="L342">        features.forEach(f -&gt; {</span>
+<span class="fc" id="L343">            f.setCollectorId(collector.getId());</span>
+<span class="fc" id="L344">            Feature existing = featureRepository.findByCollectorIdAndSIdAndSTeamID(collector.getId(), f.getsId(), f.getsTeamID());</span>
+<span class="fc bfc" id="L345" title="All 2 branches covered.">            if (existing != null) {</span>
+<span class="fc" id="L346">                f.setId(existing.getId());</span>
+            }
+<span class="fc" id="L348">            featureRepository.save(f);</span>
+<span class="fc" id="L349">        });</span>
+<span class="fc" id="L350">    }</span>
+
+
+    /**
+     * Update all features with the latest Epic Information, if any.
+     *
+     * @param epicList
+     * @param collector
+     */
+    private void updateFeaturesWithLatestEpics(List&lt;Epic&gt; epicList, FeatureCollector collector) {
+<span class="fc" id="L360">        epicList.stream().filter(Epic::isRecentUpdate).forEach(e -&gt; {</span>
+<span class="fc" id="L361">            List&lt;Feature&gt; existing = featureRepository.findAllByCollectorIdAndSEpicID(collector.getId(), e.getId());</span>
+<span class="fc" id="L362">            existing.stream().filter(ex -&gt; isEpicChanged(ex, e)).forEach(ex -&gt; {</span>
+<span class="fc" id="L363">                ex.setsEpicAssetState(e.getStatus());</span>
+<span class="fc" id="L364">                ex.setsEpicName(e.getName());</span>
+<span class="fc" id="L365">                featureRepository.save(ex);</span>
+<span class="fc" id="L366">            });</span>
+<span class="fc" id="L367">        });</span>
+<span class="fc" id="L368">    }</span>
+
+    /**
+     * Get a list of all issue ids for a given board or project and delete ones that are not in JIRA anymore
+     *
+     * @param collector
+     * @param teams
+     * @param scopes
+     */
+    private void refreshValidIssues(FeatureCollector collector, List&lt;Team&gt; teams, Set&lt;Scope&gt; scopes) {
+<span class="fc" id="L378">        long refreshValidIssuesStart = System.currentTimeMillis();</span>
+<span class="pc bpc" id="L379" title="1 of 2 branches missed.">        List&lt;String&gt; lookUpIds = Objects.equals(collector.getMode(), JiraMode.Board) ? teams.stream().map(Team::getTeamId).collect(Collectors.toList()) : scopes.stream().map(Scope::getpId).collect(Collectors.toList());</span>
+<span class="fc" id="L380">        lookUpIds.forEach(l -&gt; {</span>
+<span class="fc" id="L381">            LOGGER.info(&quot;Refreshing issues for &quot; + collector.getMode() + &quot; ID:&quot; + l);</span>
+<span class="fc" id="L382">            List&lt;String&gt; issueIds = jiraClient.getAllIssueIds(l, collector.getMode());</span>
+<span class="pc bpc" id="L383" title="1 of 2 branches missed.">            List&lt;Feature&gt; existingFeatures = Objects.equals(collector.getMode(), JiraMode.Board) ? featureRepository.findAllByCollectorIdAndSTeamID(collector.getId(), l) : featureRepository.findAllByCollectorIdAndSProjectID(collector.getId(), l);</span>
+<span class="pc bnc" id="L384" title="All 2 branches missed.">            List&lt;Feature&gt; deletedFeatures = existingFeatures.stream().filter(e -&gt; !issueIds.contains(e.getsId())).collect(Collectors.toList());</span>
+<span class="fc" id="L385">            deletedFeatures.forEach(d -&gt; {</span>
+<span class="nc" id="L386">                LOGGER.info(&quot;Deleting Feature &quot; + d.getsId() + ':' + d.getsName());</span>
+<span class="nc" id="L387">                featureRepository.delete(d);</span>
+<span class="nc" id="L388">            });</span>
+<span class="fc" id="L389">        });</span>
+<span class="fc" id="L390">        log(collector.getMode() + &quot; Issues Refreshed &quot;, refreshValidIssuesStart);</span>
+<span class="fc" id="L391">    }</span>
+
+
+    // Checks if epic information on a feature needs update
+    private static boolean isEpicChanged(Feature feature, Epic epic) {
+<span class="pc bpc" id="L396" title="1 of 2 branches missed.">        if (!feature.getsEpicAssetState().equalsIgnoreCase(epic.getStatus())) {</span>
+<span class="nc" id="L397">            return true;</span>
+        }
+<span class="pc bpc" id="L399" title="1 of 4 branches missed.">        if (!feature.getsEpicName().equalsIgnoreCase(epic.getName()) || !feature.getsEpicNumber().equalsIgnoreCase(epic.getNumber())) {</span>
+<span class="fc" id="L400">            return true;</span>
+        }
+
+<span class="pc bpc" id="L403" title="2 of 4 branches missed.">        if (!StringUtils.isEmpty(feature.getChangeDate()) &amp;&amp; !StringUtils.isEmpty(epic.getChangeDate()) &amp;&amp;</span>
+<span class="fc bfc" id="L404" title="All 2 branches covered.">                !Objects.equals(Utilities.parseDateWithoutFraction(feature.getChangeDate()), Utilities.parseDateWithoutFraction(epic.getChangeDate()))) {</span>
+<span class="fc" id="L405">            return true;</span>
+        }
+<span class="pc bpc" id="L407" title="2 of 4 branches missed.">        if (!StringUtils.isEmpty(feature.getsEpicBeginDate()) &amp;&amp; !StringUtils.isEmpty(epic.getBeginDate()) &amp;&amp;</span>
+<span class="pc bpc" id="L408" title="1 of 2 branches missed.">                !Objects.equals(Utilities.parseDateWithoutFraction(feature.getsEpicBeginDate()), Utilities.parseDateWithoutFraction(epic.getBeginDate()))) {</span>
+<span class="fc" id="L409">            return true;</span>
+        }
+<span class="nc bnc" id="L411" title="All 4 branches missed.">        return !StringUtils.isEmpty(feature.getsEpicEndDate()) &amp;&amp; !StringUtils.isEmpty(epic.getEndDate()) &amp;&amp;</span>
+<span class="nc bnc" id="L412" title="All 2 branches missed.">                !Objects.equals(Utilities.parseDateWithoutFraction(feature.getsEpicEndDate()), Utilities.parseDateWithoutFraction(epic.getEndDate()));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

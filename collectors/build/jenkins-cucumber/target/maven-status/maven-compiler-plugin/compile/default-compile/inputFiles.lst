@@ -1,0 +1,12 @@
+/home/Devops/Hygieia/collectors/build/jenkins-cucumber/src/main/java/com/capitalone/dashboard/collector/JenkinsCucumberTestCollectorTask.java
+/home/Devops/Hygieia/collectors/build/jenkins-cucumber/src/main/java/com/capitalone/dashboard/Application.java
+/home/Devops/Hygieia/collectors/build/jenkins-cucumber/src/main/java/com/capitalone/dashboard/collector/DefaultJenkinsClient.java
+/home/Devops/Hygieia/collectors/build/jenkins-cucumber/src/main/java/com/capitalone/dashboard/collector/JenkinsSettings.java
+/home/Devops/Hygieia/collectors/build/jenkins-cucumber/src/main/java/com/capitalone/dashboard/model/JenkinsCucumberTestCollector.java
+/home/Devops/Hygieia/collectors/build/jenkins-cucumber/src/main/java/com/capitalone/dashboard/repository/JenkinsCucumberTestJobRepository.java
+/home/Devops/Hygieia/collectors/build/jenkins-cucumber/src/main/java/com/capitalone/dashboard/collector/RestOperationsSupplier.java
+/home/Devops/Hygieia/collectors/build/jenkins-cucumber/src/main/java/com/capitalone/dashboard/collector/CucumberJsonToTestResultTransformer.java
+/home/Devops/Hygieia/collectors/build/jenkins-cucumber/src/main/java/com/capitalone/dashboard/repository/JenkinsCucumberTestCollectorRepository.java
+/home/Devops/Hygieia/collectors/build/jenkins-cucumber/src/main/java/com/capitalone/dashboard/model/JenkinsJob.java
+/home/Devops/Hygieia/collectors/build/jenkins-cucumber/src/main/java/com/capitalone/dashboard/collector/Transformer.java
+/home/Devops/Hygieia/collectors/build/jenkins-cucumber/src/main/java/com/capitalone/dashboard/collector/JenkinsClient.java

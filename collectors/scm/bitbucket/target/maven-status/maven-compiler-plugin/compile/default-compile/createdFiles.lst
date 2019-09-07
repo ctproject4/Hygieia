@@ -1,0 +1,9 @@
+com/capitalone/dashboard/collector/GitCollectorTask.class
+com/capitalone/dashboard/model/GitRepo.class
+com/capitalone/dashboard/collector/GitSettings.class
+com/capitalone/dashboard/collector/GitClient.class
+com/capitalone/dashboard/repository/GitRepoRepository.class
+com/capitalone/dashboard/Application.class
+com/capitalone/dashboard/collector/DefaultBitbucketServerClient.class
+com/capitalone/dashboard/collector/DefaultBitbucketCloudClient.class
+com/capitalone/dashboard/collector/RestOperationsSupplier.class

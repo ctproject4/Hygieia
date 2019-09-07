@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GitHubCollectorTask.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:github-scm-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">GitHubCollectorTask.java</span></div><h1>GitHubCollectorTask.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+
+import com.capitalone.dashboard.misc.HygieiaException;
+import com.capitalone.dashboard.model.CollectionError;
+import com.capitalone.dashboard.model.Collector;
+import com.capitalone.dashboard.model.CollectorItem;
+import com.capitalone.dashboard.model.CollectorType;
+import com.capitalone.dashboard.model.Commit;
+import com.capitalone.dashboard.model.CommitType;
+import com.capitalone.dashboard.model.GitHubRepo;
+import com.capitalone.dashboard.model.GitRequest;
+import com.capitalone.dashboard.repository.BaseCollectorRepository;
+import com.capitalone.dashboard.repository.CommitRepository;
+import com.capitalone.dashboard.repository.ComponentRepository;
+import com.capitalone.dashboard.repository.GitHubRepoRepository;
+import com.capitalone.dashboard.repository.GitRequestRepository;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientException;
+
+import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+/**
+ * CollectorTask that fetches Commit information from GitHub
+ */
+@Component
+public class GitHubCollectorTask extends CollectorTask&lt;Collector&gt; {
+<span class="fc" id="L48">    private static final Log LOG = LogFactory.getLog(GitHubCollectorTask.class);</span>
+
+    private final BaseCollectorRepository&lt;Collector&gt; collectorRepository;
+    private final GitHubRepoRepository gitHubRepoRepository;
+    private final CommitRepository commitRepository;
+    private final GitRequestRepository gitRequestRepository;
+    private final GitHubClient gitHubClient;
+    private final GitHubSettings gitHubSettings;
+    private final ComponentRepository dbComponentRepository;
+    private static final long FOURTEEN_DAYS_MILLISECONDS = 14 * 24 * 60 * 60 * 1000;
+    private static final String API_RATE_LIMIT_MESSAGE = &quot;API rate limit exceeded&quot;;
+<span class="fc" id="L59">    private List&lt;Pattern&gt; commitExclusionPatterns = new ArrayList&lt;&gt;();</span>
+
+    @Autowired
+    public GitHubCollectorTask(TaskScheduler taskScheduler,
+                               BaseCollectorRepository&lt;Collector&gt; collectorRepository,
+                               GitHubRepoRepository gitHubRepoRepository,
+                               CommitRepository commitRepository,
+                               GitRequestRepository gitRequestRepository,
+                               GitHubClient gitHubClient,
+                               GitHubSettings gitHubSettings,
+                               ComponentRepository dbComponentRepository) {
+<span class="fc" id="L70">        super(taskScheduler, &quot;GitHub&quot;);</span>
+<span class="fc" id="L71">        this.collectorRepository = collectorRepository;</span>
+<span class="fc" id="L72">        this.gitHubRepoRepository = gitHubRepoRepository;</span>
+<span class="fc" id="L73">        this.commitRepository = commitRepository;</span>
+<span class="fc" id="L74">        this.gitHubClient = gitHubClient;</span>
+<span class="fc" id="L75">        this.gitHubSettings = gitHubSettings;</span>
+<span class="fc" id="L76">        this.dbComponentRepository = dbComponentRepository;</span>
+<span class="fc" id="L77">        this.gitRequestRepository = gitRequestRepository;</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">        if (!CollectionUtils.isEmpty(gitHubSettings.getNotBuiltCommits())) {</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">            for (String regExStr : gitHubSettings.getNotBuiltCommits()) {</span>
+<span class="nc" id="L80">                Pattern pattern = Pattern.compile(regExStr, Pattern.CASE_INSENSITIVE);</span>
+<span class="nc" id="L81">                commitExclusionPatterns.add(pattern);</span>
+<span class="nc" id="L82">            }</span>
+        }
+<span class="fc" id="L84">    }</span>
+
+    @Override
+    public Collector getCollector() {
+<span class="nc" id="L88">        Collector protoType = new Collector();</span>
+<span class="nc" id="L89">        protoType.setName(&quot;GitHub&quot;);</span>
+<span class="nc" id="L90">        protoType.setCollectorType(CollectorType.SCM);</span>
+<span class="nc" id="L91">        protoType.setOnline(true);</span>
+<span class="nc" id="L92">        protoType.setEnabled(true);</span>
+
+<span class="nc" id="L94">        Map&lt;String, Object&gt; allOptions = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L95">        allOptions.put(GitHubRepo.REPO_URL, &quot;&quot;);</span>
+<span class="nc" id="L96">        allOptions.put(GitHubRepo.BRANCH, &quot;&quot;);</span>
+<span class="nc" id="L97">        allOptions.put(GitHubRepo.USER_ID, &quot;&quot;);</span>
+<span class="nc" id="L98">        allOptions.put(GitHubRepo.PASSWORD, &quot;&quot;);</span>
+<span class="nc" id="L99">        allOptions.put(GitHubRepo.PERSONAL_ACCESS_TOKEN, &quot;&quot;);</span>
+<span class="nc" id="L100">        protoType.setAllFields(allOptions);</span>
+
+<span class="nc" id="L102">        Map&lt;String, Object&gt; uniqueOptions = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L103">        uniqueOptions.put(GitHubRepo.REPO_URL, &quot;&quot;);</span>
+<span class="nc" id="L104">        uniqueOptions.put(GitHubRepo.BRANCH, &quot;&quot;);</span>
+<span class="nc" id="L105">        protoType.setUniqueFields(uniqueOptions);</span>
+<span class="nc" id="L106">        return protoType;</span>
+    }
+
+    @Override
+    public BaseCollectorRepository&lt;Collector&gt; getCollectorRepository() {
+<span class="nc" id="L111">        return collectorRepository;</span>
+    }
+
+    @Override
+    public String getCron() {
+<span class="nc" id="L116">        return gitHubSettings.getCron();</span>
+    }
+
+    /**
+     * Clean up unused deployment collector items
+     *
+     * @param collector the {@link Collector}
+     */
+    @SuppressWarnings(&quot;PMD.AvoidDeeplyNestedIfStmts&quot;) // agreed, fixme
+    private void clean(Collector collector) {
+<span class="fc" id="L126">        Set&lt;ObjectId&gt; uniqueIDs = new HashSet&lt;&gt;();</span>
+        /**
+         * Logic: For each component, retrieve the collector item list of the type SCM.
+         * Store their IDs in a unique set ONLY if their collector IDs match with GitHub collectors ID.
+         */
+<span class="fc bfc" id="L131" title="All 2 branches covered.">        for (com.capitalone.dashboard.model.Component comp : dbComponentRepository.findAll()) {</span>
+<span class="pc bpc" id="L132" title="2 of 4 branches missed.">            if (comp.getCollectorItems() != null &amp;&amp; !comp.getCollectorItems().isEmpty()) {</span>
+<span class="fc" id="L133">                List&lt;CollectorItem&gt; itemList = comp.getCollectorItems().get(CollectorType.SCM);</span>
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">                if (itemList != null) {</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">                    for (CollectorItem ci : itemList) {</span>
+<span class="pc bpc" id="L136" title="1 of 4 branches missed.">                        if (ci != null &amp;&amp; ci.getCollectorId().equals(collector.getId())) {</span>
+<span class="fc" id="L137">                            uniqueIDs.add(ci.getId());</span>
+                        }
+<span class="fc" id="L139">                    }</span>
+                }
+            }
+<span class="fc" id="L142">        }</span>
+
+        /**
+         * Logic: Get all the collector items from the collector_item collection for this collector.
+         * If their id is in the unique set (above), keep them enabled; else, disable them.
+         */
+<span class="fc" id="L148">        List&lt;GitHubRepo&gt; repoList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L149">        Set&lt;ObjectId&gt; gitID = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L150">        gitID.add(collector.getId());</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">        for (GitHubRepo repo : gitHubRepoRepository.findByCollectorIdIn(gitID)) {</span>
+<span class="pc bpc" id="L152" title="1 of 2 branches missed.">            if (repo.isPushed()) {continue;}</span>
+
+<span class="fc" id="L154">            repo.setEnabled(uniqueIDs.contains(repo.getId()));</span>
+<span class="fc" id="L155">            repoList.add(repo);</span>
+<span class="fc" id="L156">        }</span>
+<span class="fc" id="L157">        gitHubRepoRepository.save(repoList);</span>
+<span class="fc" id="L158">    }</span>
+
+    @Override
+    public void collect(Collector collector) {
+
+<span class="fc" id="L163">        logBanner(&quot;Starting...&quot;);</span>
+<span class="fc" id="L164">        long start = System.currentTimeMillis();</span>
+<span class="fc" id="L165">        int repoCount = 0;</span>
+<span class="fc" id="L166">        int commitCount = 0;</span>
+<span class="fc" id="L167">        int pullCount = 0;</span>
+<span class="fc" id="L168">        int issueCount = 0;</span>
+
+<span class="fc" id="L170">        clean(collector);</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">        for (GitHubRepo repo : enabledRepos(collector)) {</span>
+<span class="fc bfc" id="L172" title="All 2 branches covered.">            if (repo.getErrorCount() &lt; gitHubSettings.getErrorThreshold()) {</span>
+<span class="pc bpc" id="L173" title="3 of 4 branches missed.">                boolean firstRun = ((repo.getLastUpdated() == 0) || ((start - repo.getLastUpdated()) &gt; FOURTEEN_DAYS_MILLISECONDS));</span>
+<span class="fc" id="L174">                repo.removeLastUpdateDate();  //moved last update date to collector item. This is to clean old data.</span>
+                try {
+<span class="fc" id="L176">                    LOG.info(repo.getOptions().toString() + &quot;::&quot; + repo.getBranch() + &quot;:: get commits&quot;);</span>
+                    // Step 1: Get all the commits
+<span class="fc bfc" id="L178" title="All 2 branches covered.">                    for (Commit commit : gitHubClient.getCommits(repo, firstRun, commitExclusionPatterns)) {</span>
+<span class="fc" id="L179">                        LOG.debug(commit.getTimestamp() + &quot;:::&quot; + commit.getScmCommitLog());</span>
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">                        if (isNewCommit(repo, commit)) {</span>
+<span class="fc" id="L181">                            commit.setCollectorItemId(repo.getId());</span>
+<span class="fc" id="L182">                            commitRepository.save(commit);</span>
+<span class="fc" id="L183">                            commitCount++;</span>
+                        }
+<span class="fc" id="L185">                    }</span>
+
+                    // Step 2: Get all the issues
+<span class="fc" id="L188">                    LOG.info(repo.getOptions().toString() + &quot;::&quot; + repo.getBranch() + &quot; get issues&quot;);</span>
+<span class="fc" id="L189">                    List&lt;GitRequest&gt; issues = gitHubClient.getIssues(repo, firstRun);</span>
+<span class="fc" id="L190">                    issueCount += processList(repo, issues, &quot;issue&quot;);</span>
+
+                    //Step 2: Get all the Pull Requests
+<span class="fc" id="L193">                    LOG.info(repo.getOptions().toString() + &quot;::&quot; + repo.getBranch() + &quot;::get pulls&quot;);</span>
+<span class="fc" id="L194">                    List&lt;GitRequest&gt; allPRs = gitRequestRepository.findRequestNumberAndLastUpdated(repo.getId(), &quot;pull&quot;);</span>
+
+<span class="fc" id="L196">                    Map&lt;Long, String&gt; prCloseMap = allPRs.stream().collect(</span>
+<span class="fc" id="L197">                            Collectors.toMap(GitRequest::getUpdatedAt, GitRequest::getNumber,</span>
+<span class="nc" id="L198">                                    (oldValue, newValue) -&gt; oldValue</span>
+                            )
+                    );
+<span class="fc" id="L201">                    List&lt;GitRequest&gt; pulls = gitHubClient.getPulls(repo, &quot;all&quot;, firstRun, prCloseMap);</span>
+<span class="fc" id="L202">                    pullCount += processList(repo, pulls, &quot;pull&quot;);</span>
+
+<span class="fc" id="L204">                    repo.setLastUpdated(System.currentTimeMillis());</span>
+<span class="nc" id="L205">                } catch (HttpStatusCodeException hc) {</span>
+<span class="nc" id="L206">                    LOG.error(&quot;Error fetching commits for:&quot; + repo.getRepoUrl(), hc);</span>
+<span class="nc bnc" id="L207" title="All 4 branches missed.">                    if (! (isRateLimitError(hc) || hc.getStatusCode() == HttpStatus.SERVICE_UNAVAILABLE) ) {</span>
+<span class="nc" id="L208">                        CollectionError error = new CollectionError(hc.getStatusCode().toString(), hc.getMessage());</span>
+<span class="nc" id="L209">                        repo.getErrors().add(error);</span>
+                    }
+<span class="nc" id="L211">                } catch (ResourceAccessException ex) {</span>
+                    //handle case where repo is valid but github returns connection refused due to outages??
+<span class="nc bnc" id="L213" title="All 4 branches missed.">                    if (ex.getMessage() != null &amp;&amp; ex.getMessage().contains(&quot;Connection refused&quot;)) {</span>
+<span class="nc" id="L214">                        LOG.error(&quot;Error fetching commits for:&quot; + repo.getRepoUrl(), ex);</span>
+                    } else {
+<span class="nc" id="L216">                        LOG.error(&quot;Error fetching commits for:&quot; + repo.getRepoUrl(), ex);</span>
+<span class="nc" id="L217">                        CollectionError error = new CollectionError(CollectionError.UNKNOWN_HOST, repo.getRepoUrl());</span>
+<span class="nc" id="L218">                        repo.getErrors().add(error);</span>
+                    }
+<span class="nc" id="L220">                } catch (RestClientException | MalformedURLException ex) {</span>
+<span class="nc" id="L221">                    LOG.error(&quot;Error fetching commits for:&quot; + repo.getRepoUrl(), ex);</span>
+<span class="nc" id="L222">                    CollectionError error = new CollectionError(CollectionError.UNKNOWN_HOST, repo.getRepoUrl());</span>
+<span class="nc" id="L223">                    repo.getErrors().add(error);</span>
+<span class="nc" id="L224">                } catch (HygieiaException he) {</span>
+<span class="nc" id="L225">                    LOG.error(&quot;Error fetching commits for:&quot; + repo.getRepoUrl(), he);</span>
+<span class="nc" id="L226">                    CollectionError error = new CollectionError(&quot;Bad repo url&quot;, repo.getRepoUrl());</span>
+<span class="nc" id="L227">                    repo.getErrors().add(error);</span>
+<span class="pc" id="L228">                }</span>
+<span class="fc" id="L229">                gitHubRepoRepository.save(repo);</span>
+            }
+<span class="fc" id="L231">            repoCount++;</span>
+<span class="fc" id="L232">        }</span>
+<span class="fc" id="L233">        log(&quot;Repo Count&quot;, start, repoCount);</span>
+<span class="fc" id="L234">        log(&quot;New Commits&quot;, start, commitCount);</span>
+<span class="fc" id="L235">        log(&quot;New Pulls&quot;, start, pullCount);</span>
+<span class="fc" id="L236">        log(&quot;New Issues&quot;, start, issueCount);</span>
+
+<span class="fc" id="L238">        log(&quot;Finished&quot;, start);</span>
+<span class="fc" id="L239">    }</span>
+
+
+    private int processList(GitHubRepo repo, List&lt;GitRequest&gt; entries, String type) {
+<span class="fc" id="L243">        int count = 0;</span>
+<span class="fc bfc" id="L244" title="All 2 branches covered.">        if (CollectionUtils.isEmpty(entries)) return 0;</span>
+
+<span class="fc bfc" id="L246" title="All 2 branches covered.">        for (GitRequest entry : entries) {</span>
+<span class="fc" id="L247">            LOG.debug(entry.getTimestamp() + &quot;:::&quot; + entry.getScmCommitLog());</span>
+<span class="fc" id="L248">            GitRequest existing = gitRequestRepository.findByCollectorItemIdAndNumberAndRequestType(repo.getId(), entry.getNumber(), type);</span>
+
+<span class="pc bpc" id="L250" title="1 of 2 branches missed.">            if (existing == null) {</span>
+<span class="fc" id="L251">                entry.setCollectorItemId(repo.getId());</span>
+<span class="fc" id="L252">                count++;</span>
+            } else {
+<span class="nc" id="L254">                entry.setId(existing.getId());</span>
+<span class="nc" id="L255">                entry.setCollectorItemId(repo.getId());</span>
+            }
+<span class="fc" id="L257">            gitRequestRepository.save(entry);</span>
+
+            //fix merge commit type for squash merged and rebased merged PRs
+            //PRs that were squash merged or rebase merged have only one parent
+<span class="pc bpc" id="L261" title="3 of 4 branches missed.">            if (&quot;pull&quot;.equalsIgnoreCase(type) &amp;&amp; &quot;merged&quot;.equalsIgnoreCase(entry.getState())) {</span>
+<span class="nc" id="L262">                List&lt;Commit&gt; commits = commitRepository.findByScmRevisionNumber(entry.getScmRevisionNumber());</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">                for(Commit commit : commits) {</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">                    if (commit.getType() != null) {</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">                        if (commit.getType() != CommitType.Merge) {</span>
+<span class="nc" id="L266">                            commit.setType(CommitType.Merge);</span>
+<span class="nc" id="L267">                            commitRepository.save(commit);</span>
+                        }
+                    } else {
+<span class="nc" id="L270">                        commit.setType(CommitType.Merge);</span>
+<span class="nc" id="L271">                        commitRepository.save(commit);</span>
+                    }
+<span class="nc" id="L273">                }</span>
+            }
+<span class="fc" id="L275">        }</span>
+<span class="fc" id="L276">        return count;</span>
+    }
+
+    private boolean isRateLimitError(HttpStatusCodeException hc) {
+<span class="nc" id="L280">        String response = hc.getResponseBodyAsString();</span>
+<span class="nc bnc" id="L281" title="All 2 branches missed.">        return StringUtils.isEmpty(response) ? false : response.contains(API_RATE_LIMIT_MESSAGE);</span>
+    }
+
+    private List&lt;GitHubRepo&gt; enabledRepos(Collector collector) {
+<span class="fc" id="L285">        List&lt;GitHubRepo&gt; repos = gitHubRepoRepository.findEnabledGitHubRepos(collector.getId());</span>
+
+<span class="fc" id="L287">        List&lt;GitHubRepo&gt; pulledRepos</span>
+<span class="fc" id="L288">                = Optional.ofNullable(repos)</span>
+<span class="fc" id="L289">                .orElseGet(Collections::emptyList).stream()</span>
+<span class="pc bpc" id="L290" title="1 of 2 branches missed.">                .filter(pulledRepo -&gt; !pulledRepo.isPushed())</span>
+<span class="fc" id="L291">                .collect(Collectors.toList());</span>
+
+<span class="pc bpc" id="L293" title="1 of 2 branches missed.">        if (CollectionUtils.isEmpty(pulledRepos)) { return new ArrayList&lt;&gt;(); }</span>
+
+<span class="fc" id="L295">        return pulledRepos;</span>
+    }
+
+
+    private boolean isNewCommit(GitHubRepo repo, Commit commit) {
+<span class="pc bpc" id="L300" title="1 of 2 branches missed.">        return commitRepository.findByCollectorItemIdAndScmRevisionNumber(</span>
+<span class="fc" id="L301">                repo.getId(), commit.getScmRevisionNumber()) == null;</span>
+    }
+
+    private GitRequest getExistingRequest(GitHubRepo repo, GitRequest request, String type) {
+<span class="nc" id="L305">        return gitRequestRepository.findByCollectorItemIdAndNumberAndRequestType(</span>
+<span class="nc" id="L306">                repo.getId(), request.getNumber(), type);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

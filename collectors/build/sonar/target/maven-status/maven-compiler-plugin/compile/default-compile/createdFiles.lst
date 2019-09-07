@@ -1,0 +1,15 @@
+com/capitalone/dashboard/collector/SonarSettings.class
+com/capitalone/dashboard/repository/SonarCollectorRepository.class
+com/capitalone/dashboard/collector/SonarCollectorTask.class
+com/capitalone/dashboard/repository/SonarProjectRepository.class
+com/capitalone/dashboard/collector/DefaultSonar56Client.class
+com/capitalone/dashboard/Application.class
+com/capitalone/dashboard/repository/SonarProfileRepostory.class
+com/capitalone/dashboard/collector/RestOperationsSupplier.class
+com/capitalone/dashboard/collector/DefaultSonarClient.class
+com/capitalone/dashboard/util/SonarDashboardUrl.class
+com/capitalone/dashboard/model/SonarCollector.class
+com/capitalone/dashboard/collector/SonarClient.class
+com/capitalone/dashboard/collector/SonarClientSelector.class
+com/capitalone/dashboard/collector/DefaultSonar6Client.class
+com/capitalone/dashboard/model/SonarProject.class

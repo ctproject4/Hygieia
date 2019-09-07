@@ -1,0 +1,10 @@
+com/capitalone/dashboard/uitest/definitions/DeleteDashboardDefinitions.class
+com/capitalone/dashboard/uitest/pages/DashboardPage.class
+com/capitalone/dashboard/uitest/pages/LoginPage.class
+com/capitalone/dashboard/uitest/steps/UserSteps.class
+com/capitalone/dashboard/uitest/definitions/CreateDashboardDefinitions.class
+com/capitalone/dashboard/uitest/definitions/LoginDefinitions.class
+com/capitalone/dashboard/uitest/utils/TestPropertiesManager.class
+com/capitalone/dashboard/uitest/definitions/CommonDefinitions.class
+com/capitalone/dashboard/uitest/pages/HomePage.class
+com/capitalone/dashboard/uitest/UITestRunner.class

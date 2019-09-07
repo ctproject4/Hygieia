@@ -1,0 +1,10 @@
+com/capitalone/dashboard/utils/CodeQualityDataServiceTest.class
+com/capitalone/dashboard/collector/JenkinsCodeQualityCollectorTaskTest.class
+com/capitalone/dashboard/jenkins/JenkinsJobTest.class
+com/capitalone/dashboard/collector/HttpJenkinsClientTest.class
+com/capitalone/dashboard/collector/JenkinsCodeQualityCollectorTaskTest$1.class
+com/capitalone/dashboard/collector/ResponseConversionTest.class
+com/capitalone/dashboard/utils/CodeQualityMetricsConverterTest.class
+com/capitalone/dashboard/jenkins/JenkinsPredicateTest.class
+com/capitalone/dashboard/utils/CodeMetricsCodeQualitConverterTest.class
+com/capitalone/dashboard/collector/JenkinsCodeQualityCollectorTaskTest$2.class

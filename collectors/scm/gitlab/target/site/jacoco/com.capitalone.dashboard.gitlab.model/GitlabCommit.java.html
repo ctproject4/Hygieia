@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GitlabCommit.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:gitlab-scm-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.gitlab.model</a> &gt; <span class="el_source">GitlabCommit.java</span></div><h1>GitlabCommit.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.gitlab.model;
+
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+<span class="fc" id="L7">public class GitlabCommit {</span>
+
+    private String id;
+    @JsonProperty(&quot;short_id&quot;)
+    private String shortId;
+    private String title;
+    @JsonProperty(&quot;author_name&quot;)
+    private String authorName;
+    @JsonProperty(&quot;author_email&quot;)
+    private String authorEmail;
+    @JsonProperty(&quot;authored_date&quot;)
+    private String authoredDate;
+    @JsonProperty(&quot;committer_name&quot;)
+    private String committerName;
+    @JsonProperty(&quot;committer_email&quot;)
+    private String committerEmail;
+    @JsonProperty(&quot;committed_date&quot;)
+    private String committedDate;
+    @JsonProperty(&quot;created_at&quot;)
+    private String createdAt;
+    private String message;
+    @JsonProperty(&quot;parent_ids&quot;)
+    private List&lt;String&gt; parentIds;
+
+    public String getId() {
+<span class="fc" id="L32">        return id;</span>
+    }
+
+    public void setId(String id) {
+<span class="fc" id="L36">        this.id = id;</span>
+<span class="fc" id="L37">    }</span>
+
+    public String getShortId() {
+<span class="nc" id="L40">        return shortId;</span>
+    }
+
+    public void setShortId(String shortId) {
+<span class="nc" id="L44">        this.shortId = shortId;</span>
+<span class="nc" id="L45">    }</span>
+
+    public String getTitle() {
+<span class="nc" id="L48">        return title;</span>
+    }
+
+    public void setTitle(String title) {
+<span class="nc" id="L52">        this.title = title;</span>
+<span class="nc" id="L53">    }</span>
+
+    public String getAuthorName() {
+<span class="fc" id="L56">        return authorName;</span>
+    }
+
+    public void setAuthorName(String authorName) {
+<span class="fc" id="L60">        this.authorName = authorName;</span>
+<span class="fc" id="L61">    }</span>
+
+    public String getAuthorEmail() {
+<span class="nc" id="L64">        return authorEmail;</span>
+    }
+
+    public void setAuthorEmail(String authorEmail) {
+<span class="nc" id="L68">        this.authorEmail = authorEmail;</span>
+<span class="nc" id="L69">    }</span>
+
+    public String getAuthoredDate() {
+<span class="nc" id="L72">        return authoredDate;</span>
+    }
+
+    public void setAuthoredDate(String authoredDate) {
+<span class="nc" id="L76">        this.authoredDate = authoredDate;</span>
+<span class="nc" id="L77">    }</span>
+
+    public String getCommitterName() {
+<span class="nc" id="L80">        return committerName;</span>
+    }
+
+    public void setCommitterName(String committerName) {
+<span class="nc" id="L84">        this.committerName = committerName;</span>
+<span class="nc" id="L85">    }</span>
+
+    public String getCommitterEmail() {
+<span class="nc" id="L88">        return committerEmail;</span>
+    }
+
+    public void setCommitterEmail(String committerEmail) {
+<span class="nc" id="L92">        this.committerEmail = committerEmail;</span>
+<span class="nc" id="L93">    }</span>
+
+    public String getCommittedDate() {
+<span class="nc" id="L96">        return committedDate;</span>
+    }
+
+    public void setCommittedDate(String committedDate) {
+<span class="nc" id="L100">        this.committedDate = committedDate;</span>
+<span class="nc" id="L101">    }</span>
+
+    public String getCreatedAt() {
+<span class="fc" id="L104">        return createdAt;</span>
+    }
+
+    public void setCreatedAt(String createdAt) {
+<span class="fc" id="L108">        this.createdAt = createdAt;</span>
+<span class="fc" id="L109">    }</span>
+
+    public String getMessage() {
+<span class="fc" id="L112">        return message;</span>
+    }
+
+    public void setMessage(String message) {
+<span class="fc" id="L116">        this.message = message;</span>
+<span class="fc" id="L117">    }</span>
+
+    public List&lt;String&gt; getParentIds() {
+<span class="fc" id="L120">        return parentIds;</span>
+    }
+
+    public void setParentIds(List&lt;String&gt; parentIds) {
+<span class="nc" id="L124">        this.parentIds = parentIds;</span>
+<span class="nc" id="L125">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

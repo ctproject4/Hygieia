@@ -1,0 +1,10 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+com.capitalone.dashboard:nfrr-audit-collector,com.capitalone.dashboard,Application,8,0,0,0,3,0,2,0,2,0
+com.capitalone.dashboard:nfrr-audit-collector,com.capitalone.dashboard.collector,AuditCollectorUtil.AUDIT_PARAMS,9,69,0,0,0,1,2,2,2,2
+com.capitalone.dashboard:nfrr-audit-collector,com.capitalone.dashboard.collector,AuditSettings,46,20,2,0,20,8,12,6,11,6
+com.capitalone.dashboard:nfrr-audit-collector,com.capitalone.dashboard.collector,AuditCollector,0,34,0,0,0,10,0,3,0,3
+com.capitalone.dashboard:nfrr-audit-collector,com.capitalone.dashboard.collector,AuditCollectorUtil,1193,150,151,3,256,29,100,6,23,6
+com.capitalone.dashboard:nfrr-audit-collector,com.capitalone.dashboard.collector,AuditCollectorTask,103,33,2,0,22,10,5,4,4,4
+com.capitalone.dashboard:nfrr-audit-collector,com.capitalone.dashboard.model,AuditStatus,44,39,4,0,4,4,5,2,3,2
+com.capitalone.dashboard:nfrr-audit-collector,com.capitalone.dashboard.model,DataStatus,44,59,4,0,4,6,5,2,3,2
+com.capitalone.dashboard:nfrr-audit-collector,com.capitalone.dashboard.model,Audit,23,25,0,0,9,9,7,4,7,4

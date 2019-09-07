@@ -1,0 +1,9 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+com.capitalone.dashboard:nexus-iq-collector,com.capitalone.dashboard,Application,8,0,0,0,3,0,2,0,2,0
+com.capitalone.dashboard:nexus-iq-collector,com.capitalone.dashboard.collector,NexusIQCollectorTask,464,0,64,0,108,0,43,0,11,0
+com.capitalone.dashboard:nexus-iq-collector,com.capitalone.dashboard.collector,RestOperationsSupplier,7,0,0,0,2,0,2,0,2,0
+com.capitalone.dashboard:nexus-iq-collector,com.capitalone.dashboard.collector,NexusIQSettings,21,17,0,0,9,7,6,5,6,5
+com.capitalone.dashboard:nexus-iq-collector,com.capitalone.dashboard.collector,DefaultNexusIQClient,635,515,80,40,104,104,56,26,7,12
+com.capitalone.dashboard:nexus-iq-collector,com.capitalone.dashboard.model,NexusIQApplication,53,49,10,0,8,12,8,8,3,8
+com.capitalone.dashboard:nexus-iq-collector,com.capitalone.dashboard.model,NexusIQCollector,78,0,0,0,20,0,3,0,3,0
+com.capitalone.dashboard:nexus-iq-collector,com.capitalone.dashboard.model,LibraryPolicyReport,0,31,0,0,0,13,0,9,0,9

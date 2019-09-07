@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GitCollectorTask.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:bitbucket-scm-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">GitCollectorTask.java</span></div><h1>GitCollectorTask.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+
+import com.capitalone.dashboard.model.Collector;
+import com.capitalone.dashboard.model.CollectorItem;
+import com.capitalone.dashboard.model.CollectorType;
+import com.capitalone.dashboard.model.Commit;
+import com.capitalone.dashboard.model.GitRepo;
+import com.capitalone.dashboard.repository.BaseCollectorRepository;
+import com.capitalone.dashboard.repository.CommitRepository;
+import com.capitalone.dashboard.repository.ComponentRepository;
+import com.capitalone.dashboard.repository.GitRepoRepository;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * CollectorTask that fetches Commit information from Git
+ */
+@Component
+public class GitCollectorTask extends CollectorTask&lt;Collector&gt; {
+<span class="nc" id="L34">    private static final Log LOG = LogFactory.getLog(GitCollectorTask.class);</span>
+
+    private final BaseCollectorRepository&lt;Collector&gt; collectorRepository;
+    private final GitRepoRepository gitRepoRepository;
+    private final CommitRepository commitRepository;
+    private final GitClient gitClient;
+    private final GitSettings gitSettings;
+    private final ComponentRepository dbComponentRepository;
+
+    @Autowired
+    public GitCollectorTask(TaskScheduler taskScheduler,
+                            BaseCollectorRepository&lt;Collector&gt; collectorRepository,
+                            GitRepoRepository gitRepoRepository,
+                            CommitRepository commitRepository,
+                            GitClient gitClient,
+                            GitSettings gitSettings,
+                            ComponentRepository dbComponentRepository) {
+<span class="nc" id="L51">        super(taskScheduler, &quot;Bitbucket&quot;);</span>
+<span class="nc" id="L52">        this.collectorRepository = collectorRepository;</span>
+<span class="nc" id="L53">        this.gitRepoRepository = gitRepoRepository;</span>
+<span class="nc" id="L54">        this.commitRepository = commitRepository;</span>
+<span class="nc" id="L55">        this.gitClient = gitClient;</span>
+<span class="nc" id="L56">        this.gitSettings = gitSettings;</span>
+<span class="nc" id="L57">        this.dbComponentRepository = dbComponentRepository;</span>
+<span class="nc" id="L58">    }</span>
+
+    @Override
+    public Collector getCollector() {
+<span class="nc" id="L62">        Collector protoType = new Collector();</span>
+<span class="nc" id="L63">        protoType.setName(&quot;Bitbucket&quot;);</span>
+<span class="nc" id="L64">        protoType.setCollectorType(CollectorType.SCM);</span>
+<span class="nc" id="L65">        protoType.setOnline(true);</span>
+<span class="nc" id="L66">        protoType.setEnabled(true);</span>
+
+<span class="nc" id="L68">        Map&lt;String, Object&gt; allOptions = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L69">        allOptions.put(GitRepo.REPO_URL, &quot;&quot;);</span>
+<span class="nc" id="L70">        allOptions.put(GitRepo.BRANCH, &quot;&quot;);</span>
+<span class="nc" id="L71">        allOptions.put(GitRepo.USER_ID, &quot;&quot;);</span>
+<span class="nc" id="L72">        allOptions.put(GitRepo.PASSWORD, &quot;&quot;);</span>
+<span class="nc" id="L73">        allOptions.put(GitRepo.LAST_UPDATE_TIME, new Date());</span>
+<span class="nc" id="L74">        allOptions.put(GitRepo.LAST_UPDATE_COMMIT, &quot;&quot;);</span>
+<span class="nc" id="L75">        protoType.setAllFields(allOptions);</span>
+
+<span class="nc" id="L77">        Map&lt;String, Object&gt; uniqueOptions = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L78">        uniqueOptions.put(GitRepo.REPO_URL, &quot;&quot;);</span>
+<span class="nc" id="L79">        uniqueOptions.put(GitRepo.BRANCH, &quot;&quot;);</span>
+<span class="nc" id="L80">        protoType.setUniqueFields(uniqueOptions);</span>
+<span class="nc" id="L81">        return protoType;</span>
+    }
+
+    @Override
+    public BaseCollectorRepository&lt;Collector&gt; getCollectorRepository() {
+<span class="nc" id="L86">        return collectorRepository;</span>
+    }
+
+    @Override
+    public String getCron() {
+<span class="nc" id="L91">        return gitSettings.getCron();</span>
+    }
+
+    /**
+     * Clean up unused deployment collector items
+     *
+     * @param collector the {@link Collector}
+     */
+
+    private void clean(Collector collector) {
+<span class="nc" id="L101">        Set&lt;ObjectId&gt; uniqueIDs = new HashSet&lt;ObjectId&gt;();</span>
+        /**
+         * Logic: For each component, retrieve the collector item list of the type SCM.
+         * Store their IDs in a unique set ONLY if their collector IDs match with Bitbucket collectors ID.
+         */
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        for (com.capitalone.dashboard.model.Component comp : dbComponentRepository.findAll()) {</span>
+<span class="nc bnc" id="L107" title="All 4 branches missed.">            if (comp.getCollectorItems() == null || comp.getCollectorItems().isEmpty()) continue;</span>
+<span class="nc" id="L108">            List&lt;CollectorItem&gt; itemList = comp.getCollectorItems().get(CollectorType.SCM);</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">            if (itemList == null) continue;</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">            for (CollectorItem ci : itemList) {</span>
+<span class="nc bnc" id="L111" title="All 4 branches missed.">                if (ci != null &amp;&amp; ci.getCollectorId().equals(collector.getId())) {</span>
+<span class="nc" id="L112">                    uniqueIDs.add(ci.getId());</span>
+                }
+<span class="nc" id="L114">            }</span>
+<span class="nc" id="L115">        }</span>
+
+        /**
+         * Logic: Get all the collector items from the collector_item collection for this collector.
+         * If their id is in the unique set (above), keep them enabled; else, disable them.
+         */
+<span class="nc" id="L121">        List&lt;GitRepo&gt; repoList = new ArrayList&lt;GitRepo&gt;();</span>
+<span class="nc" id="L122">        Set&lt;ObjectId&gt; gitID = new HashSet&lt;ObjectId&gt;();</span>
+<span class="nc" id="L123">        gitID.add(collector.getId());</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        for (GitRepo repo : gitRepoRepository.findByCollectorIdIn(gitID)) {</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">            if (repo != null) {</span>
+<span class="nc" id="L126">                repo.setEnabled(uniqueIDs.contains(repo.getId()));</span>
+<span class="nc" id="L127">                repoList.add(repo);</span>
+            }
+<span class="nc" id="L129">        }</span>
+<span class="nc" id="L130">        gitRepoRepository.save(repoList);</span>
+<span class="nc" id="L131">    }</span>
+
+
+    @Override
+    public void collect(Collector collector) {
+
+<span class="nc" id="L137">        logBanner(&quot;Starting...&quot;);</span>
+<span class="nc" id="L138">        long start = System.currentTimeMillis();</span>
+<span class="nc" id="L139">        int repoCount = 0;</span>
+<span class="nc" id="L140">        int commitCount = 0;</span>
+
+<span class="nc" id="L142">        clean(collector);</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">        for (GitRepo repo : enabledRepos(collector)) {</span>
+<span class="nc" id="L144">            boolean firstRun = false;</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">            if (repo.getLastUpdateTime() == null) firstRun = true;</span>
+<span class="nc" id="L146">            LOG.debug(repo.getOptions().toString() + &quot;::&quot; + repo.getBranch());</span>
+
+<span class="nc" id="L148">            List&lt;Commit&gt; commits = gitClient.getCommits(repo, firstRun);</span>
+<span class="nc" id="L149">            List&lt;Commit&gt; newCommits = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">            for (Commit commit : commits) {</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">                if (LOG.isDebugEnabled()) {</span>
+<span class="nc" id="L152">                    LOG.debug(commit.getTimestamp() + &quot;:::&quot; + commit.getScmCommitLog());</span>
+                }
+
+<span class="nc bnc" id="L155" title="All 2 branches missed.">                if (isNewCommit(repo, commit)) {</span>
+<span class="nc" id="L156">                    commit.setCollectorItemId(repo.getId());</span>
+<span class="nc" id="L157">                    newCommits.add(commit);</span>
+                }
+<span class="nc" id="L159">            }</span>
+<span class="nc" id="L160">            commitRepository.save(newCommits);</span>
+<span class="nc" id="L161">            commitCount += newCommits.size();</span>
+
+<span class="nc" id="L163">            repo.setLastUpdateTime(Calendar.getInstance().getTime());</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">            if (!commits.isEmpty()) {</span>
+                // It appears that the first commit in the list is the HEAD of the branch
+<span class="nc" id="L166">                repo.setLastUpdateCommit(commits.get(0).getScmRevisionNumber());</span>
+            }
+
+<span class="nc" id="L169">            gitRepoRepository.save(repo);</span>
+
+<span class="nc" id="L171">            repoCount++;</span>
+<span class="nc" id="L172">        }</span>
+<span class="nc" id="L173">        log(&quot;Repo Count&quot;, start, repoCount);</span>
+<span class="nc" id="L174">        log(&quot;New Commits&quot;, start, commitCount);</span>
+
+<span class="nc" id="L176">        log(&quot;Finished&quot;, start);</span>
+<span class="nc" id="L177">    }</span>
+
+    @SuppressWarnings(&quot;unused&quot;)
+    private Date lastUpdated(GitRepo repo) {
+<span class="nc" id="L181">        return repo.getLastUpdateTime();</span>
+    }
+
+    private List&lt;GitRepo&gt; enabledRepos(Collector collector) {
+<span class="nc" id="L185">        return gitRepoRepository.findEnabledGitRepos(collector.getId());</span>
+    }
+
+    private boolean isNewCommit(GitRepo repo, Commit commit) {
+<span class="nc bnc" id="L189" title="All 2 branches missed.">        return commitRepository.findByCollectorItemIdAndScmRevisionNumber(</span>
+<span class="nc" id="L190">                repo.getId(), commit.getScmRevisionNumber()) == null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

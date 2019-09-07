@@ -1,0 +1,5 @@
+/home/Devops/Hygieia/collectors/audit/nfrr/src/test/java/com/capitalone/dashboard/collector/config/TestConfig.java
+/home/Devops/Hygieia/collectors/audit/nfrr/src/test/java/com/capitalone/dashboard/collector/config/FongoConfig.java
+/home/Devops/Hygieia/collectors/audit/nfrr/src/test/java/com/capitalone/dashboard/collector/TestUtils.java
+/home/Devops/Hygieia/collectors/audit/nfrr/src/test/java/com/capitalone/dashboard/collector/AuditCollectorTest.java
+/home/Devops/Hygieia/collectors/audit/nfrr/src/test/java/com/capitalone/dashboard/collector/AuditCollectorTaskTest.java

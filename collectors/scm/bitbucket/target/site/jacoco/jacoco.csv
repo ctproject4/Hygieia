@@ -1,0 +1,8 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+com.capitalone.dashboard:bitbucket-scm-collector,com.capitalone.dashboard,Application,8,0,0,0,3,0,2,0,2,0
+com.capitalone.dashboard:bitbucket-scm-collector,com.capitalone.dashboard.collector,DefaultBitbucketCloudClient,559,0,40,0,118,0,29,0,9,0
+com.capitalone.dashboard:bitbucket-scm-collector,com.capitalone.dashboard.collector,DefaultBitbucketServerClient,68,531,18,50,14,105,18,24,0,8
+com.capitalone.dashboard:bitbucket-scm-collector,com.capitalone.dashboard.collector,GitCollectorTask,377,0,32,0,83,0,26,0,10,0
+com.capitalone.dashboard:bitbucket-scm-collector,com.capitalone.dashboard.collector,RestOperationsSupplier,18,0,0,0,5,0,2,0,2,0
+com.capitalone.dashboard:bitbucket-scm-collector,com.capitalone.dashboard.collector,GitSettings,21,24,0,0,9,10,6,7,6,7
+com.capitalone.dashboard:bitbucket-scm-collector,com.capitalone.dashboard.model,GitRepo,44,124,12,10,14,29,13,13,3,12

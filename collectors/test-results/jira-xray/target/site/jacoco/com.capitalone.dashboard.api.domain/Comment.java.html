@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Comment.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:jira-xray-testresult-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.api.domain</a> &gt; <span class="el_source">Comment.java</span></div><h1>Comment.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.api.domain;
+
+import com.capitalone.dashboard.core.json.util.RendereableItem;
+
+/**
+ * This class will get the details from comment section
+ */
+public class Comment implements RendereableItem {
+    private String raw;
+    private String rendered;
+<span class="nc" id="L11">    public Comment(String raw,String rendered){</span>
+<span class="nc" id="L12">        this.raw=raw;</span>
+<span class="nc" id="L13">        this.rendered=rendered;</span>
+<span class="nc" id="L14">    }</span>
+
+<span class="nc" id="L16">    public Comment(RendereableItem item){</span>
+<span class="nc" id="L17">        this.raw=item.getRaw();</span>
+<span class="nc" id="L18">        this.rendered=item.getRendered();</span>
+<span class="nc" id="L19">    }</span>
+
+    public String getRendered() {
+<span class="nc" id="L22">        return rendered;</span>
+    }
+
+    public void setRendered(String rendered) {
+<span class="nc" id="L26">        this.rendered=rendered;</span>
+<span class="nc" id="L27">    }</span>
+
+    public String getRaw() {
+<span class="nc" id="L30">        return raw;</span>
+    }
+
+    public void setRaw(String raw) {
+<span class="nc" id="L34">        this.raw=raw;</span>
+<span class="nc" id="L35">    }</span>
+
+    public Comment cloneComment(){
+<span class="nc" id="L38">        return new Comment(this.raw,this.rendered);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

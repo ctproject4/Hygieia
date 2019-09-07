@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ScoreCollectorTask.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:score-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">ScoreCollectorTask.java</span></div><h1>ScoreCollectorTask.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+import java.util.List;
+
+import com.capitalone.dashboard.ScoreSettingsService;
+import com.capitalone.dashboard.model.score.ScoreCollectorItem;
+import com.capitalone.dashboard.model.score.ScoreMetric;
+import com.capitalone.dashboard.model.score.ScoreValueType;
+import com.capitalone.dashboard.model.score.settings.ScoreCriteriaSettings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.TaskScheduler;
+
+import com.capitalone.dashboard.ApplicationScoreService;
+import com.capitalone.dashboard.model.*;
+import com.capitalone.dashboard.repository.*;
+
+/**
+ * Collects {@link ScoreMetric} data from
+ * {@link ScoreCollectorItem}s.
+ */
+@org.springframework.stereotype.Component
+public class ScoreCollectorTask extends CollectorTask&lt;ScoreCollector&gt; {
+  @SuppressWarnings({&quot;unused&quot;, &quot;PMD.UnusedPrivateField&quot;})
+<span class="nc" id="L26">  private static final Logger LOGGER = LoggerFactory.getLogger(ScoreCollectorTask.class);</span>
+
+  private final ScoreCollectorRepository scoreCollectorRepository;
+  private final ScoreCollectorItemRepository scoreCollectorItemRepository;
+  private final ScoreSettings scoreSettings;
+  private final ScoreSettingsService scoreSettingsService;
+  private final ScoreRepository scoreRepository;
+  private final ScoreCriteriaSettingsRepository scoreCriteriaSettingsRepository;
+
+  private final ApplicationScoreService applicationScoreService;
+
+  @Autowired
+  @SuppressWarnings(&quot;PMD.ExcessiveParameterList&quot;)
+  public ScoreCollectorTask(TaskScheduler taskScheduler,
+    ScoreCollectorRepository scoreCollectorRepository,
+    ScoreCollectorItemRepository scoreCollectorItemRepository,
+    ScoreRepository scoreRepository,
+    ScoreSettings scoreSettings,
+    ScoreSettingsService scoreSettingsService,
+    ScoreCriteriaSettingsRepository scoreCriteriaSettingsRepository,
+    ApplicationScoreService applicationScoreService) {
+<span class="nc" id="L47">    super(taskScheduler, &quot;Score&quot;);</span>
+<span class="nc" id="L48">    this.scoreCollectorRepository = scoreCollectorRepository;</span>
+<span class="nc" id="L49">    this.scoreCollectorItemRepository = scoreCollectorItemRepository;</span>
+<span class="nc" id="L50">    this.scoreSettings = scoreSettings;</span>
+<span class="nc" id="L51">    this.scoreSettingsService = scoreSettingsService;</span>
+<span class="nc" id="L52">    this.scoreRepository = scoreRepository;</span>
+<span class="nc" id="L53">    this.scoreCriteriaSettingsRepository = scoreCriteriaSettingsRepository;</span>
+<span class="nc" id="L54">    this.applicationScoreService = applicationScoreService;</span>
+
+<span class="nc" id="L56">  }</span>
+
+  @Override
+  public ScoreCollector getCollector() {
+<span class="nc" id="L60">    return ScoreCollector.prototype();</span>
+  }
+
+  @Override
+  public BaseCollectorRepository&lt;ScoreCollector&gt; getCollectorRepository() {
+<span class="nc" id="L65">    return scoreCollectorRepository;</span>
+  }
+
+  @Override
+  public String getCron() {
+<span class="nc" id="L70">    return scoreSettings.getCron();</span>
+  }
+
+  @Override
+  @SuppressWarnings(&quot;PMD.ExcessiveMethodLength&quot;)
+  public void collect(ScoreCollector collector) {
+
+<span class="nc" id="L77">    logBanner(&quot;Score&quot;);</span>
+
+<span class="nc" id="L79">    long start = System.currentTimeMillis();</span>
+
+    //Save Dashboard Score Criteria Settings when collector runs
+<span class="nc" id="L82">    ScoreCriteriaSettings scoreCriteriaSettings = saveDashboardScoreSettings();</span>
+
+    //Find enabled applications from collection repository
+    //For each enabled application, get the dashboard id
+    //For the dashboard id get the dashboard data
+    //For each dashboard go through the widgets one by one
+
+
+    //Get all dashboards with score widget
+<span class="nc" id="L91">    List&lt;ScoreCollectorItem&gt; scoreApplications = getScoreApplications(collector);</span>
+<span class="nc" id="L92">    log(&quot;No of dashboards with score widget=&quot; + scoreApplications.size());</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">    for (ScoreCollectorItem scoreApplication : scoreApplications) {</span>
+<span class="nc" id="L94">      collectScoreForApplication(scoreApplication, scoreCriteriaSettings);</span>
+<span class="nc" id="L95">    }</span>
+<span class="nc" id="L96">    log(&quot;Finished&quot;, start);</span>
+<span class="nc" id="L97">  }</span>
+
+
+  private void collectScoreForApplication(ScoreCollectorItem scoreApplication, ScoreCriteriaSettings scoreCriteriaSettings) {
+
+<span class="nc" id="L102">    ScoreMetric scoreMetric = this.applicationScoreService.getScoreForApplication(scoreApplication, scoreCriteriaSettings);</span>
+
+<span class="nc bnc" id="L104" title="All 2 branches missed.">    if (null == scoreMetric) {</span>
+<span class="nc" id="L105">      return;</span>
+    }
+
+<span class="nc" id="L108">    ScoreMetric existingScore = this.scoreRepository</span>
+<span class="nc" id="L109">      .findByCollectorItemId(scoreApplication.getId());</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">    if (null != existingScore) {</span>
+<span class="nc" id="L111">      scoreMetric.setId(existingScore.getId());</span>
+    }
+<span class="nc" id="L113">    this.scoreRepository.save(scoreMetric);</span>
+<span class="nc" id="L114">  }</span>
+
+
+  private List&lt;ScoreCollectorItem&gt; getScoreApplications(ScoreCollector collector) {
+<span class="nc" id="L118">    log(&quot;Score collector id = &quot; + collector.getId());</span>
+<span class="nc" id="L119">    return scoreCollectorItemRepository.findEnabledScores(</span>
+<span class="nc" id="L120">      collector.getId());</span>
+  }
+
+
+  private ScoreCriteriaSettings saveDashboardScoreSettings() {
+<span class="nc" id="L125">    ScoreCriteriaSettings scoreCriteriaSettings = this.scoreSettingsService.getDashboardScoreCriteriaSettings();</span>
+<span class="nc" id="L126">    scoreCriteriaSettings.setTimestamp(System.currentTimeMillis());</span>
+
+<span class="nc" id="L128">    ScoreCriteriaSettings scoreCriteriaSettingsExisting = this.scoreCriteriaSettingsRepository.findByType(ScoreValueType.DASHBOARD);</span>
+
+<span class="nc bnc" id="L130" title="All 2 branches missed.">    if (null != scoreCriteriaSettingsExisting) {</span>
+<span class="nc" id="L131">      scoreCriteriaSettings.setId(scoreCriteriaSettingsExisting.getId());</span>
+    }
+
+<span class="nc" id="L134">    return this.scoreCriteriaSettingsRepository.save(scoreCriteriaSettings);</span>
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>RallyCollectorTask.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:rally-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">RallyCollectorTask.java</span></div><h1>RallyCollectorTask.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.bson.types.ObjectId;
+import org.json.simple.JSONArray;
+import org.json.simple.parser.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientException;
+
+import com.capitalone.dashboard.model.CollectionError;
+import com.capitalone.dashboard.model.CollectorItem;
+import com.capitalone.dashboard.model.CollectorType;
+import com.capitalone.dashboard.model.Configuration;
+import com.capitalone.dashboard.model.RallyBurnDownData;
+import com.capitalone.dashboard.model.RallyCollector;
+import com.capitalone.dashboard.model.RallyFeature;
+import com.capitalone.dashboard.model.RallyProject;
+import com.capitalone.dashboard.repository.BaseCollectorRepository;
+import com.capitalone.dashboard.repository.ComponentRepository;
+import com.capitalone.dashboard.repository.ConfigurationRepository;
+import com.capitalone.dashboard.repository.RallyBurnDownRepository;
+import com.capitalone.dashboard.repository.RallyCollectorRepository;
+import com.capitalone.dashboard.repository.RallyFeatureRepository;
+import com.capitalone.dashboard.repository.RallyProjectRepository;
+
+@Component
+public class RallyCollectorTask extends CollectorTask&lt;RallyCollector&gt; {
+<span class="fc" id="L44">	private static final Log LOG = LogFactory.getLog(RallyCollectorTask.class);</span>
+
+	private final RallyCollectorRepository rallyCollectorRepository;
+	private final RallyProjectRepository rallyProjectRepository;
+	private final RallyFeatureRepository rallyFeatureRepository;
+	private final RallyClient rallyClient;
+	private final RallySettings rallySettings;
+	private final ComponentRepository dbComponentRepository;
+	private final RallyBurnDownRepository rallyBurnDownRepository;
+	private final ConfigurationRepository configurationRepository;
+
+	@Autowired
+	public RallyCollectorTask(TaskScheduler taskScheduler, RallyCollectorRepository rallyCollectorRepository,
+			RallyProjectRepository rallyProjectRepository, RallyFeatureRepository rallyFeatureRepository,
+			RallySettings rallySettings, RallyClient rallyClient, ComponentRepository dbComponentRepository,
+			RallyBurnDownRepository rallyBurnDownRepository, ConfigurationRepository configurationRepository) {
+<span class="fc" id="L60">		super(taskScheduler, &quot;Rally&quot;);</span>
+<span class="fc" id="L61">		this.rallyCollectorRepository = rallyCollectorRepository;</span>
+<span class="fc" id="L62">		this.rallyProjectRepository = rallyProjectRepository;</span>
+<span class="fc" id="L63">		this.rallyFeatureRepository = rallyFeatureRepository;</span>
+<span class="fc" id="L64">		this.rallySettings = rallySettings;</span>
+<span class="fc" id="L65">		this.rallyClient = rallyClient;</span>
+<span class="fc" id="L66">		this.dbComponentRepository = dbComponentRepository;</span>
+<span class="fc" id="L67">		this.rallyBurnDownRepository = rallyBurnDownRepository;</span>
+<span class="fc" id="L68">		this.configurationRepository = configurationRepository;</span>
+<span class="fc" id="L69">	}</span>
+
+	@Override
+	public RallyCollector getCollector() {
+<span class="nc" id="L73">		Configuration config = configurationRepository.findByCollectorName(&quot;Rally&quot;);</span>
+	
+<span class="nc bnc" id="L75" title="All 4 branches missed.">		if(rallySettings.getHttpProxyHost()!=null &amp;&amp; rallySettings.getHttpProxyPort()!=null </span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">													&amp;&amp; rallySettings.getHttpsProxyHost()!=null</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">													&amp;&amp; rallySettings.getHttpsProxyPort()!=null) {</span>
+<span class="nc" id="L78">		System.setProperty(&quot;http.proxyHost&quot;, rallySettings.getHttpProxyHost());</span>
+<span class="nc" id="L79">		System.setProperty(&quot;https.proxyHost&quot;, rallySettings.getHttpsProxyHost());</span>
+<span class="nc" id="L80">		System.setProperty(&quot;http.proxyPort&quot;, rallySettings.getHttpProxyPort());</span>
+<span class="nc" id="L81">		System.setProperty(&quot;https.proxyPort&quot;, rallySettings.getHttpsProxyPort());</span>
+		}
+			
+<span class="nc bnc" id="L84" title="All 2 branches missed.">			if(rallySettings.getServers()==null) {</span>
+<span class="nc" id="L85">				rallySettings.setUsernames(new ArrayList&lt;&gt;());</span>
+<span class="nc" id="L86">				rallySettings.setPasswords(new ArrayList&lt;&gt;());</span>
+<span class="nc" id="L87">				rallySettings.setServers(new ArrayList&lt;&gt;());</span>
+			} else {
+<span class="nc" id="L89">				rallySettings.getUsernames().clear();</span>
+<span class="nc" id="L90">				rallySettings.getServers().clear();</span>
+<span class="nc" id="L91">				rallySettings.getPasswords().clear();</span>
+			}
+				
+<span class="nc bnc" id="L94" title="All 2 branches missed.">			if (config != null ) {</span>
+<span class="nc" id="L95">				config.decryptOrEncrptInfo();</span>
+				// To clear the username and password from existing run and
+				// pick the latest
+				
+<span class="nc bnc" id="L99" title="All 2 branches missed.">			for (Map&lt;String, String&gt; rallyServer : config.getInfo()) {</span>
+<span class="nc" id="L100">				rallySettings.getServers().add(rallyServer.get(&quot;url&quot;));</span>
+<span class="nc" id="L101">				rallySettings.getUsernames().add(rallyServer.get(&quot;userName&quot;));</span>
+<span class="nc" id="L102">				rallySettings.getPasswords().add(rallyServer.get(&quot;password&quot;));</span>
+
+<span class="nc" id="L104">			}</span>
+		}
+<span class="nc" id="L106">		return RallyCollector.prototype(rallySettings.getServers());</span>
+	}
+
+	@Override
+	public BaseCollectorRepository&lt;RallyCollector&gt; getCollectorRepository() {
+<span class="nc" id="L111">		return rallyCollectorRepository;</span>
+	}
+
+	@Override
+	public String getCron() {
+<span class="nc" id="L116">		return rallySettings.getCron();</span>
+	}
+
+	@Override
+	public void collect(RallyCollector collector) {
+<span class="fc" id="L121">		long start = System.currentTimeMillis();</span>
+<span class="fc" id="L122">		Set&lt;ObjectId&gt; udId = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L123">		udId.add(collector.getId());</span>
+<span class="fc" id="L124">		List&lt;RallyProject&gt; existingProjects = rallyProjectRepository.findByCollectorIdIn(udId);</span>
+
+<span class="fc" id="L126">		List&lt;RallyProject&gt; latestProjects = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L128">		clean(collector, existingProjects);</span>
+
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">		for (String instanceUrl : collector.getRallyServers()) {</span>
+<span class="nc" id="L131">			logBanner(instanceUrl);</span>
+<span class="nc" id="L132">			List&lt;RallyProject&gt; filteredExistingProjects = existingProjects.stream()</span>
+<span class="nc" id="L133">					.filter(project -&gt; project.getInstanceUrl().equals(instanceUrl)).collect(Collectors.toList());</span>
+
+<span class="nc" id="L135">			List&lt;RallyProject&gt; projects = new ArrayList&lt;&gt;();</span>
+			try {
+<span class="nc" id="L137">				projects = rallyClient.getProjects(instanceUrl);</span>
+<span class="nc" id="L138">				latestProjects.addAll(projects);</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">				int projSize = ((projects != null) ? projects.size() : 0);</span>
+<span class="nc" id="L140">				log(&quot;Fetched projects   &quot; + projSize, start);</span>
+<span class="nc" id="L141">				addNewProjects(projects, filteredExistingProjects, collector);</span>
+<span class="nc" id="L142">				deleteUnwantedJobs(latestProjects, filteredExistingProjects, collector);</span>
+<span class="nc" id="L143">				refreshData(enabledProjects(collector, instanceUrl));</span>
+
+<span class="nc" id="L145">				log(&quot;Finished&quot;, start);</span>
+<span class="nc" id="L146">			} catch (ParseException | RestClientException e) {</span>
+<span class="nc" id="L147">				LOG.error(&quot;Error fetching data for the instance URL :&quot; + instanceUrl, e);</span>
+<span class="nc" id="L148">			}</span>
+
+<span class="nc" id="L150">		}</span>
+<span class="fc" id="L151">	}</span>
+
+	/**
+	 * Clean up unused rally collector items
+	 *
+	 * @param collector
+	 *            the {@link RallyCollector}
+	 */
+
+	@SuppressWarnings(&quot;PMD.AvoidDeeplyNestedIfStmts&quot;) // agreed PMD, fixme
+	private void clean(RallyCollector collector, List&lt;RallyProject&gt; existingProjects) {
+<span class="fc" id="L162">		Set&lt;ObjectId&gt; uniqueIDs = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">		for (com.capitalone.dashboard.model.Component comp : dbComponentRepository.findAll()) {</span>
+<span class="pc bpc" id="L164" title="2 of 4 branches missed.">			if (comp.getCollectorItems() != null &amp;&amp; !comp.getCollectorItems().isEmpty()) {</span>
+<span class="nc" id="L165">				List&lt;CollectorItem&gt; itemList = comp.getCollectorItems().get(CollectorType.AgileTool);</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">				if (itemList != null) {</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">					for (CollectorItem ci : itemList) {</span>
+<span class="nc bnc" id="L168" title="All 4 branches missed.">						if (ci != null &amp;&amp; ci.getCollectorId().equals(collector.getId())) {</span>
+<span class="nc" id="L169">							uniqueIDs.add(ci.getId());</span>
+						}
+<span class="nc" id="L171">					}</span>
+				}
+			}
+<span class="fc" id="L174">		}</span>
+<span class="fc" id="L175">		List&lt;RallyProject&gt; stateChangeJobList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L176">		Set&lt;ObjectId&gt; udId = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L177">		udId.add(collector.getId());</span>
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">		for (RallyProject job : existingProjects) {</span>
+			// collect the jobs that need to change state : enabled vs disabled.
+<span class="nc bnc" id="L180" title="All 4 branches missed.">			if ((job.isEnabled() &amp;&amp; !uniqueIDs.contains(job.getId())) || // if</span>
+			// it
+			// was
+			// enabled
+			// but
+			// not
+			// on
+			// a
+			// dashboard
+<span class="nc bnc" id="L189" title="All 4 branches missed.">					(!job.isEnabled() &amp;&amp; uniqueIDs.contains(job.getId()))) { // OR</span>
+				// it
+				// was
+				// disabled
+				// and
+				// now
+				// on
+				// a
+				// dashboard
+<span class="nc" id="L198">				job.setEnabled(uniqueIDs.contains(job.getId()));</span>
+<span class="nc" id="L199">				stateChangeJobList.add(job);</span>
+			}
+<span class="nc" id="L201">		}</span>
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">		if (!CollectionUtils.isEmpty(stateChangeJobList)) {</span>
+<span class="nc" id="L203">			rallyProjectRepository.save(stateChangeJobList);</span>
+		}
+<span class="fc" id="L205">	}</span>
+
+	private void deleteUnwantedJobs(List&lt;RallyProject&gt; latestProjects, List&lt;RallyProject&gt; existingProjects,
+			RallyCollector collector) {
+<span class="nc" id="L209">		List&lt;RallyProject&gt; deleteJobList = new ArrayList&lt;&gt;();</span>
+
+		// First delete collector items that are not supposed to be collected
+		// anymore because the servers have moved(?)
+<span class="nc bnc" id="L213" title="All 2 branches missed.">		for (RallyProject job : existingProjects) {</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">			if (job.isPushed())</span>
+<span class="nc" id="L215">				continue; // do not delete jobs that are being pushed via API</span>
+
+<span class="nc bnc" id="L217" title="All 2 branches missed.">			if (!collector.getRallyServers().contains(job.getInstanceUrl())</span>
+<span class="nc bnc" id="L218" title="All 4 branches missed.">					|| (!job.getCollectorId().equals(collector.getId())) || (!latestProjects.contains(job))) {</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">				if (!job.isEnabled()) {</span>
+<span class="nc" id="L220">					deleteJobList.add(job);</span>
+				} else {
+<span class="nc" id="L222">					CollectionError error = new CollectionError(HttpStatus.NOT_FOUND.toString(),</span>
+							&quot;NOT FOUND&quot;);
+<span class="nc" id="L224">					job.getErrors().clear();</span>
+<span class="nc" id="L225">					job.getErrors().add(error);</span>
+<span class="nc" id="L226">					rallyProjectRepository.save(job);</span>
+				}
+			}
+<span class="nc" id="L229">		}</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">		if (!CollectionUtils.isEmpty(deleteJobList)) {</span>
+<span class="nc" id="L231">			rallyProjectRepository.delete(deleteJobList);</span>
+		}
+
+<span class="nc" id="L234">	}</span>
+
+	private void refreshData(List&lt;RallyProject&gt; rallyProjects) {
+<span class="nc" id="L237">		long start = System.currentTimeMillis();</span>
+<span class="nc" id="L238">		int count = 0;</span>
+<span class="nc" id="L239">		Date currentDate = new Date();</span>
+<span class="nc" id="L240">		SimpleDateFormat format = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;);</span>
+
+<span class="nc bnc" id="L242" title="All 2 branches missed.">		for (RallyProject project : rallyProjects) {</span>
+
+<span class="nc" id="L244">			if (project.getErrors().stream()</span>
+<span class="nc" id="L245">					.filter(error -&gt; error.getErrorMessage().equalsIgnoreCase(&quot;NOT FOUND&quot;))</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">					.collect(Collectors.toList()).isEmpty()) {</span>
+<span class="nc" id="L247">				LOG.info(&quot;Fetching Project details for : &quot; + project.getProjectName());</span>
+				try {
+<span class="nc" id="L249">					List&lt;RallyFeature&gt; iterationDatas = rallyClient.getRallyIterations(project);</span>
+<span class="nc" id="L250">					List&lt;RallyFeature&gt; iterationsForProject = rallyFeatureRepository</span>
+<span class="nc" id="L251">							.findByProjectId(project.getProjectId());</span>
+
+<span class="nc bnc" id="L253" title="All 2 branches missed.">					for (RallyFeature iteration : iterationsForProject) {						</span>
+<span class="nc bnc" id="L254" title="All 4 branches missed.">						if(format.parse(format.format(currentDate)).after(format.parse(iteration.getEndDate().toString())) &amp;&amp; iteration.getRemainingDays()!=0) {</span>
+<span class="nc" id="L255">							iteration.setRemainingDays(0);</span>
+<span class="nc" id="L256">							rallyFeatureRepository.save(iteration);</span>
+						}
+<span class="nc" id="L258">					}</span>
+
+<span class="nc bnc" id="L260" title="All 2 branches missed.">					if (iterationsForProject.isEmpty()) {</span>
+<span class="nc" id="L261">						rallyFeatureRepository.save(iterationDatas);</span>
+					} else {
+<span class="nc bnc" id="L263" title="All 2 branches missed.">						for (RallyFeature currentIteration : iterationDatas) {</span>
+
+<span class="nc" id="L265">							RallyFeature truncateData = rallyFeatureRepository.findByRallyWidgetDetails(</span>
+<span class="nc" id="L266">									currentIteration.getProjectId(), currentIteration.getIterationId());</span>
+
+<span class="nc bnc" id="L268" title="All 2 branches missed.">							if (truncateData != null) { // if present updates</span>
+														// the
+														// existing record with
+														// the
+														// latest..
+<span class="nc" id="L273">								currentIteration.setId(truncateData.getId());</span>
+							}
+<span class="nc" id="L275">							JSONArray userStories = rallyClient.getIterationStories(currentIteration);</span>
+<span class="nc" id="L276">							currentIteration.getStoryStages().add(rallyClient.getStoryStages(currentIteration.getProjectId(), userStories));</span>
+<span class="nc" id="L277">							rallyFeatureRepository.save(currentIteration);</span>
+
+<span class="nc" id="L279">							refreshIterationBurnDownData(currentIteration);</span>
+
+<span class="nc" id="L281">							count++;</span>
+<span class="nc" id="L282">						}</span>
+					}
+<span class="nc" id="L284">					project.setLastUpdated(System.currentTimeMillis());</span>
+<span class="nc" id="L285">					project.getErrors().clear();</span>
+
+<span class="nc" id="L287">				} catch (HttpStatusCodeException hc) {</span>
+<span class="nc" id="L288">					LOG.error(&quot;Error fetching data for:&quot; + project.getProjectName(), hc);</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">					if (hc.getStatusCode() == HttpStatus.SERVICE_UNAVAILABLE) {</span>
+<span class="nc" id="L290">						CollectionError error = new CollectionError(hc.getStatusCode().toString(), hc.getMessage());</span>
+<span class="nc" id="L291">						project.getErrors().add(error);</span>
+					}
+<span class="nc" id="L293">				} catch (ResourceAccessException ex) {</span>
+<span class="nc bnc" id="L294" title="All 4 branches missed.">					if (ex.getMessage() != null &amp;&amp; ex.getMessage().contains(&quot;Connection refused&quot;)) {</span>
+<span class="nc" id="L295">						LOG.error(&quot;Error fetching data for:&quot; + project.getProjectName(), ex);</span>
+					} else {
+<span class="nc" id="L297">						LOG.error(&quot;Error fetching data for:&quot; + project.getProjectName(), ex);</span>
+<span class="nc" id="L298">						CollectionError error = new CollectionError(CollectionError.UNKNOWN_HOST,</span>
+<span class="nc" id="L299">								project.getProjectName());</span>
+<span class="nc" id="L300">						project.getErrors().add(error);</span>
+					}
+<span class="nc" id="L302">				} catch (RestClientException ex) {</span>
+<span class="nc" id="L303">					LOG.error(&quot;Error fetching data for:&quot; + project.getProjectName(), ex);</span>
+<span class="nc" id="L304">					CollectionError error = new CollectionError(CollectionError.UNKNOWN_HOST, project.getProjectName());</span>
+<span class="nc" id="L305">					project.getErrors().add(error);</span>
+<span class="nc" id="L306">				} catch (ParseException e) {</span>
+<span class="nc" id="L307">					LOG.error(&quot;Error fetching data for:&quot; + project.getProjectName(), e);</span>
+<span class="nc" id="L308">					CollectionError error = new CollectionError(&quot;Error parsing data&quot;, project.getProjectName());</span>
+<span class="nc" id="L309">					project.getErrors().add(error);</span>
+<span class="nc" id="L310">				} catch (java.text.ParseException e) {</span>
+<span class="nc" id="L311">					LOG.error(&quot;Parsing date error &quot;+e);</span>
+				} finally {
+<span class="nc" id="L313">					rallyProjectRepository.save(project);</span>
+<span class="nc" id="L314">				}</span>
+
+			}
+<span class="nc" id="L317">		}</span>
+<span class="nc" id="L318">		log(&quot;Updated&quot;, start, count);</span>
+<span class="nc" id="L319">	}</span>
+
+	private void refreshIterationBurnDownData(RallyFeature currentIteration)
+			throws RestClientException, ParseException {
+		
+<span class="nc" id="L324">		String iterationId = currentIteration.getIterationId();</span>
+<span class="nc" id="L325">		String projectId = currentIteration.getProjectId();</span>
+
+<span class="nc" id="L327">		RallyBurnDownData existingRallyBurnDownData = rallyBurnDownRepository.findByIterationIdAndProjectId(iterationId,</span>
+				projectId);
+
+<span class="nc" id="L330">		RallyBurnDownData rallyBurnDownData = rallyClient.getBurnDownData(currentIteration,</span>
+<span class="nc" id="L331">				rallyClient.getIterationStories(currentIteration), existingRallyBurnDownData);</span>
+<span class="nc" id="L332">		rallyBurnDownRepository.save(rallyBurnDownData);</span>
+
+<span class="nc" id="L334">	}</span>
+
+	private List&lt;RallyProject&gt; enabledProjects(RallyCollector collector, String instanceUrl) {
+<span class="nc" id="L337">		return rallyProjectRepository.findEnabledProjects(collector.getId(), instanceUrl);</span>
+	}
+
+	private void addNewProjects(List&lt;RallyProject&gt; projects, List&lt;RallyProject&gt; existingProjects,
+			RallyCollector collector) {
+<span class="nc" id="L342">		long start = System.currentTimeMillis();</span>
+<span class="nc" id="L343">		int count = 0;</span>
+<span class="nc" id="L344">		List&lt;RallyProject&gt; newProjects = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">		for (RallyProject project : projects) {</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">			if (!existingProjects.contains(project)) {</span>
+<span class="nc" id="L347">				project.setCollectorId(collector.getId());</span>
+<span class="nc" id="L348">				project.setEnabled(false);</span>
+<span class="nc" id="L349">				project.setDescription(project.getProjectName());</span>
+<span class="nc" id="L350">				newProjects.add(project);</span>
+<span class="nc" id="L351">				count++;</span>
+			}
+<span class="nc" id="L353">		}</span>
+		// save all in one shot
+<span class="nc bnc" id="L355" title="All 2 branches missed.">		if (!CollectionUtils.isEmpty(newProjects)) {</span>
+<span class="nc" id="L356">			rallyProjectRepository.save(newProjects);</span>
+		}
+<span class="nc" id="L358">		log(&quot;New projects&quot;, start, count);</span>
+<span class="nc" id="L359">	}</span>
+
+	@SuppressWarnings(&quot;unused&quot;)
+	private boolean isNewProject(RallyCollector collector, RallyProject application) {
+<span class="nc bnc" id="L363" title="All 2 branches missed.">		return rallyProjectRepository.findRallyProject(collector.getId(), application.getInstanceUrl(),</span>
+<span class="nc" id="L364">				application.getProjectId()) == null;</span>
+	}
+
+	private boolean isNewRallyData(RallyProject project, RallyFeature iterations) {
+<span class="nc bnc" id="L368" title="All 2 branches missed.">		return rallyFeatureRepository.findByCollectorItemIdAndTimestamp(project.getId(),</span>
+<span class="nc" id="L369">				iterations.getLastUpdated()) == null;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

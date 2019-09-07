@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>FeatureSettings.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:jira-feature-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">FeatureSettings.java</span></div><h1>FeatureSettings.java</h1><pre class="source lang-java linenums">
+package com.capitalone.dashboard.collector;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+/**
+ * Bean to hold settings specific to the Feature collector.
+ */
+@Component
+@ConfigurationProperties(prefix = &quot;feature&quot;)
+<span class="fc" id="L13">public class FeatureSettings {</span>
+	private String cron;
+	private int pageSize;
+	@Value(&quot;${feature.firstRunHistoryDays:30}&quot;)
+	private int firstRunHistoryDays;
+	// After this number of hours since the last run, we will refresh boards/teams and projects
+	@Value(&quot;${feature.refreshTeamAndProjectHours:24}&quot;)
+	private int refreshTeamAndProjectHours;
+	// Jira-connection details
+	private String jiraBaseUrl;
+	private String jiraQueryEndpoint;
+	private String jiraCredentials;
+	private String jiraOauthAuthtoken;
+	private String jiraOauthRefreshtoken;
+	private String jiraOauthRedirecturi;
+	private String jiraOauthExpiretime;
+	private String jiraProxyUrl;
+	private String jiraProxyPort;
+	/**
+	 * In Jira, general IssueType IDs are associated to various &quot;issue&quot;
+	 * attributes. However, there is one attribute which this collector's
+	 * queries rely on that change between different instantiations of Jira.
+	 * Please provide a numerical ID reference to your instance's IssueType for
+	 * the lowest level of Issues (e.g., &quot;user story&quot;) specific to your Jira
+	 * instance.
+	 * &lt;p&gt;
+	 * &lt;/p&gt;
+	 * &lt;strong&gt;Note:&lt;/strong&gt; You can retrieve your instance's IssueType ID
+	 * listings via the following URI:
+	 * https://[your-jira-domain-name]/rest/api/2/issuetype/
+	 * Multiple comma-separated values can be specified.
+	 */
+	private String[] jiraIssueTypeNames;
+	/**
+	 * In Jira, your instance will have its own custom field created for &quot;sprint&quot; or &quot;timebox&quot; details, which includes a list of information.  This field allows you to specify that data field for your instance of Jira.
+	 * &lt;p&gt;
+	 * &lt;/p&gt;
+	 * &lt;strong&gt;Note:&lt;/strong&gt; You can retrieve your instance's sprint data field name
+	 * via the following URI, and look for a package name &lt;em&gt;com.atlassian.greenhopper.service.sprint.Sprint&lt;/em&gt;; your custom field name describes the values in this field:
+	 * https://[your-jira-domain-name]/rest/api/2/issue/[some-issue-name]
+	 */
+	private String jiraSprintDataFieldName;
+	/**
+	 * In Jira, your instance will have its own custom field created for &quot;super story&quot; or &quot;epic&quot; back-end ID, which includes a list of information.  This field allows you to specify that data field for your instance of Jira.
+	 * &lt;p&gt;
+	 * &lt;/p&gt;
+     * &lt;strong&gt;Note:&lt;/strong&gt; You can retrieve your instance's epic ID field name
+	 * via the following URI where your queried user story issue has a super issue (e.g., epic) tied to it; your custom field name describes the epic value you expect to see, and is the only field that does this for a given issue:
+	 *  https://[your-jira-domain-name]/rest/api/2/issue/[some-issue-name]
+	 */
+
+    private String jiraEpicIdFieldName;
+
+    private String jiraStoryPointsFieldName;
+
+	/**
+	 * Its a custom field in JIRA, set it here
+	 */
+	private String jiraTeamFieldName;
+
+	/**
+	 * If you want to select boards in the Hygieia UI
+	 */
+	private boolean jiraBoardAsTeam;
+
+	/**
+	 * Defines the maximum number of features allow per board. If limit is reach collection will not happen for given board
+	 */
+	@Value(&quot;${feature.maxNumberOfFeaturesPerBoard:2000}&quot;)
+	private int maxNumberOfFeaturesPerBoard;
+
+	/**
+	 *  Defines how to update features per board. If true then only update based on enabled collectorItems otherwise full update
+	 */
+	@Value(&quot;${feature.collectorItemOnlyUpdate:true}&quot;)
+	private boolean collectorItemOnlyUpdate;
+
+	public boolean isCollectorItemOnlyUpdate() {
+<span class="fc" id="L91">		return collectorItemOnlyUpdate;</span>
+	}
+
+	public void setCollectorItemOnlyUpdate(boolean collectorItemOnlyUpdate) {
+<span class="fc" id="L95">		this.collectorItemOnlyUpdate = collectorItemOnlyUpdate;</span>
+<span class="fc" id="L96">	}</span>
+
+	public int getMaxNumberOfFeaturesPerBoard() {
+<span class="fc" id="L99">		return maxNumberOfFeaturesPerBoard;</span>
+	}
+
+	public void setMaxNumberOfFeaturesPerBoard(int maxNumberOfFeaturesPerBoard) {
+<span class="fc" id="L103">		this.maxNumberOfFeaturesPerBoard = maxNumberOfFeaturesPerBoard;</span>
+<span class="fc" id="L104">	}</span>
+
+	public String getCron() {
+<span class="fc" id="L107">		return cron;</span>
+	}
+
+	public void setCron(String cron) {
+<span class="fc" id="L111">		this.cron = cron;</span>
+<span class="fc" id="L112">	}</span>
+
+	public int getPageSize() {
+<span class="nc" id="L115">		return pageSize;</span>
+	}
+
+	public void setPageSize(int pageSize) {
+<span class="nc" id="L119">		this.pageSize = pageSize;</span>
+<span class="nc" id="L120">	}</span>
+
+	public int getFirstRunHistoryDays() {
+<span class="fc" id="L123">		return firstRunHistoryDays;</span>
+	}
+
+	public void setFirstRunHistoryDays(int firstRunHistoryDays) {
+<span class="nc" id="L127">		this.firstRunHistoryDays = firstRunHistoryDays;</span>
+<span class="nc" id="L128">	}</span>
+
+	public String getJiraBaseUrl() {
+<span class="fc" id="L131">		return jiraBaseUrl;</span>
+	}
+
+	public void setJiraBaseUrl(String jiraBaseUrl) {
+<span class="fc" id="L135">		this.jiraBaseUrl = jiraBaseUrl;</span>
+<span class="fc" id="L136">	}</span>
+
+	public String getJiraQueryEndpoint() {
+<span class="nc" id="L139">		return jiraQueryEndpoint;</span>
+	}
+
+	public void setJiraQueryEndpoint(String jiraQueryEndpoint) {
+<span class="nc" id="L143">		this.jiraQueryEndpoint = jiraQueryEndpoint;</span>
+<span class="nc" id="L144">	}</span>
+
+	public String getJiraCredentials() {
+<span class="fc" id="L147">		return jiraCredentials;</span>
+	}
+
+	public void setJiraCredentials(String jiraCredentials) {
+<span class="fc" id="L151">		this.jiraCredentials = jiraCredentials;</span>
+<span class="fc" id="L152">	}</span>
+
+	public String getJiraOauthAuthtoken() {
+<span class="nc" id="L155">		return jiraOauthAuthtoken;</span>
+	}
+
+	public void setJiraOauthAuthtoken(String jiraOauthAuthtoken) {
+<span class="nc" id="L159">		this.jiraOauthAuthtoken = jiraOauthAuthtoken;</span>
+<span class="nc" id="L160">	}</span>
+
+	public String getJiraOauthRefreshtoken() {
+<span class="nc" id="L163">		return jiraOauthRefreshtoken;</span>
+	}
+
+	public void setJiraOauthRefreshtoken(String jiraOauthRefreshtoken) {
+<span class="nc" id="L167">		this.jiraOauthRefreshtoken = jiraOauthRefreshtoken;</span>
+<span class="nc" id="L168">	}</span>
+
+	public String getJiraOauthRedirecturi() {
+<span class="nc" id="L171">		return jiraOauthRedirecturi;</span>
+	}
+
+	public void setJiraOauthRedirecturi(String jiraOauthRedirecturi) {
+<span class="nc" id="L175">		this.jiraOauthRedirecturi = jiraOauthRedirecturi;</span>
+<span class="nc" id="L176">	}</span>
+
+	public String getJiraOauthExpiretime() {
+<span class="nc" id="L179">		return jiraOauthExpiretime;</span>
+	}
+
+	public void setJiraOauthExpiretime(String jiraOauthExpiretime) {
+<span class="nc" id="L183">		this.jiraOauthExpiretime = jiraOauthExpiretime;</span>
+<span class="nc" id="L184">	}</span>
+
+	public String getJiraProxyUrl() {
+<span class="fc" id="L187">		return jiraProxyUrl;</span>
+	}
+
+	public void setJiraProxyUrl(String jiraProxyUrl) {
+<span class="nc" id="L191">		this.jiraProxyUrl = jiraProxyUrl;</span>
+<span class="nc" id="L192">	}</span>
+
+	public String getJiraProxyPort() {
+<span class="fc" id="L195">		return jiraProxyPort;</span>
+	}
+
+	public void setJiraProxyPort(String jiraProxyPort) {
+<span class="nc" id="L199">		this.jiraProxyPort = jiraProxyPort;</span>
+<span class="nc" id="L200">	}</span>
+
+	public String[] getJiraIssueTypeNames() {
+<span class="fc" id="L203">		return jiraIssueTypeNames;</span>
+	}
+
+	public void setJiraIssueTypeNames(String[] jiraIssueTypeNames) {
+<span class="nc" id="L207">		this.jiraIssueTypeNames = jiraIssueTypeNames;</span>
+<span class="nc" id="L208">	}</span>
+
+	public String getJiraSprintDataFieldName() {
+<span class="fc" id="L211">		return jiraSprintDataFieldName;</span>
+	}
+
+	public void setJiraSprintDataFieldName(String jiraSprintDataFieldName) {
+<span class="fc" id="L215">		this.jiraSprintDataFieldName = jiraSprintDataFieldName;</span>
+<span class="fc" id="L216">	}</span>
+
+    public String getJiraEpicIdFieldName() {
+<span class="fc" id="L219">        return jiraEpicIdFieldName;</span>
+    }
+
+    public void setJiraEpicIdFieldName(String jiraEpicIdFieldName) {
+<span class="fc" id="L223">        this.jiraEpicIdFieldName = jiraEpicIdFieldName;</span>
+<span class="fc" id="L224">    }</span>
+
+    public String getJiraStoryPointsFieldName() {
+<span class="fc" id="L227">        return jiraStoryPointsFieldName;</span>
+    }
+
+    public void setJiraStoryPointsFieldName(String jiraStoryPointsFieldName) {
+<span class="fc" id="L231">        this.jiraStoryPointsFieldName = jiraStoryPointsFieldName;</span>
+<span class="fc" id="L232">    }</span>
+
+    public String getJiraTeamFieldName() {
+<span class="fc" id="L235">        return jiraTeamFieldName;</span>
+    }
+
+    public void setJiraTeamFieldName(String jiraTeamFieldName) {
+<span class="fc" id="L239">        this.jiraTeamFieldName = jiraTeamFieldName;</span>
+<span class="fc" id="L240">    }</span>
+
+    public int getRefreshTeamAndProjectHours() {
+<span class="fc" id="L243">        return refreshTeamAndProjectHours;</span>
+    }
+
+    public void setRefreshTeamAndProjectHours(int refreshTeamAndProjectHours) {
+<span class="nc" id="L247">        this.refreshTeamAndProjectHours = refreshTeamAndProjectHours;</span>
+<span class="nc" id="L248">    }</span>
+
+	public boolean isJiraBoardAsTeam() {
+<span class="fc" id="L251">		return jiraBoardAsTeam;</span>
+	}
+
+	public void setJiraBoardAsTeam(boolean jiraBoardAsTeam) {
+<span class="fc" id="L255">		this.jiraBoardAsTeam = jiraBoardAsTeam;</span>
+<span class="fc" id="L256">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

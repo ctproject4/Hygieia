@@ -1,0 +1,7 @@
+com/capitalone/dashboard/model/SubversionRepo.class
+com/capitalone/dashboard/collector/DefaultSubversionClient.class
+com/capitalone/dashboard/collector/SubversionClient.class
+com/capitalone/dashboard/collector/SubversionCollectorTask.class
+com/capitalone/dashboard/repository/SubversionRepoRepository.class
+com/capitalone/dashboard/collector/SubversionSettings.class
+com/capitalone/dashboard/Application.class

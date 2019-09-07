@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DefaultJenkinsClient.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:jenkins-cucumber-test-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">DefaultJenkinsClient.java</span></div><h1>DefaultJenkinsClient.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+
+import com.capitalone.dashboard.model.Build;
+import com.capitalone.dashboard.model.JenkinsJob;
+import com.capitalone.dashboard.model.TestCapability;
+import com.capitalone.dashboard.model.TestCaseStatus;
+import com.capitalone.dashboard.model.TestResult;
+import com.capitalone.dashboard.model.TestSuite;
+import com.capitalone.dashboard.model.TestSuiteType;
+import com.capitalone.dashboard.util.Supplier;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestOperations;
+
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+//@SuppressWarnings(&quot;PMD.ExcessiveMethodLength&quot;) // getCucumberTestResult needs refactor!
+@Component
+public class DefaultJenkinsClient implements JenkinsClient {
+
+<span class="fc" id="L45">    private static final Log LOG = LogFactory.getLog(DefaultJenkinsClient.class);</span>
+
+    private final RestOperations rest;
+    private final Transformer&lt;String, List&lt;TestSuite&gt;&gt; cucumberTransformer;
+    private final Pattern cucumberJsonFilePattern;
+    private final JenkinsSettings settings;
+
+    private static final String JOBS_URL_SUFFIX = &quot;/api/json?tree=jobs[name,url,builds[number,url],lastSuccessfulBuild[number]]&quot;;
+    private static final String LAST_SUCCESSFUL_BUILD = &quot;/lastSuccessfulBuild&quot;;
+    private static final String LAST_SUCCESSFUL_BUILD_SUFFIX = &quot;/lastSuccessfulBuild/api/json?tree=url,timestamp,number,fullDisplayName&quot;;
+    private static final String LAST_SUCCESSFUL_BUILD_ARTIFACT_SUFFIX = &quot;/lastSuccessfulBuild/api/json?tree=timestamp,duration,number,fullDisplayName,building,artifacts[fileName,relativePath]&quot;;
+
+    @Autowired
+    public DefaultJenkinsClient(Supplier&lt;RestOperations&gt; restOperationsSupplier,
+                                Transformer&lt;String, List&lt;TestSuite&gt;&gt; cucumberTransformer,
+<span class="fc" id="L60">                                JenkinsSettings settings) {</span>
+<span class="fc" id="L61">        this.rest = restOperationsSupplier.get();</span>
+<span class="fc" id="L62">        this.cucumberTransformer = cucumberTransformer;</span>
+<span class="fc" id="L63">        this.cucumberJsonFilePattern = Pattern.compile(settings.getCucumberJsonRegex());</span>
+<span class="fc" id="L64">        this.settings = settings;</span>
+<span class="fc" id="L65">    }</span>
+
+    @Override
+    public Map&lt;JenkinsJob, Set&lt;Build&gt;&gt; getInstanceJobs(String instanceUrl) {
+<span class="fc" id="L69">        Map&lt;JenkinsJob, Set&lt;Build&gt;&gt; result = new LinkedHashMap&lt;&gt;();</span>
+        try {
+<span class="fc" id="L71">            JSONObject object = (JSONObject) new JSONParser().parse(getJson(instanceUrl, JOBS_URL_SUFFIX));</span>
+
+<span class="fc bfc" id="L73" title="All 2 branches covered.">            for (Object job : getJsonArray(object, &quot;jobs&quot;)) {</span>
+<span class="fc" id="L74">                JSONObject jsonJob = (JSONObject) job;</span>
+<span class="fc" id="L75">                JSONObject lastSuccessful = (JSONObject) jsonJob.get(&quot;lastSuccessfulBuild&quot;);</span>
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">                if (lastSuccessful != null) {</span>
+<span class="fc" id="L77">                    JenkinsJob jenkinsJob = new JenkinsJob();</span>
+<span class="fc" id="L78">                    jenkinsJob.setInstanceUrl(instanceUrl);</span>
+<span class="fc" id="L79">                    jenkinsJob.setJobName(getString(jsonJob, &quot;name&quot;));</span>
+<span class="fc" id="L80">                    jenkinsJob.setJobUrl(getString(jsonJob, &quot;url&quot;));</span>
+
+<span class="fc" id="L82">                    Set&lt;Build&gt; builds = new LinkedHashSet&lt;&gt;();</span>
+<span class="fc" id="L83">                    result.put(jenkinsJob, builds);</span>
+
+<span class="fc bfc" id="L85" title="All 2 branches covered.">                    for (Object build : getJsonArray(jsonJob, &quot;builds&quot;)) {</span>
+<span class="fc" id="L86">                        JSONObject jsonBuild = (JSONObject) build;</span>
+
+                        // A basic Build object. This will be fleshed out later if this is a new Build.
+<span class="fc" id="L89">                        Build hudsonBuild = new Build();</span>
+<span class="fc" id="L90">                        hudsonBuild.setNumber(jsonBuild.get(&quot;number&quot;).toString());</span>
+<span class="fc" id="L91">                        hudsonBuild.setBuildUrl(getString(jsonBuild, &quot;url&quot;));</span>
+<span class="fc" id="L92">                        builds.add(hudsonBuild);</span>
+<span class="fc" id="L93">                    }</span>
+                }
+<span class="fc" id="L95">            }</span>
+<span class="fc" id="L96">        } catch (ParseException e) {</span>
+<span class="fc" id="L97">            LOG.error(&quot;Parsing jobs on instance: &quot; + instanceUrl, e);</span>
+<span class="nc" id="L98">        } catch (RestClientException rce) {</span>
+<span class="nc" id="L99">            LOG.error(rce);</span>
+<span class="fc" id="L100">        }</span>
+
+<span class="fc" id="L102">        return result;</span>
+    }
+
+
+    @Override
+    public Build getLastSuccessfulBuild(String buildUrl) {
+<span class="nc" id="L108">        Build build = new Build();</span>
+        try {
+            // Get Build info
+<span class="nc" id="L111">            JSONObject buildJson = (JSONObject) new JSONParser().parse(getJson(buildUrl, LAST_SUCCESSFUL_BUILD_SUFFIX));</span>
+<span class="nc" id="L112">            build.setBuildUrl(getString(buildJson, &quot;url&quot;));</span>
+<span class="nc" id="L113">            build.setNumber(buildJson.get(&quot;number&quot;).toString());</span>
+<span class="nc" id="L114">            build.setTimestamp(getLong(buildJson, &quot;timestamp&quot;));</span>
+
+<span class="nc" id="L116">        } catch (ParseException e) {</span>
+<span class="nc" id="L117">            LOG.error(&quot;Parsing jobs on instance: &quot; + buildUrl, e);</span>
+<span class="nc" id="L118">        } catch (HttpClientErrorException hce) {</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">            if (hce.getStatusCode() != HttpStatus.NOT_FOUND) {</span>
+<span class="nc" id="L120">                LOG.error(&quot;HTTP Client Exception for: &quot; + buildUrl, hce);</span>
+            }
+<span class="nc" id="L122">        }</span>
+<span class="nc" id="L123">        return build;</span>
+    }
+
+    @Override
+    public boolean buildHasCucumberResults(String buildUrl) {
+
+        JSONObject buildJson;
+        try {
+            // Get Build info
+<span class="nc" id="L132">            buildJson = (JSONObject) new JSONParser().parse(getJson(buildUrl, LAST_SUCCESSFUL_BUILD_ARTIFACT_SUFFIX));</span>
+
+<span class="nc" id="L134">            Boolean building = (Boolean) buildJson.get(&quot;building&quot;);</span>
+
+<span class="nc bnc" id="L136" title="All 4 branches missed.">            if (building != null &amp;&amp; !building) {</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">                for (Object artifactObj : (JSONArray) buildJson.get(&quot;artifacts&quot;)) {</span>
+<span class="nc" id="L138">                    JSONObject artifact = (JSONObject) artifactObj;</span>
+
+                    // return true if we find an archived file that matches the naming of the regex config
+<span class="nc bnc" id="L141" title="All 2 branches missed.">                    if (cucumberJsonFilePattern.matcher(getString(artifact, &quot;fileName&quot;)).matches()) {</span>
+<span class="nc" id="L142">                        return true;</span>
+	                        // TODO: maybe we want to validate that we can parse the json
+	                        //String cucumberJson = getCucumberJson(buildUrl, getString(artifact, &quot;relativePath&quot;));
+	                        //suites.addAll(cucumberTransformer.transformer(cucumberJson));
+                    }
+<span class="nc" id="L147">                }</span>
+            }
+<span class="nc" id="L149">            return false;</span>
+
+<span class="nc" id="L151">        } catch (ParseException e) {</span>
+<span class="nc" id="L152">            LOG.error(&quot;Parsing jobs on instance: &quot; + buildUrl, e);</span>
+<span class="nc" id="L153">        } catch (HttpClientErrorException hce) {</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">            if (hce.getStatusCode() != HttpStatus.NOT_FOUND) {</span>
+<span class="nc" id="L155">                LOG.error(&quot;HTTP Client Exception for: &quot; + buildUrl, hce);</span>
+            }
+<span class="nc" id="L157">        }</span>
+
+<span class="nc" id="L159">        return false;</span>
+    }
+
+
+    protected List&lt;TestCapability&gt; getCapabilities(JSONObject buildJson, String buildUrl) {
+<span class="fc" id="L164">        List&lt;TestCapability&gt; capabilities = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L166" title="All 2 branches covered.">        for (Object artifactObj : (JSONArray) buildJson.get(&quot;artifacts&quot;)) {</span>
+<span class="fc" id="L167">            JSONObject artifact = (JSONObject) artifactObj;</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">            if (cucumberJsonFilePattern.matcher(getString(artifact, &quot;fileName&quot;)).matches()) {</span>
+<span class="fc" id="L169">                String cucumberJson = getCucumberJson(buildUrl, getString(artifact, &quot;relativePath&quot;));</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">                if (!StringUtils.isEmpty(cucumberJson)) {</span>
+<span class="fc" id="L171">                    TestCapability cap = new TestCapability();</span>
+<span class="fc" id="L172">                    cap.setType(TestSuiteType.Functional);</span>
+<span class="fc" id="L173">                    List&lt;TestSuite&gt; testSuites = cucumberTransformer.transformer(cucumberJson);</span>
+<span class="fc" id="L174">                    cap.setDescription(getCapabilityDescription(cucumberJsonFilePattern.pattern(), getString(artifact, &quot;relativePath&quot;)));</span>
+<span class="fc" id="L175">                    cap.getTestSuites().addAll(testSuites); //add test suites</span>
+<span class="fc" id="L176">                    long duration = 0;</span>
+<span class="fc" id="L177">                    int testSuiteSkippedCount = 0, testSuiteSuccessCount = 0, testSuiteFailCount = 0, testSuiteUnknownCount = 0;</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">                    for (TestSuite t : testSuites) {</span>
+<span class="fc" id="L179">                        duration += t.getDuration();</span>
+<span class="pc bpc" id="L180" title="3 of 4 branches missed.">                        switch (t.getStatus()) {</span>
+                            case Success:
+<span class="fc" id="L182">                                testSuiteSuccessCount++;</span>
+<span class="fc" id="L183">                                break;</span>
+                            case Failure:
+<span class="nc" id="L185">                                testSuiteFailCount++;</span>
+<span class="nc" id="L186">                                break;</span>
+                            case Skipped:
+<span class="nc" id="L188">                                testSuiteSkippedCount++;</span>
+<span class="nc" id="L189">                                break;</span>
+                            default:
+<span class="nc" id="L191">                                testSuiteUnknownCount++;</span>
+                                break;
+                        }
+<span class="fc" id="L194">                    }</span>
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">                    if (testSuiteFailCount &gt; 0) {</span>
+<span class="nc" id="L196">                        cap.setStatus(TestCaseStatus.Failure);</span>
+<span class="pc bpc" id="L197" title="1 of 2 branches missed.">                    } else if (testSuiteSkippedCount &gt; 0) {</span>
+<span class="nc" id="L198">                        cap.setStatus(TestCaseStatus.Skipped);</span>
+<span class="pc bpc" id="L199" title="1 of 2 branches missed.">                    } else if (testSuiteSuccessCount &gt; 0) {</span>
+<span class="fc" id="L200">                        cap.setStatus(TestCaseStatus.Success);</span>
+                    } else {
+<span class="nc" id="L202">                        cap.setStatus(TestCaseStatus.Unknown);</span>
+                    }
+<span class="fc" id="L204">                    cap.setFailedTestSuiteCount(testSuiteFailCount);</span>
+<span class="fc" id="L205">                    cap.setSkippedTestSuiteCount(testSuiteSkippedCount);</span>
+<span class="fc" id="L206">                    cap.setSuccessTestSuiteCount(testSuiteSuccessCount);</span>
+<span class="fc" id="L207">                    cap.setUnknownStatusTestSuiteCount(testSuiteUnknownCount);</span>
+<span class="fc" id="L208">                    cap.setTotalTestSuiteCount(testSuites.size());</span>
+<span class="fc" id="L209">                    cap.setDuration(duration);</span>
+<span class="fc" id="L210">                    cap.setExecutionId(buildJson.get(&quot;number&quot;).toString());</span>
+<span class="fc" id="L211">                    capabilities.add(cap);</span>
+                }
+            }
+<span class="fc" id="L214">        }</span>
+<span class="fc" id="L215">        return capabilities;</span>
+    }
+
+    protected TestResult buildTestResultObject(JSONObject buildJson, String buildUrl, List&lt;TestCapability&gt; capabilities) {
+<span class="pc bpc" id="L219" title="1 of 2 branches missed.">        if (!capabilities.isEmpty()) {</span>
+            // There are test suites so let's construct a TestResult to encapsulate these results
+<span class="fc" id="L221">            TestResult testResult = new TestResult();</span>
+<span class="fc" id="L222">            testResult.setDescription(getString(buildJson, &quot;fullDisplayName&quot;));</span>
+<span class="fc" id="L223">            testResult.setExecutionId(buildJson.get(&quot;number&quot;).toString());</span>
+<span class="fc" id="L224">            testResult.setUrl(buildUrl);</span>
+            // Using the build times for start, end and duration is not ideal but the Cucumber JSON does not capture
+            // start or end times
+<span class="fc" id="L227">            testResult.setDuration(getLong(buildJson, &quot;duration&quot;));</span>
+<span class="fc" id="L228">            testResult.setEndTime(getLong(buildJson, &quot;timestamp&quot;));</span>
+<span class="fc" id="L229">            testResult.setStartTime(testResult.getEndTime() - testResult.getDuration());</span>
+<span class="fc" id="L230">            testResult.getTestCapabilities().addAll(capabilities);  //add all capabilities</span>
+<span class="fc" id="L231">            testResult.setTotalCount(capabilities.size());</span>
+<span class="fc" id="L232">            int testCapabilitySkippedCount = 0, testCapabilitySuccessCount = 0, testCapabilityFailCount = 0;</span>
+<span class="fc" id="L233">            int testCapabilityUnknownCount = 0;</span>
+            // Calculate counts based on test suites
+<span class="fc bfc" id="L235" title="All 2 branches covered.">            for (TestCapability cap : capabilities) {</span>
+<span class="pc bpc" id="L236" title="3 of 4 branches missed.">                switch (cap.getStatus()) {</span>
+                    case Success:
+<span class="fc" id="L238">                        testCapabilitySuccessCount++;</span>
+<span class="fc" id="L239">                        break;</span>
+                    case Failure:
+<span class="nc" id="L241">                        testCapabilityFailCount++;</span>
+<span class="nc" id="L242">                        break;</span>
+                    case Skipped:
+<span class="nc" id="L244">                        testCapabilitySkippedCount++;</span>
+<span class="nc" id="L245">                        break;</span>
+                    default:
+<span class="nc" id="L247">                        testCapabilityUnknownCount++;</span>
+                        break;
+                }
+<span class="fc" id="L250">            }</span>
+<span class="fc" id="L251">            testResult.setSuccessCount(testCapabilitySuccessCount);</span>
+<span class="fc" id="L252">            testResult.setFailureCount(testCapabilityFailCount);</span>
+<span class="fc" id="L253">            testResult.setSkippedCount(testCapabilitySkippedCount);</span>
+<span class="fc" id="L254">            testResult.setUnknownStatusCount(testCapabilityUnknownCount);</span>
+<span class="fc" id="L255">            return testResult;</span>
+        }
+<span class="nc" id="L257">        return null;</span>
+    }
+
+
+    @Override
+    public TestResult getCucumberTestResult(String buildUrl) {
+        try {
+<span class="fc" id="L264">            JSONObject buildJson = (JSONObject) new JSONParser().parse(getJson(buildUrl, LAST_SUCCESSFUL_BUILD_ARTIFACT_SUFFIX));</span>
+<span class="fc" id="L265">            List&lt;TestCapability&gt; capabilities = getCapabilities(buildJson, buildUrl);</span>
+<span class="fc" id="L266">            return buildTestResultObject(buildJson, buildUrl, capabilities);</span>
+<span class="nc" id="L267">        } catch (ParseException e) {</span>
+<span class="nc" id="L268">            LOG.error(&quot;Parsing jobs on instance: &quot; + buildUrl, e);</span>
+<span class="nc" id="L269">        } catch (RestClientException rce) {</span>
+<span class="nc" id="L270">            LOG.error(rce);</span>
+<span class="nc" id="L271">        }</span>
+        // An exception occurred or this build does not have cucumber test results
+<span class="nc" id="L273">        return null;</span>
+    }
+
+
+    protected String getCucumberJson(String buildUrl, String artifactRelativePath) {
+<span class="fc" id="L278">        return getJson(StringUtils.removeEnd(buildUrl, &quot;/&quot;) + LAST_SUCCESSFUL_BUILD, &quot;/artifact/&quot; + artifactRelativePath);</span>
+    }
+
+
+    /**
+     * @param cucumberJsonPattern
+     * @param fileName
+     * @return String
+     */
+    private String getCapabilityDescription(String cucumberJsonPattern, String fileName) {
+<span class="fc" id="L288">        return StringUtils.removeEnd(fileName, cucumberJsonPattern);</span>
+    }
+
+    // Helper Methods
+
+    private String getString(JSONObject json, String key) {
+<span class="fc" id="L294">        return (String) json.get(key);</span>
+    }
+
+    private long getLong(JSONObject json, String key) {
+<span class="fc" id="L298">        Object value = json.get(key);</span>
+<span class="pc bpc" id="L299" title="1 of 2 branches missed.">        return value == null ? 0 : (long) value;</span>
+    }
+
+    private JSONArray getJsonArray(JSONObject json, String key) {
+<span class="fc" id="L303">        Object array = json.get(key);</span>
+<span class="pc bpc" id="L304" title="1 of 2 branches missed.">        return array == null ? new JSONArray() : (JSONArray) array;</span>
+    }
+
+    private String getJson(String baseUrl, String endpoint) {
+<span class="fc" id="L308">        String url = StringUtils.removeEnd(baseUrl, &quot;/&quot;) + endpoint;</span>
+<span class="fc" id="L309">        ResponseEntity&lt;String&gt; result = null;</span>
+        try {
+<span class="fc" id="L311">            result = makeRestCall(url);</span>
+<span class="fc" id="L312">            return result.getBody();</span>
+<span class="nc" id="L313">        } catch (MalformedURLException mfe) {</span>
+<span class="nc" id="L314">            LOG.error(&quot;malformed url&quot; + mfe.getStackTrace());</span>
+        }
+<span class="nc" id="L316">        return &quot;&quot;;</span>
+    }
+
+    protected ResponseEntity&lt;String&gt; makeRestCall(String sUrl) throws MalformedURLException {
+<span class="fc" id="L320">    	String url = sUrl;</span>
+<span class="fc" id="L321">    	String dockerLocalHostOverride = settings.getDockerLocalHostIP();</span>
+<span class="fc" id="L322">		LOG.debug(&quot;dockerLocalHostOverride =  &quot; + dockerLocalHostOverride);</span>
+
+<span class="pc bpc" id="L324" title="1 of 2 branches missed.">    	if( !dockerLocalHostOverride.isEmpty() ){</span>
+<span class="nc" id="L325">    		url = sUrl.replace(&quot;localhost&quot;, dockerLocalHostOverride);</span>
+<span class="nc" id="L326">    		LOG.debug(&quot;WARNING: mapping localhost to: &quot; + dockerLocalHostOverride);</span>
+<span class="nc" id="L327">    		LOG.debug(&quot;URL: &quot; + url );</span>
+        } else {
+<span class="fc" id="L329">    		LOG.debug(&quot;URL: &quot; + url );</span>
+        }
+
+<span class="fc" id="L332">    	URI thisuri = URI.create(url);</span>
+<span class="fc" id="L333">        String userInfo = thisuri.getUserInfo();</span>
+
+        //get userinfo from URI or settings (in spring properties)
+<span class="pc bpc" id="L336" title="1 of 6 branches missed.">        if (StringUtils.isEmpty(userInfo) &amp;&amp; (this.settings.getUsername() != null) &amp;&amp; (this.settings.getApiKey() != null)) {</span>
+<span class="fc" id="L337">            userInfo = this.settings.getUsername() + &quot;:&quot; + this.settings.getApiKey();</span>
+        }
+        // Basic Auth only.
+<span class="fc bfc" id="L340" title="All 2 branches covered.">        if (StringUtils.isNotEmpty(userInfo)) {</span>
+<span class="fc" id="L341">            return rest.exchange(thisuri, HttpMethod.GET,</span>
+<span class="fc" id="L342">                    new HttpEntity&lt;&gt;(createHeaders(userInfo)),</span>
+                    String.class);
+        }
+<span class="fc" id="L345">        return rest.exchange(thisuri, HttpMethod.GET, null,</span>
+                String.class);
+    }
+
+    protected HttpHeaders createHeaders(final String userInfo) {
+<span class="fc" id="L350">        byte[] encodedAuth = org.apache.commons.codec.binary.Base64.encodeBase64(</span>
+<span class="fc" id="L351">                userInfo.getBytes(StandardCharsets.US_ASCII));</span>
+<span class="fc" id="L352">        String authHeader = &quot;Basic &quot; + new String(encodedAuth);</span>
+
+<span class="fc" id="L354">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L355">        headers.set(HttpHeaders.AUTHORIZATION, authHeader);</span>
+<span class="fc" id="L356">        return headers;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

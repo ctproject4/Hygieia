@@ -358,7 +358,7 @@ public class DefaultJiraClient implements JiraClient {
                     JSONObject issueJson = (JSONObject) issue;
                     String type = getIssueType(issueJson);
 
-                    if (JIRA_EPIC.equals(type)) {
+                    if (JIRA_EPIC.equalsIgnoreCase(type)) {
                         saveEpic(issueJson, epicMap, true);
                         return;
                     }

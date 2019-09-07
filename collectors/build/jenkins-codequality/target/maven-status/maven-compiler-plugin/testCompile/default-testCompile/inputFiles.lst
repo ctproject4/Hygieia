@@ -1,0 +1,8 @@
+/home/Devops/Hygieia/collectors/build/jenkins-codequality/src/test/java/com/capitalone/dashboard/collector/ResponseConversionTest.java
+/home/Devops/Hygieia/collectors/build/jenkins-codequality/src/test/java/com/capitalone/dashboard/jenkins/JenkinsPredicateTest.java
+/home/Devops/Hygieia/collectors/build/jenkins-codequality/src/test/java/com/capitalone/dashboard/utils/CodeQualityMetricsConverterTest.java
+/home/Devops/Hygieia/collectors/build/jenkins-codequality/src/test/java/com/capitalone/dashboard/collector/JenkinsCodeQualityCollectorTaskTest.java
+/home/Devops/Hygieia/collectors/build/jenkins-codequality/src/test/java/com/capitalone/dashboard/jenkins/JenkinsJobTest.java
+/home/Devops/Hygieia/collectors/build/jenkins-codequality/src/test/java/com/capitalone/dashboard/collector/HttpJenkinsClientTest.java
+/home/Devops/Hygieia/collectors/build/jenkins-codequality/src/test/java/com/capitalone/dashboard/utils/CodeQualityDataServiceTest.java
+/home/Devops/Hygieia/collectors/build/jenkins-codequality/src/test/java/com/capitalone/dashboard/utils/CodeMetricsCodeQualitConverterTest.java

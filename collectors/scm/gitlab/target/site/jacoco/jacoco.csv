@@ -1,0 +1,11 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+com.capitalone.dashboard:gitlab-scm-collector,com.capitalone.dashboard.gitlab,GitlabCommitsResponseMapper,6,91,2,4,0,20,2,4,0,3
+com.capitalone.dashboard:gitlab-scm-collector,com.capitalone.dashboard.gitlab,GitlabUrlUtility,5,271,0,14,2,59,0,17,0,10
+com.capitalone.dashboard:gitlab-scm-collector,com.capitalone.dashboard.gitlab,DefaultGitlabGitClient,0,121,0,6,0,28,0,7,0,4
+com.capitalone.dashboard:gitlab-scm-collector,com.capitalone.dashboard,Application,8,0,0,0,3,0,2,0,2,0
+com.capitalone.dashboard:gitlab-scm-collector,com.capitalone.dashboard.collector,GitlabSettings.new X509TrustManager() {...},13,0,0,0,5,0,4,0,4,0
+com.capitalone.dashboard:gitlab-scm-collector,com.capitalone.dashboard.collector,RestOperationsSupplier,18,0,0,0,5,0,2,0,2,0
+com.capitalone.dashboard:gitlab-scm-collector,com.capitalone.dashboard.collector,GitlabSettings,96,4,2,0,37,1,21,1,20,1
+com.capitalone.dashboard:gitlab-scm-collector,com.capitalone.dashboard.collector,GitlabGitCollectorTask,61,297,16,12,12,71,9,15,0,10
+com.capitalone.dashboard:gitlab-scm-collector,com.capitalone.dashboard.model,GitlabGitRepo,42,97,0,6,12,26,6,11,6,8
+com.capitalone.dashboard:gitlab-scm-collector,com.capitalone.dashboard.gitlab.model,GitlabCommit,53,34,0,0,23,14,15,10,15,10

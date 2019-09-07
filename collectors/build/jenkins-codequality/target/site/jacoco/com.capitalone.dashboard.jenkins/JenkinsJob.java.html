@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>JenkinsJob.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:jenkins-codequality</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.jenkins</a> &gt; <span class="el_source">JenkinsJob.java</span></div><h1>JenkinsJob.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.jenkins;
+
+import com.capitalone.dashboard.model.CollectorItem;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Stream;
+
+public class JenkinsJob extends CollectorItem {
+
+    private String url;
+
+    private String name;
+
+    private JenkinsBuild lastSuccessfulBuild;
+
+    private List&lt;JenkinsJob&gt; jobs;
+
+<span class="fc" id="L20">    private JenkinsJob() {</span>
+        // required for converter
+<span class="fc" id="L22">    }</span>
+
+<span class="fc" id="L24">    private JenkinsJob(Builder builder) {</span>
+<span class="fc" id="L25">        url = builder.url;</span>
+<span class="fc" id="L26">        name = builder.jobName;</span>
+<span class="fc" id="L27">        lastSuccessfulBuild = builder.lastSuccessfulBuild;</span>
+<span class="fc" id="L28">        jobs = Collections.unmodifiableList(builder.jobs);</span>
+<span class="fc" id="L29">    }</span>
+
+    public String getUrl() {
+<span class="fc" id="L32">        return url;</span>
+    }
+
+    public String getName() {
+<span class="fc" id="L36">        return name;</span>
+    }
+
+    public JenkinsBuild getLastSuccessfulBuild() {
+<span class="fc" id="L40">        return lastSuccessfulBuild;</span>
+    }
+
+    public List&lt;JenkinsJob&gt; getJobs() {
+<span class="nc" id="L44">        return jobs;</span>
+    }
+
+    public static Builder newBuilder() {
+<span class="fc" id="L48">        return new Builder();</span>
+    }
+
+    public Stream&lt;JenkinsJob&gt; streamJobs(){
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (null!=jobs) {</span>
+<span class="fc" id="L53">            return Stream.concat(Stream.of(this), jobs.stream().flatMap(JenkinsJob::streamJobs));</span>
+        }
+<span class="fc" id="L55">        return Stream.of(this);</span>
+    }
+
+<span class="fc" id="L58">    public static final class Builder{</span>
+
+        private String url;
+        private String jobName;
+        private JenkinsBuild lastSuccessfulBuild;
+<span class="fc" id="L63">        private List&lt;JenkinsJob&gt; jobs = new ArrayList&lt;&gt;();</span>
+
+        public Builder url(String url) {
+<span class="fc" id="L66">            this.url = url;</span>
+<span class="fc" id="L67">            return this;</span>
+        }
+
+        public Builder jobName(String jobName) {
+<span class="fc" id="L71">            this.jobName = jobName;</span>
+<span class="fc" id="L72">            return this;</span>
+        }
+
+        @SuppressWarnings(&quot;PMD.AccessorClassGeneration&quot;)
+        public JenkinsJob build() {
+<span class="fc" id="L77">            return new JenkinsJob(this);</span>
+        }
+
+        public Builder lastSuccessfulBuild(JenkinsBuild lastSuccessfulBuild) {
+<span class="fc" id="L81">            this.lastSuccessfulBuild = lastSuccessfulBuild;</span>
+<span class="fc" id="L82">            return this;</span>
+        }
+
+        public Builder job(JenkinsJob job) {
+<span class="fc" id="L86">            jobs.add(job);</span>
+<span class="fc" id="L87">            return this;</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

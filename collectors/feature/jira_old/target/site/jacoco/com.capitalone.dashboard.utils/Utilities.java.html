@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Utilities.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:jira-feature-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.utils</a> &gt; <span class="el_source">Utilities.java</span></div><h1>Utilities.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.utils;
+
+import org.json.simple.JSONObject;
+
+<span class="nc" id="L5">public class Utilities {</span>
+    public static String getString(JSONObject json, String key) {
+<span class="pc bpc" id="L7" title="1 of 2 branches missed.">        if (json == null) return &quot;&quot;;</span>
+<span class="fc" id="L8">        Object o = json.get(key);</span>
+<span class="fc bfc" id="L9" title="All 2 branches covered.">        if (o == null) return &quot;&quot;;</span>
+<span class="pc bpc" id="L10" title="1 of 2 branches missed.">        if (o instanceof Double) {</span>
+<span class="nc" id="L11">            Double d = (Double) o;</span>
+<span class="nc" id="L12">            return String.valueOf(d.intValue());</span>
+        }
+<span class="fc" id="L14">        return String.valueOf(o);</span>
+    }
+
+    public static long getLong(JSONObject json, String key) {
+<span class="pc bpc" id="L18" title="1 of 2 branches missed.">        if (json == null) return 0;</span>
+<span class="fc" id="L19">        Object o = json.get(key);</span>
+<span class="fc bfc" id="L20" title="All 2 branches covered.">        if (o == null) return 0;</span>
+<span class="fc" id="L21">        return (Long) o;</span>
+    }
+
+    //This is weird but way faster than Java date time formatter etc.
+    public static String parseDateWithoutFraction(String date) {
+<span class="fc bfc" id="L26" title="All 2 branches covered.">        if(date == null) return &quot;&quot;;</span>
+<span class="fc bfc" id="L27" title="All 2 branches covered.">        if (date.length() &lt; 20) {</span>
+<span class="fc" id="L28">            return date;</span>
+        }
+<span class="fc" id="L30">        return date.substring(0, 19);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

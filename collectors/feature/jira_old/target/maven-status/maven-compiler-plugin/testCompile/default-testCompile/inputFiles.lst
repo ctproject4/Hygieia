@@ -1,0 +1,7 @@
+/home/Devops/Hygieia/collectors/feature/jira/src/test/java/com/capitalone/dashboard/config/TestConfig.java
+/home/Devops/Hygieia/collectors/feature/jira/src/test/java/com/capitalone/dashboard/common/TestUtils.java
+/home/Devops/Hygieia/collectors/feature/jira/src/test/java/com/capitalone/dashboard/utils/UtilitiesTest.java
+/home/Devops/Hygieia/collectors/feature/jira/src/test/java/com/capitalone/dashboard/collector/FeatureCollectorTaskTest.java
+/home/Devops/Hygieia/collectors/feature/jira/src/test/java/com/capitalone/dashboard/collector/DefaultJiraClientTest.java
+/home/Devops/Hygieia/collectors/feature/jira/src/test/java/com/capitalone/dashboard/config/FongoConfig.java
+/home/Devops/Hygieia/collectors/feature/jira/src/test/java/com/capitalone/dashboard/collector/SprintFormatterTest.java

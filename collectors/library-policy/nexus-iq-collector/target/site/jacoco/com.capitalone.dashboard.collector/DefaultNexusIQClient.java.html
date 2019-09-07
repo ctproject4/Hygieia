@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DefaultNexusIQClient.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:nexus-iq-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">DefaultNexusIQClient.java</span></div><h1>DefaultNexusIQClient.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+import java.math.BigDecimal;
+import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestOperations;
+
+import com.capitalone.dashboard.model.LibraryPolicyReport;
+import com.capitalone.dashboard.model.LibraryPolicyResult;
+import com.capitalone.dashboard.model.LibraryPolicyThreatLevel;
+import com.capitalone.dashboard.model.LibraryPolicyType;
+import com.capitalone.dashboard.model.NexusIQApplication;
+import com.capitalone.dashboard.model.PolicyScanMetric;
+import com.capitalone.dashboard.util.Supplier;
+
+@Component
+public class DefaultNexusIQClient implements NexusIQClient {
+<span class="fc" id="L39">    private static final Log LOG = LogFactory.getLog(DefaultNexusIQClient.class);</span>
+
+    private static final String API_V2_APPLICATIONS = &quot;/api/v2/applications&quot;;
+    private static final String API_V2_REPORTS_LINKS = &quot;/api/v2/reports/applications/%s&quot;;
+    private static final String API_V2_POLICIES = &quot;/api/v2/policies?format=json&quot;;
+    private static final String API_V2_POLICY_VIOLATION = &quot;/api/v2/policyViolations?p=%s&amp;format=json&quot;;
+
+    private static final String DATE_FORMAT = &quot;yyyy-MM-dd'T'HH:mm:ss.SSSXXX&quot;;
+    private static final String ID = &quot;id&quot;;
+    private static final String NAME = &quot;name&quot;;
+    private static final String PUBLIC_ID = &quot;publicId&quot;;
+
+    private static final String THREAT_LEVEL = &quot;threatLevel&quot;;
+
+    private final RestOperations rest;
+    private final NexusIQSettings nexusIQSettings;
+
+    @Autowired
+<span class="fc" id="L57">    public DefaultNexusIQClient(Supplier&lt;RestOperations&gt; restOperationsSupplier, NexusIQSettings settings) {</span>
+<span class="fc" id="L58">        this.rest = restOperationsSupplier.get();</span>
+<span class="fc" id="L59">        this.nexusIQSettings = settings;</span>
+<span class="fc" id="L60">    }</span>
+
+    /**
+     * Get all the applications from the nexus IQ server
+     * @param instanceUrl instance of nexus iq
+     * @return List of applications
+     */
+    @Override
+    public List&lt;NexusIQApplication&gt; getApplications(String instanceUrl) {
+<span class="fc" id="L69">        List&lt;NexusIQApplication&gt; nexusIQApplications = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L70">        String url = instanceUrl + API_V2_APPLICATIONS;</span>
+
+        try {
+<span class="fc" id="L73">            JSONObject jsonObject = parseAsObject(url);</span>
+<span class="fc" id="L74">            JSONArray jsonArray = (JSONArray) jsonObject.get(&quot;applications&quot;);</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">            for (Object obj : jsonArray) {</span>
+<span class="fc" id="L76">                JSONObject applicationData = (JSONObject) obj;</span>
+<span class="fc" id="L77">                NexusIQApplication application = new NexusIQApplication();</span>
+<span class="fc" id="L78">                application.setInstanceUrl(instanceUrl);</span>
+<span class="fc" id="L79">                application.setApplicationId(str(applicationData, ID));</span>
+<span class="fc" id="L80">                application.setApplicationName(str(applicationData, NAME));</span>
+<span class="fc" id="L81">                application.setDescription(application.getApplicationName());</span>
+<span class="fc" id="L82">                application.setPublicId(str(applicationData, PUBLIC_ID));</span>
+<span class="fc" id="L83">                nexusIQApplications.add(application);</span>
+<span class="fc" id="L84">            }</span>
+<span class="fc" id="L85">        } catch (ParseException e) {</span>
+<span class="fc" id="L86">            LOG.error(&quot;Could not parse response from: &quot; + url, e);</span>
+<span class="fc" id="L87">        } catch (RestClientException rce) {</span>
+<span class="fc" id="L88">            LOG.error(rce);</span>
+<span class="fc" id="L89">        }</span>
+<span class="fc" id="L90">        return nexusIQApplications;</span>
+    }
+
+    /**
+     * Get report links for a given application.
+     * @param application nexus application
+     * @return a list of report links
+     */
+    @Override
+    public List&lt;LibraryPolicyReport&gt; getApplicationReport(NexusIQApplication application) {
+<span class="fc" id="L100">        List&lt;LibraryPolicyReport&gt; applicationReports = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L102">        String appReportLinkUrl = String.format(</span>
+<span class="fc" id="L103">                application.getInstanceUrl() + API_V2_REPORTS_LINKS, application.getApplicationId());</span>
+
+        try {
+<span class="fc" id="L106">            JSONArray reports = parseAsArray(appReportLinkUrl);</span>
+<span class="pc bpc" id="L107" title="2 of 4 branches missed.">            if ((reports == null) || (reports.isEmpty())) return null;</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">            for (Object element : reports) {</span>
+<span class="fc" id="L109">                LibraryPolicyReport appReport = new LibraryPolicyReport();</span>
+<span class="fc" id="L110">                String stage = str((JSONObject) element, &quot;stage&quot;);</span>
+<span class="fc" id="L111">                appReport.setStage(stage);</span>
+<span class="fc" id="L112">                appReport.setEvaluationDate(timestamp((JSONObject) element, &quot;evaluationDate&quot;));</span>
+<span class="fc" id="L113">                appReport.setReportDataUrl(application.getInstanceUrl() + &quot;/&quot; + str((JSONObject) element, &quot;reportDataUrl&quot;));</span>
+<span class="fc" id="L114">                appReport.setReportUIUrl(application.getInstanceUrl() + &quot;/&quot; + str((JSONObject) element, &quot;reportHtmlUrl&quot;));</span>
+<span class="fc" id="L115">                applicationReports.add(appReport);</span>
+<span class="fc" id="L116">            }</span>
+<span class="nc" id="L117">        } catch (ParseException e) {</span>
+<span class="nc" id="L118">            LOG.error(&quot;Could not parse response from: &quot; + appReportLinkUrl, e);</span>
+<span class="nc" id="L119">        } catch (RestClientException rce) {</span>
+<span class="nc" id="L120">            LOG.error(&quot;RestClientException: &quot; + appReportLinkUrl + &quot;. Error code=&quot; + rce.getMessage());</span>
+<span class="pc" id="L121">        }</span>
+<span class="fc" id="L122">        return applicationReports;</span>
+    }
+        
+    /**
+     * Get the report details given a url for the report data.
+     * @param url url of the report
+     * @return LibraryPolicyResult
+     */
+    @SuppressWarnings({&quot;PMD.AvoidDeeplyNestedIfStmts&quot;,&quot;PMD.NPathComplexity&quot;}) // agreed PMD, fixme
+
+    @Override
+    public LibraryPolicyResult getDetailedReport(String url) {
+<span class="fc" id="L134">        LibraryPolicyResult policyResult = null;</span>
+        try {
+<span class="fc" id="L136">            JSONObject obj = parseAsObject(url);</span>
+<span class="fc" id="L137">            JSONObject matchSummary = (JSONObject) obj.get(&quot;matchSummary&quot;);</span>
+<span class="fc" id="L138">            JSONArray componentArray = (JSONArray) obj.get(&quot;components&quot;);</span>
+<span class="pc bpc" id="L139" title="1 of 4 branches missed.">            if ((componentArray == null) || (componentArray.isEmpty())) return null;</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">            for (Object element : componentArray) {</span>
+<span class="fc" id="L141">                JSONObject component = (JSONObject) element;</span>
+<span class="fc" id="L142">                int licenseLevel = 0;</span>
+<span class="fc" id="L143">                JSONArray pathArray = (JSONArray) component.get(&quot;pathnames&quot;);</span>
+
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">                String componentName = !CollectionUtils.isEmpty(pathArray) ? (String) pathArray.get(0) : getComponentNameFromIdentifier((JSONObject) component.get(&quot;componentIdentifier&quot;));</span>
+
+<span class="fc" id="L147">                JSONObject licenseData = (JSONObject) component.get(&quot;licenseData&quot;);</span>
+
+<span class="fc bfc" id="L149" title="All 2 branches covered.">                if (licenseData != null) {</span>
+                    //process license data
+<span class="fc" id="L151">                    JSONArray effectiveLicenseThreats = (JSONArray) licenseData.get(&quot;effectiveLicenseThreats&quot;);</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">                    if (!CollectionUtils.isEmpty(effectiveLicenseThreats)) {</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">                        for (Object et : effectiveLicenseThreats) {</span>
+<span class="fc" id="L154">                            JSONObject etJO = (JSONObject) et;</span>
+<span class="fc" id="L155">                            Long longvalue = toLong(etJO, &quot;licenseThreatGroupLevel&quot;);</span>
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">                            if (longvalue != null) {</span>
+<span class="fc" id="L157">                                int newlevel = longvalue.intValue();</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">                                if (licenseLevel == 0) {</span>
+<span class="fc" id="L159">                                    licenseLevel = newlevel;</span>
+                                } else {
+<span class="fc bfc" id="L161" title="All 2 branches covered.">                                    licenseLevel = nexusIQSettings.isSelectStricterLicense() ? Math.max(licenseLevel, newlevel) : Math.min(licenseLevel, newlevel);</span>
+                                }
+                            }
+<span class="fc" id="L164">                        }</span>
+
+                    }
+                }
+
+<span class="fc bfc" id="L169" title="All 2 branches covered.">                if (policyResult == null) {</span>
+<span class="fc" id="L170">                    policyResult = new LibraryPolicyResult();</span>
+                }
+
+<span class="fc bfc" id="L173" title="All 2 branches covered.">                if (licenseLevel &gt; 0) {</span>
+<span class="fc" id="L174">                    policyResult.addThreat(LibraryPolicyType.License, LibraryPolicyThreatLevel.fromInt(licenseLevel), componentName);</span>
+                }
+
+<span class="fc" id="L177">                JSONObject securityData = (JSONObject) component.get(&quot;securityData&quot;);</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">                if (securityData != null) {</span>
+                    //process security data
+<span class="fc" id="L180">                    JSONArray securityIssues = (JSONArray) securityData.get(&quot;securityIssues&quot;);</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">                    if (!CollectionUtils.isEmpty(securityIssues)) {</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">                        for (Object si : securityIssues) {</span>
+<span class="fc" id="L183">                            JSONObject siJO = (JSONObject) si;</span>
+<span class="fc" id="L184">                            BigDecimal bigDecimalValue = decimal(siJO, &quot;severity&quot;);</span>
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">                            double securityLevel = (bigDecimalValue == null) ? getSeverityLevel(str(siJO, &quot;threatCategory&quot;)) : bigDecimalValue.doubleValue();</span>
+<span class="fc" id="L186">                            policyResult.addThreat(LibraryPolicyType.Security, LibraryPolicyThreatLevel.fromDouble(securityLevel), componentName);</span>
+<span class="fc" id="L187">                        }</span>
+                    } 
+                }
+<span class="fc" id="L190">            } </span>
+            
+<span class="fc" id="L192">            policyResult.setTotalComponentCount(Integer.parseInt(matchSummary.get(&quot;totalComponentCount&quot;).toString()));</span>
+<span class="fc" id="L193">        	policyResult.setKnownComponentCount(Integer.parseInt(matchSummary.get(&quot;knownComponentCount&quot;).toString()));</span>
+            
+<span class="nc" id="L195">        } catch (ParseException e) {</span>
+<span class="nc" id="L196">            LOG.error(&quot;Could not parse response from: &quot; + url, e);</span>
+<span class="fc" id="L197">        } catch (RestClientException rce) {</span>
+<span class="fc" id="L198">            LOG.error(&quot;RestClientException from: &quot; + url + &quot;. Error code=&quot; + rce.getMessage());</span>
+<span class="pc" id="L199">        }</span>
+                   
+<span class="fc" id="L201">        return policyResult;</span>
+    }
+    
+    @Override
+    public PolicyScanMetric getPolicyAlerts(NexusIQApplication application)
+    {
+<span class="nc" id="L207">    	List&lt;String&gt; policyHighViolatedComponents = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L208">		List&lt;String&gt; policyMediumViolatedComponents = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L209">		List&lt;String&gt; policyModerateViolatedComponents = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L210">		Set&lt;String&gt; affectedComponents = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L211">		PolicyScanMetric psm = new PolicyScanMetric();</span>
+		
+<span class="nc" id="L213">    	JSONArray applicationViolations = getPolicyViolations(application.getInstanceUrl());</span>
+    	
+<span class="nc bnc" id="L215" title="All 2 branches missed.">    	for (Object violatedApplication : applicationViolations) {</span>
+<span class="nc" id="L216">			JSONObject applicationArray = (JSONObject) violatedApplication;</span>
+<span class="nc" id="L217">			JSONObject app = (JSONObject) applicationArray.get(&quot;application&quot;);</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">			if (str(app, PUBLIC_ID).equals(application.getApplicationName())) {</span>
+<span class="nc" id="L219">				JSONArray pv = (JSONArray) applicationArray.get(&quot;policyViolations&quot;);</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">				for (Object objt : pv) {</span>
+<span class="nc" id="L221">					JSONObject violationObject = (JSONObject) objt;</span>
+
+<span class="nc" id="L223">					JSONObject component = (JSONObject) violationObject.get(&quot;component&quot;);</span>
+<span class="nc" id="L224">					String componentHash = (String) component.get(&quot;hash&quot;);</span>
+
+<span class="nc bnc" id="L226" title="All 4 branches missed.">					if ((8 &lt;= lng(violationObject, THREAT_LEVEL)) &amp;&amp; (10 &gt;= lng(violationObject, THREAT_LEVEL))) {</span>
+<span class="nc" id="L227">						policyHighViolatedComponents.add(componentHash);</span>
+<span class="nc" id="L228">						affectedComponents.add(componentHash);</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">					} else if ((4 &lt;= lng(violationObject, THREAT_LEVEL))</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">							&amp;&amp; (7 &gt;= lng(violationObject, THREAT_LEVEL))) {</span>
+<span class="nc" id="L231">						policyMediumViolatedComponents.add(componentHash);</span>
+<span class="nc" id="L232">						affectedComponents.add(componentHash);</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">					} else if (3 &gt;= lng(violationObject, THREAT_LEVEL)</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">							&amp;&amp; (lng(violationObject, THREAT_LEVEL) &gt;= 2)) {</span>
+<span class="nc" id="L235">						policyModerateViolatedComponents.add(componentHash);</span>
+<span class="nc" id="L236">						affectedComponents.add(componentHash);</span>
+					}
+
+<span class="nc" id="L239">				}</span>
+
+			}
+
+<span class="nc" id="L243">		}</span>
+
+<span class="nc bnc" id="L245" title="All 2 branches missed.">	for (String policyhighViolatedComponent : policyHighViolatedComponents) {</span>
+<span class="nc" id="L246">		policyMediumViolatedComponents.removeIf(policyhighViolatedComponent::equals);</span>
+<span class="nc" id="L247">		policyModerateViolatedComponents.removeIf(policyhighViolatedComponent::equals);</span>
+<span class="nc" id="L248">	}</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">	for (String policyMediumViolatedComponent : policyMediumViolatedComponents) {</span>
+<span class="nc" id="L250">		policyModerateViolatedComponents.removeIf(policyMediumViolatedComponent::equals);</span>
+<span class="nc" id="L251">	}</span>
+
+<span class="nc" id="L253">	psm.setPolicycriticalCount(policyHighViolatedComponents.size());</span>
+<span class="nc" id="L254">	psm.setPolicysevereCount(policyMediumViolatedComponents.size());</span>
+<span class="nc" id="L255">	psm.setPolimoderateCount(policyModerateViolatedComponents.size());</span>
+<span class="nc" id="L256">	psm.setPolicyAffectedCount(affectedComponents.size());</span>
+<span class="nc" id="L257">	return psm;    	</span>
+    	
+    }
+    
+	private JSONArray getPolicyViolations(String url) {
+<span class="nc" id="L262">		String policyUrl = url + API_V2_POLICIES;</span>
+		String policyViolationUrl;
+
+		JSONObject object;
+<span class="nc" id="L266">		JSONArray applicationViolations = new JSONArray();</span>
+		try {
+<span class="nc" id="L268">			object = parseAsObject(policyUrl);</span>
+<span class="nc" id="L269">			JSONArray policyArray = (JSONArray) object.get(&quot;policies&quot;);</span>
+
+<span class="nc bnc" id="L271" title="All 2 branches missed.">			for (Object obj : policyArray) {</span>
+<span class="nc" id="L272">				JSONObject policyData = (JSONObject) obj;</span>
+<span class="nc" id="L273">				policyViolationUrl = String.format(url + API_V2_POLICY_VIOLATION, str(policyData, ID));</span>
+<span class="nc" id="L274">				JSONObject policyObject = parseAsObject(policyViolationUrl);</span>
+<span class="nc" id="L275">				applicationViolations.addAll((JSONArray) policyObject.get(&quot;applicationViolations&quot;));</span>
+<span class="nc" id="L276">			}</span>
+<span class="nc" id="L277">		} catch (ParseException e) {</span>
+<span class="nc" id="L278">			LOG.error(&quot;Error parsing JSON object at getPolicyViolations()&quot; + e);</span>
+<span class="nc" id="L279">		}catch (RestClientException e){</span>
+<span class="nc" id="L280">			LOG.error(&quot;Error fetching polices in getPolicyViolations() &quot;+e);</span>
+<span class="nc" id="L281">		}</span>
+<span class="nc" id="L282">		return applicationViolations;</span>
+	}
+
+    private String getComponentNameFromIdentifier(JSONObject identifier) {
+<span class="nc" id="L286">        String unknown = &quot;unknown&quot;;</span>
+<span class="nc bnc" id="L287" title="All 2 branches missed.">        if (identifier == null) return unknown;</span>
+<span class="nc" id="L288">        JSONObject coordinate = (JSONObject) identifier.get(&quot;coordinates&quot;);</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">        if (coordinate == null) return unknown;</span>
+<span class="nc" id="L290">        String format = str(identifier, &quot;format&quot;);</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">        if (format == null) return unknown;</span>
+        String componentName;
+<span class="nc bnc" id="L293" title="All 10 branches missed.">        switch (format.toLowerCase(Locale.ENGLISH)) {</span>
+            case &quot;maven&quot;:
+<span class="nc" id="L295">                componentName = String.format(&quot;%s:%s-%s.%s&quot;,</span>
+<span class="nc" id="L296">                        str(coordinate, &quot;groupId&quot;),</span>
+<span class="nc" id="L297">                        str(coordinate, &quot;artifactId&quot;),</span>
+<span class="nc" id="L298">                        str(coordinate, &quot;version&quot;),</span>
+<span class="nc" id="L299">                        str(coordinate, &quot;extension&quot;));</span>
+<span class="nc" id="L300">                break;</span>
+
+            case &quot;a-name&quot;:
+<span class="nc" id="L303">                componentName = String.format(&quot;%s-%s&quot;,</span>
+<span class="nc" id="L304">                        str(identifier, &quot;name&quot;),</span>
+<span class="nc" id="L305">                        str(identifier, &quot;version&quot;));</span>
+<span class="nc" id="L306">                break;</span>
+
+            default:
+<span class="nc" id="L309">                componentName = unknown;</span>
+                break;
+        }
+<span class="nc" id="L312">        return componentName;</span>
+    }
+
+    private double getSeverityLevel(String threatCategory) {
+<span class="nc bnc" id="L316" title="All 14 branches missed.">        switch (threatCategory) {</span>
+            case &quot;critial&quot;:
+<span class="nc" id="L318">                return 10.0;</span>
+            case &quot;severe&quot;:
+<span class="nc" id="L320">                return 6.9;</span>
+            case &quot;moderate&quot;:
+<span class="nc" id="L322">                return 2.9;</span>
+            default:
+<span class="nc" id="L324">                return 0.0;</span>
+        }
+    }
+
+
+    private JSONArray parseAsArray(String url) throws ParseException {
+<span class="fc" id="L330">        ResponseEntity&lt;String&gt; response = rest.exchange(url, HttpMethod.GET, createHeaders(url), String.class);</span>
+<span class="fc" id="L331">        return (JSONArray) new JSONParser().parse(response.getBody());</span>
+    }
+
+    private JSONObject parseAsObject(String url) throws ParseException {
+<span class="fc" id="L335">        ResponseEntity&lt;String&gt; response = rest.exchange(url, HttpMethod.GET, createHeaders(url), String.class);</span>
+<span class="fc" id="L336">        return (JSONObject) new JSONParser().parse(response.getBody());</span>
+    }
+
+    private long timestamp(JSONObject json, String key) {
+<span class="fc" id="L340">        Object obj = json.get(key);</span>
+<span class="pc bpc" id="L341" title="1 of 2 branches missed.">        if (obj != null) {</span>
+            try {
+<span class="fc" id="L343">                return new SimpleDateFormat(DATE_FORMAT).parse(obj.toString()).getTime();</span>
+<span class="nc" id="L344">            } catch (java.text.ParseException e) {</span>
+<span class="nc" id="L345">                LOG.error(obj + &quot; is not in expected format &quot; + DATE_FORMAT, e);</span>
+            }
+        }
+<span class="nc" id="L348">        return 0;</span>
+    }
+
+    private String str(JSONObject json, String key) {
+<span class="fc" id="L352">        Object obj = json.get(key);</span>
+<span class="pc bpc" id="L353" title="1 of 2 branches missed.">        return obj == null ? null : obj.toString();</span>
+    }
+
+    @SuppressWarnings(&quot;unused&quot;)
+    private Integer integer(JSONObject json, String key) {
+<span class="nc" id="L358">        Object obj = json.get(key);</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">        return obj == null ? null : (Integer) obj;</span>
+    }
+
+    private Long toLong(JSONObject json, String key) {
+<span class="fc" id="L363">        Object obj = json.get(key);</span>
+<span class="pc bpc" id="L364" title="1 of 2 branches missed.">        return obj == null ? null : (Long) obj;</span>
+    }
+
+    @SuppressWarnings(&quot;unused&quot;)
+    private BigDecimal decimal(JSONObject json, String key) {
+<span class="fc" id="L369">        Object obj = json.get(key);</span>
+<span class="pc bpc" id="L370" title="1 of 2 branches missed.">        return obj == null ? null : new BigDecimal(obj.toString());</span>
+    }
+
+    @SuppressWarnings(&quot;unused&quot;)
+    private Boolean bool(JSONObject json, String key) {
+<span class="nc" id="L375">        Object obj = json.get(key);</span>
+<span class="nc bnc" id="L376" title="All 2 branches missed.">        return obj == null ? null : Boolean.valueOf(obj.toString());</span>
+    }
+    
+    @SuppressWarnings(&quot;unused&quot;)
+	private Long lng(JSONObject json, String key) {
+<span class="nc" id="L381">		Object obj = json.get(key);</span>
+<span class="nc bnc" id="L382" title="All 2 branches missed.">		return obj == null ? null : Long.valueOf(obj.toString());</span>
+	}
+  
+    private HttpEntity&lt;String&gt; createHeaders(String url) {
+<span class="fc" id="L386">    	String username = null;</span>
+<span class="fc" id="L387">    	String password = null;</span>
+<span class="fc" id="L388">        HttpHeaders headers = new HttpHeaders();</span>
+
+<span class="pc bpc" id="L390" title="1 of 2 branches missed.">    	for(int i=0;i&lt;nexusIQSettings.getServers().size();i++) {</span>
+<span class="nc bnc" id="L391" title="All 2 branches missed.">    		if(url.contains(nexusIQSettings.getServers().get(i))){</span>
+<span class="nc" id="L392">        		username = nexusIQSettings.getUsernames().get(i);</span>
+<span class="nc" id="L393">        		password = nexusIQSettings.getPasswords().get(i);</span>
+    		}
+    	}
+<span class="pc bpc" id="L396" title="5 of 6 branches missed.">        if (username != null &amp;&amp; !username.isEmpty() &amp;&amp;</span>
+<span class="nc bnc" id="L397" title="All 2 branches missed.">                password != null &amp;&amp; !password.isEmpty()) {</span>
+<span class="nc" id="L398">            String auth = username + &quot;:&quot; + password;</span>
+<span class="nc" id="L399">            byte[] encodedAuth = Base64.encodeBase64(</span>
+<span class="nc" id="L400">                    auth.getBytes(Charset.forName(&quot;US-ASCII&quot;))</span>
+            );
+<span class="nc" id="L402">            String authHeader = &quot;Basic &quot; + new String(encodedAuth);</span>
+<span class="nc" id="L403">            headers.set(&quot;Authorization&quot;, authHeader);</span>
+        }
+<span class="fc" id="L405">        return new HttpEntity&lt;&gt;(headers);</span>
+
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

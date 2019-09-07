@@ -1,0 +1,14 @@
+com/capitalone/dashboard/utils/UtilitiesTest.class
+com/capitalone/dashboard/config/TestConfig.class
+com/capitalone/dashboard/collector/FeatureCollectorTaskTest$1.class
+com/capitalone/dashboard/collector/FeatureCollectorTaskTest$3.class
+com/capitalone/dashboard/common/TestUtils$2.class
+com/capitalone/dashboard/config/FongoConfig.class
+com/capitalone/dashboard/common/TestUtils$3.class
+com/capitalone/dashboard/common/TestUtils$1.class
+com/capitalone/dashboard/collector/SprintFormatterTest.class
+com/capitalone/dashboard/common/TestUtils.class
+com/capitalone/dashboard/collector/FeatureCollectorTaskTest$2.class
+com/capitalone/dashboard/collector/DefaultJiraClientTest.class
+com/capitalone/dashboard/common/TestUtils$4.class
+com/capitalone/dashboard/collector/FeatureCollectorTaskTest.class

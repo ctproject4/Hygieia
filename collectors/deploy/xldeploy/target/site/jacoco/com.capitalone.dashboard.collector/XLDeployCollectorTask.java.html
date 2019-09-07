@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>XLDeployCollectorTask.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:xldeploy-deployment-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">XLDeployCollectorTask.java</span></div><h1>XLDeployCollectorTask.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+
+import org.apache.commons.lang3.StringUtils;
+import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+
+import com.capitalone.dashboard.model.CollectorItem;
+import com.capitalone.dashboard.model.CollectorType;
+import com.capitalone.dashboard.model.EnvironmentComponent;
+import com.capitalone.dashboard.model.EnvironmentStatus;
+import com.capitalone.dashboard.model.XLDeployApplication;
+import com.capitalone.dashboard.model.XLDeployApplicationHistoryItem;
+import com.capitalone.dashboard.model.XLDeployCollector;
+import com.capitalone.dashboard.repository.BaseCollectorRepository;
+import com.capitalone.dashboard.repository.ComponentRepository;
+import com.capitalone.dashboard.repository.EnvironmentStatusRepository;
+import com.capitalone.dashboard.repository.XLDeployApplicationRepository;
+import com.capitalone.dashboard.repository.XLDeployCollectorRepository;
+import com.capitalone.dashboard.repository.XLDeployEnvironmentComponentRepository;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
+
+@Component
+public class XLDeployCollectorTask extends CollectorTask&lt;XLDeployCollector&gt;{
+<span class="nc" id="L45">	private final DateFormat FULL_DATE = new SimpleDateFormat(&quot;yyyy-MM-dd'T'HH:mm:ss.SSSZ&quot;);</span>
+	
+<span class="nc" id="L47">	private static final Logger LOGGER = LoggerFactory.getLogger(XLDeployCollectorTask.class);</span>
+	
+	public static final String STATUS_DONE = &quot;DONE&quot;;
+	public static final String STATUS_CANCELLED = &quot;CANCELLED&quot;;
+	
+	public static final String DEPLOYMENT_INITIAL = &quot;Initial&quot;;
+	public static final String DEPLOYMENT_UPDATE = &quot;Update&quot;;
+	public static final String DEPLOYMENT_UNDEPLOY = &quot;Undeployment&quot;;
+	public static final String DEPLOYMENT_ROLLBACK = &quot;Rollback&quot;;
+	
+	private final XLDeployCollectorRepository xlDeployCollectorRepository;
+	private final XLDeployApplicationRepository xlDeployApplicationRepository;
+	private final XLDeployClient xlDeployClient;
+	private final XLDeploySettings xlDeploySettings;
+	
+    private final XLDeployEnvironmentComponentRepository envComponentRepository;
+    @SuppressWarnings({&quot;unused&quot;, &quot;PMD.SingularField&quot;}) // might need in future
+	private final EnvironmentStatusRepository environmentStatusRepository;
+
+    private final ComponentRepository dbComponentRepository;
+	
+    @Autowired
+	public XLDeployCollectorTask(TaskScheduler taskScheduler,
+									XLDeployCollectorRepository xlDeployCollectorRepository,
+									XLDeployApplicationRepository xlDeployApplicationRepository,
+									XLDeployEnvironmentComponentRepository envComponentRepository,
+						            EnvironmentStatusRepository environmentStatusRepository,
+						            XLDeploySettings xlDeploySettings, XLDeployClient xlDeployClient,
+						            ComponentRepository dbComponentRepository) {
+<span class="nc" id="L76">		super(taskScheduler, &quot;XLDeploy&quot;);</span>
+<span class="nc" id="L77">		this.xlDeployCollectorRepository = xlDeployCollectorRepository;</span>
+<span class="nc" id="L78">		this.xlDeployApplicationRepository = xlDeployApplicationRepository;</span>
+<span class="nc" id="L79">		this.xlDeployClient = xlDeployClient;</span>
+<span class="nc" id="L80">		this.xlDeploySettings = xlDeploySettings;</span>
+<span class="nc" id="L81">        this.envComponentRepository = envComponentRepository;</span>
+<span class="nc" id="L82">        this.environmentStatusRepository = environmentStatusRepository;</span>
+<span class="nc" id="L83">        this.dbComponentRepository = dbComponentRepository;</span>
+<span class="nc" id="L84">	}</span>
+	
+    @Override
+    public XLDeployCollector getCollector() {
+<span class="nc" id="L88">        return XLDeployCollector.prototype(xlDeploySettings.getServers(), xlDeploySettings.getNiceNames());</span>
+    }
+    
+    @Override
+    public BaseCollectorRepository&lt;XLDeployCollector&gt; getCollectorRepository() {
+<span class="nc" id="L93">        return xlDeployCollectorRepository;</span>
+    }
+
+    @Override
+    public String getCron() {
+<span class="nc" id="L98">        return xlDeploySettings.getCron();</span>
+    }
+    
+    @Override
+    public void collect(XLDeployCollector collector) {
+<span class="nc bnc" id="L103" title="All 2 branches missed.">    	for (String instanceUrl : collector.getXLdeployServers()) {</span>
+    		
+<span class="nc" id="L105">    		logBanner(instanceUrl); </span>
+    		
+<span class="nc" id="L107">    		long start = System.currentTimeMillis();</span>
+    		
+<span class="nc" id="L109">    		clean(collector);</span>
+    		
+<span class="nc" id="L111">    		addNewApplications(xlDeployClient.getApplications(instanceUrl), collector);</span>
+    		
+<span class="nc" id="L113">    		updateData(enabledApplications(collector, instanceUrl));</span>
+    		
+<span class="nc" id="L115">    		log(&quot;Finished&quot;, start);</span>
+<span class="nc" id="L116">    	}</span>
+<span class="nc" id="L117">    }</span>
+    
+    /**
+     * Clean up unused deployment collector items
+     *
+     * @param collector the {@link XLDeployCollector}
+     */
+    @SuppressWarnings(&quot;PMD.AvoidDeeplyNestedIfStmts&quot;)
+    private void clean(XLDeployCollector collector) {
+<span class="nc" id="L126">    	deleteUnwantedJobs(collector);</span>
+<span class="nc" id="L127">        Set&lt;ObjectId&gt; uniqueIDs = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">        for (com.capitalone.dashboard.model.Component comp : dbComponentRepository</span>
+<span class="nc" id="L129">                .findAll()) {</span>
+<span class="nc bnc" id="L130" title="All 4 branches missed.">            if (comp.getCollectorItems() == null || comp.getCollectorItems().isEmpty()) continue;</span>
+<span class="nc" id="L131">            List&lt;CollectorItem&gt; itemList = comp.getCollectorItems().get(</span>
+                    CollectorType.Deployment);
+<span class="nc bnc" id="L133" title="All 2 branches missed.">            if (itemList == null) continue;</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">            for (CollectorItem ci : itemList) {</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">                if (ci == null) continue;</span>
+<span class="nc" id="L136">                uniqueIDs.add(ci.getId());</span>
+<span class="nc" id="L137">            }</span>
+<span class="nc" id="L138">        }</span>
+<span class="nc" id="L139">        List&lt;XLDeployApplication&gt; appList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L140">        Set&lt;ObjectId&gt; udId = new HashSet&lt; &gt;();</span>
+<span class="nc" id="L141">        udId.add(collector.getId());</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">        for (XLDeployApplication app : xlDeployApplicationRepository.findByCollectorIdIn(udId)) {</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">            if (app != null) {</span>
+<span class="nc" id="L144">                app.setEnabled(uniqueIDs.contains(app.getId()));</span>
+<span class="nc" id="L145">                appList.add(app);</span>
+            }
+<span class="nc" id="L147">        }</span>
+<span class="nc" id="L148">        xlDeployApplicationRepository.save(appList);</span>
+<span class="nc" id="L149">    }</span>
+    
+    private void deleteUnwantedJobs(XLDeployCollector collector) {
+<span class="nc" id="L152">        List&lt;XLDeployApplication&gt; deleteAppList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L153">        Set&lt;ObjectId&gt; udId = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L154">        udId.add(collector.getId());</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">        for (XLDeployApplication app : xlDeployApplicationRepository.findByCollectorIdIn(udId)) {</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">            if (!collector.getXLdeployServers().contains(app.getInstanceUrl()) ||</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">                    (!app.getCollectorId().equals(collector.getId()))) {</span>
+<span class="nc" id="L158">                deleteAppList.add(app);</span>
+            }
+<span class="nc" id="L160">        }</span>
+
+<span class="nc" id="L162">        xlDeployApplicationRepository.delete(deleteAppList);</span>
+<span class="nc" id="L163">    }</span>
+    
+    /**
+     * For each {@link XLDeployApplication}, update the current
+     * {@link EnvironmentComponent}s and {@link EnvironmentStatus}.
+     *
+     * @param xlDeployApplications list of {@link XLDeployApplication}s that belong to the same XLD instance
+     */
+    @SuppressWarnings(&quot;PMD.AvoidBranchingStatementAsLastInLoop&quot;)
+    private void updateData(List&lt;XLDeployApplication&gt; xlDeployApplications) {
+<span class="nc" id="L173">    	long startUpdate = System.currentTimeMillis();</span>
+    	
+<span class="nc" id="L175">    	List&lt;XLDeployApplicationHistoryItem&gt; allHistory = getRelevantHistory(xlDeployApplications);</span>
+    	
+<span class="nc" id="L177">    	Table&lt;XLDeployApplication, String, List&lt;XLDeployApplicationHistoryItem&gt;&gt; grouped = groupAndSort(allHistory, xlDeployApplications);</span>
+    	
+<span class="nc bnc" id="L179" title="All 2 branches missed.">    	if (LOGGER.isDebugEnabled()) {</span>
+<span class="nc" id="L180">    		dumpHistoryTable(grouped);</span>
+    	}
+    	
+<span class="nc bnc" id="L183" title="All 2 branches missed.">    	for (Map.Entry&lt;XLDeployApplication, Map&lt;String, List&lt;XLDeployApplicationHistoryItem&gt;&gt;&gt; e : grouped.rowMap().entrySet()) {</span>
+<span class="nc" id="L184">    		XLDeployApplication application = e.getKey();</span>
+    		
+<span class="nc bnc" id="L186" title="All 2 branches missed.">    		for (Map.Entry&lt;String, List&lt;XLDeployApplicationHistoryItem&gt;&gt; c : e.getValue().entrySet()) {</span>
+<span class="nc" id="L187">    			String environmentId = c.getKey();</span>
+<span class="nc" id="L188">    			List&lt;XLDeployApplicationHistoryItem&gt; history = c.getValue();</span>
+	    		
+    	    	// List in case we want to add in component information (deployables) in future
+<span class="nc" id="L191">    			List&lt;EnvironmentComponent&gt; compList = new ArrayList&lt;EnvironmentComponent&gt;();</span>
+    			
+<span class="nc" id="L193">    			XLDeployApplicationHistoryItem currentStatus = null;</span>
+    			
+<span class="nc bnc" id="L195" title="All 2 branches missed.">    			for (XLDeployApplicationHistoryItem h : history) {</span>
+<span class="nc" id="L196">    				String status = h.getStatus(); // One of DONE, CANCELLED</span>
+<span class="nc" id="L197">    	 			String type = h.getType(); // One of Initial, Update, Undeployment, Rollback, Noop (?)</span>
+    	 			
+<span class="nc bnc" id="L199" title="All 2 branches missed.">    	 			if (&quot;Rollback&quot;.equalsIgnoreCase(type)) {</span>
+    	 				// For simplicity we won't consider indeterminate cases (like if a rollback fails or is cancelled)
+<span class="nc" id="L201">    	 				continue;</span>
+    	 			}
+    	 			
+<span class="nc bnc" id="L204" title="All 2 branches missed.">    	 			if (&quot;CANCELLED&quot;.equalsIgnoreCase(status)) {</span>
+<span class="nc" id="L205">    	 				continue;</span>
+    	 			}
+    	 			
+<span class="nc" id="L208">    	 			currentStatus = h;</span>
+<span class="nc" id="L209">    	 			break;</span>
+    			}
+    			
+<span class="nc bnc" id="L212" title="All 2 branches missed.">    			if (currentStatus != null) {</span>
+<span class="nc" id="L213">    				compList.add(getEnvironmentComponent(currentStatus, application));</span>
+    			} else {
+<span class="nc" id="L215">    				LOGGER.error(&quot;Could not find history status for &quot; + application.getApplicationName() + &quot; on environment &quot; + environmentId);</span>
+    			}
+    			
+<span class="nc bnc" id="L218" title="All 2 branches missed.">    			if (!compList.isEmpty()) {</span>
+<span class="nc" id="L219">    	            List&lt;EnvironmentComponent&gt; existingComponents = envComponentRepository</span>
+<span class="nc" id="L220">    	                    .findByCollectorItemIdAndEnvironmentID(application.getId(), environmentId);</span>
+<span class="nc" id="L221">    	            envComponentRepository.delete(existingComponents);</span>
+<span class="nc" id="L222">    	            envComponentRepository.save(compList);</span>
+    	        }
+    			
+    	        // Note I don't think XLD can get environment status information
+<span class="nc" id="L226">	    	}</span>
+<span class="nc" id="L227">    	}</span>
+    	
+    	// Explicitly iterate through list in case it didn't have any history show up above
+<span class="nc bnc" id="L230" title="All 2 branches missed.">    	for (XLDeployApplication application : xlDeployApplications) {</span>
+<span class="nc" id="L231">    		application.setLastUpdated(startUpdate);</span>
+<span class="nc" id="L232">    	}</span>
+    	
+    	// We set the last update time so need to save it
+<span class="nc" id="L235">		xlDeployApplicationRepository.save(xlDeployApplications);</span>
+    	
+<span class="nc" id="L237">    	log(&quot;Deploy Update&quot;, startUpdate);</span>
+<span class="nc" id="L238">    }</span>
+    
+    private List&lt;XLDeployApplicationHistoryItem&gt; getRelevantHistory(List&lt;XLDeployApplication&gt; xlDeployApplications) {
+<span class="nc" id="L241">    	long startHistory = System.currentTimeMillis();</span>
+    	
+    	/*
+    	 * Gather history in two phases for efficiency:
+    	 * 1. For enabled applications that have updated since the beginning of yesterday only grab history
+    	 *    since the beginning of yesterday. If no deployments have been made on an environment then the
+    	 *    existing data in mongo will remain.
+    	 * 2. For enabled applications that have not been updated since yesterday (includes new ones)
+    	 *    gather 6 months worth of history
+    	 */
+<span class="nc" id="L251">    	List&lt;XLDeployApplicationHistoryItem&gt; allHistory = new ArrayList&lt;XLDeployApplicationHistoryItem&gt;();</span>
+<span class="nc" id="L252">    	List&lt;XLDeployApplication&gt; needShortHistory = new ArrayList&lt;XLDeployApplication&gt;();</span>
+<span class="nc" id="L253">    	List&lt;XLDeployApplication&gt; needLongHistory = new ArrayList&lt;XLDeployApplication&gt;();</span>
+    	
+<span class="nc" id="L255">    	long yesterdayBOD = yesterdayBOD().getTime();</span>
+    	
+<span class="nc bnc" id="L257" title="All 2 branches missed.">    	for (XLDeployApplication app : xlDeployApplications) {</span>
+<span class="nc" id="L258">    		long lastUpdate = app.getLastUpdated();</span>
+    		
+<span class="nc bnc" id="L260" title="All 2 branches missed.">    		if (lastUpdate &lt; yesterdayBOD) {</span>
+<span class="nc" id="L261">    			needLongHistory.add(app);</span>
+    		} else {
+<span class="nc" id="L263">    			needShortHistory.add(app);</span>
+    		}
+<span class="nc" id="L265">    	}</span>
+    	
+<span class="nc bnc" id="L267" title="All 2 branches missed.">    	if (!needShortHistory.isEmpty()) {</span>
+<span class="nc" id="L268">    		long startHist = System.currentTimeMillis();</span>
+<span class="nc" id="L269">    		List&lt;XLDeployApplicationHistoryItem&gt; history = xlDeployClient.getApplicationHistory(xlDeployApplications, yesterdayBOD(), tomorrowEOD());</span>
+
+<span class="nc" id="L271">    		log(&quot;Deploy Hist Short&quot;, startHist, history.size());</span>
+    		
+<span class="nc" id="L273">    		allHistory.addAll(history);</span>
+    	}
+    	
+<span class="nc bnc" id="L276" title="All 2 branches missed.">    	if (!needLongHistory.isEmpty()) {</span>
+<span class="nc" id="L277">    		long startHist = System.currentTimeMillis();</span>
+<span class="nc" id="L278">    		List&lt;XLDeployApplicationHistoryItem&gt; history = xlDeployClient.getApplicationHistory(xlDeployApplications, threeMonthsAgo(), tomorrowEOD());</span>
+
+<span class="nc" id="L280">    		log(&quot;Deploy Hist Long&quot;, startHist, history.size());</span>
+    		
+<span class="nc" id="L282">    		allHistory.addAll(history);</span>
+    	}
+    	
+<span class="nc" id="L285">    	log(&quot;Deploy Hist All&quot;, startHistory, allHistory.size());</span>
+    	
+<span class="nc" id="L287">    	return allHistory;</span>
+    }
+    
+    private List&lt;XLDeployApplication&gt; enabledApplications(
+    		XLDeployCollector collector, String instanceUrl) {
+<span class="nc" id="L292">        return xlDeployApplicationRepository.findEnabledApplications(</span>
+<span class="nc" id="L293">                collector.getId(), instanceUrl);</span>
+    }
+    
+    /**
+     * Add any new {@link XLDeployApplication}s.
+     *
+     * @param applications list of {@link XLDeployApplication}s
+     * @param collector    the {@link XLDeployCollector}
+     */
+    private void addNewApplications(List&lt;XLDeployApplication&gt; applications,
+                                    XLDeployCollector collector) {
+<span class="nc" id="L304">        long start = System.currentTimeMillis();</span>
+<span class="nc" id="L305">        int count = 0;</span>
+
+<span class="nc" id="L307">        log(&quot;All apps&quot;, start, applications.size());</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">        for (XLDeployApplication application : applications) {</span>
+<span class="nc" id="L309">        	XLDeployApplication existing = findExistingApplication(collector, application);</span>
+
+<span class="nc" id="L311">        	String niceName = getNiceName(application, collector);</span>
+<span class="nc bnc" id="L312" title="All 2 branches missed.">            if (existing == null) {</span>
+<span class="nc" id="L313">                application.setCollectorId(collector.getId());</span>
+<span class="nc" id="L314">                application.setEnabled(false);</span>
+<span class="nc" id="L315">                application.setDescription(application.getApplicationName());</span>
+<span class="nc bnc" id="L316" title="All 2 branches missed.">                if (StringUtils.isNotEmpty(niceName)) {</span>
+<span class="nc" id="L317">                	application.setNiceName(niceName);</span>
+                }
+                try {
+<span class="nc" id="L320">                    xlDeployApplicationRepository.save(application);</span>
+<span class="nc" id="L321">                } catch (org.springframework.dao.DuplicateKeyException ce) {</span>
+<span class="nc" id="L322">                    log(&quot;Duplicates items not allowed&quot;, 0);</span>
+
+<span class="nc" id="L324">                }</span>
+<span class="nc" id="L325">                count++;</span>
+<span class="nc bnc" id="L326" title="All 4 branches missed.">            } else if (StringUtils.isEmpty(existing.getNiceName()) &amp;&amp; StringUtils.isNotEmpty(niceName)) {</span>
+<span class="nc" id="L327">				existing.setNiceName(niceName);</span>
+<span class="nc" id="L328">                xlDeployApplicationRepository.save(existing);</span>
+            }
+<span class="nc" id="L330">        }</span>
+        
+<span class="nc" id="L332">        log(&quot;New apps&quot;, start, count);</span>
+<span class="nc" id="L333">    }</span>
+
+    private XLDeployApplication findExistingApplication(XLDeployCollector collector,
+                                     XLDeployApplication application) {
+<span class="nc" id="L337">        return xlDeployApplicationRepository.findXLDeployApplication(</span>
+<span class="nc" id="L338">                collector.getId(), application.getInstanceUrl(),</span>
+<span class="nc" id="L339">                application.getApplicationId());</span>
+    }
+    
+    private String getNiceName(XLDeployApplication application, XLDeployCollector collector) {
+<span class="nc bnc" id="L343" title="All 2 branches missed.">        if (CollectionUtils.isEmpty(collector.getXLdeployServers())) return &quot;&quot;;</span>
+<span class="nc" id="L344">        List&lt;String&gt; servers = collector.getXLdeployServers();</span>
+<span class="nc" id="L345">        List&lt;String&gt; niceNames = collector.getNiceNames();</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">        if (CollectionUtils.isEmpty(niceNames)) return &quot;&quot;;</span>
+<span class="nc bnc" id="L347" title="All 2 branches missed.">        for (int i = 0; i &lt; servers.size(); i++) {</span>
+<span class="nc bnc" id="L348" title="All 4 branches missed.">            if (servers.get(i).equalsIgnoreCase(application.getInstanceUrl()) &amp;&amp; niceNames.size() &gt; i) {</span>
+<span class="nc" id="L349">                return niceNames.get(i);</span>
+            }
+        }
+<span class="nc" id="L352">        return &quot;&quot;;</span>
+    }
+    
+    private EnvironmentComponent getEnvironmentComponent(XLDeployApplicationHistoryItem data, XLDeployApplication application) {
+		/**
+		 * I believe deployables correspond to the concept of &quot;Component&quot; here
+		 * 
+		 * In XLD deployables all go together when deploying a package. Versioning information
+		 * is on the package and not the deployable. Since all deployeds pass or fail together
+		 * and have the same version information we don't gain much by explicitly calling them out.
+		 * For that reason I am just creating a component that corresponds to the application.
+		 */
+<span class="nc" id="L364">		EnvironmentComponent component = new EnvironmentComponent();</span>
+		
+<span class="nc" id="L366">		component.setCollectorItemId(application.getId());</span>
+		
+<span class="nc" id="L368">		String packageName = data.getDeploymentPackage();</span>
+<span class="nc bnc" id="L369" title="All 2 branches missed.">		String applicationName = packageName != null? packageName.split(&quot;/&quot;)[0] : null;</span>
+<span class="nc bnc" id="L370" title="All 2 branches missed.">		String applicationVersion = packageName != null? packageName.split(&quot;/&quot;)[1] : null;</span>
+		
+<span class="nc" id="L372">		component.setEnvironmentID(data.getEnvironmentId());</span>
+<span class="nc" id="L373">		component.setEnvironmentName(data.getEnvironmentName());</span>
+<span class="nc" id="L374">		component.setEnvironmentUrl(application.getInstanceUrl());</span>
+		
+		// See note above about &quot;components&quot;
+<span class="nc" id="L377">		component.setComponentID(application.getApplicationId());</span>
+<span class="nc" id="L378">		component.setComponentName(applicationName);</span>
+<span class="nc" id="L379">		component.setComponentVersion(applicationVersion);</span>
+<span class="nc" id="L380">		component.setDeployTime(data.getCompletionDate());</span>
+<span class="nc" id="L381">		component.setAsOfDate(data.getCompletionDate());</span>
+		
+<span class="nc bnc" id="L383" title="All 2 branches missed.">		component.setDeployed(STATUS_DONE.equalsIgnoreCase(data.getStatus()) </span>
+<span class="nc bnc" id="L384" title="All 4 branches missed.">				&amp;&amp; (DEPLOYMENT_INITIAL.equalsIgnoreCase(data.getType()) || DEPLOYMENT_UPDATE.equalsIgnoreCase(data.getType())));</span>
+<span class="nc" id="L385">		return component;</span>
+    }
+    
+    /**
+     * 
+     * @param history		a list of history that come from the same XLD instance
+     * @param applications	a list of applications that come from the same XLD instance
+     * @return
+     */
+    private Table&lt;XLDeployApplication, String, List&lt;XLDeployApplicationHistoryItem&gt;&gt; groupAndSort(List&lt;XLDeployApplicationHistoryItem&gt; history, List&lt;XLDeployApplication&gt; applications) {
+<span class="nc" id="L395">    	Table&lt;XLDeployApplication, String, List&lt;XLDeployApplicationHistoryItem&gt;&gt; rt = HashBasedTable.create();</span>
+    	
+    	// Setup deref map... I'm pretty sure application names are unique
+<span class="nc" id="L398">    	Map&lt;String, XLDeployApplication&gt; nameToApplication = new HashMap&lt;String, XLDeployApplication&gt;();</span>
+    	
+<span class="nc bnc" id="L400" title="All 2 branches missed.">    	for (XLDeployApplication app : applications) {</span>
+<span class="nc" id="L401">    		nameToApplication.put(app.getApplicationName(), app);</span>
+<span class="nc" id="L402">    	}</span>
+    	
+    	// First group
+<span class="nc bnc" id="L405" title="All 2 branches missed.">    	for (XLDeployApplicationHistoryItem data : history) {</span>
+<span class="nc" id="L406">    		String packageName = data.getDeploymentPackage();</span>
+<span class="nc bnc" id="L407" title="All 2 branches missed.">    		String applicationName = packageName != null? packageName.split(&quot;/&quot;)[0] : null;</span>
+    		//String applicationVersion = packageName != null? packageName.split(&quot;/&quot;)[1] : null;
+    		
+<span class="nc" id="L410">    		XLDeployApplication app = nameToApplication.get(applicationName);</span>
+    		
+<span class="nc bnc" id="L412" title="All 2 branches missed.">    		if (app != null) {</span>
+<span class="nc" id="L413">    			String environmentId = data.getEnvironmentId();</span>
+    			
+<span class="nc bnc" id="L415" title="All 2 branches missed.">    			if (rt.get(app, environmentId) == null) {</span>
+<span class="nc" id="L416">    				rt.put(app, environmentId, new ArrayList&lt;XLDeployApplicationHistoryItem&gt;());</span>
+    			}
+    			
+<span class="nc" id="L419">    			rt.get(app, environmentId).add(data);</span>
+<span class="nc" id="L420">    		} else {</span>
+<span class="nc" id="L421">    			LOGGER.error(&quot;Could not find application &quot; + applicationName);</span>
+    		}
+<span class="nc" id="L423">    	}</span>
+    	
+    	// Now sort - note changes from values() are reflected in table
+<span class="nc bnc" id="L426" title="All 2 branches missed.">    	for (List&lt;XLDeployApplicationHistoryItem&gt; hist : rt.values()) {</span>
+<span class="nc" id="L427">    		Collections.sort(hist, new Comparator&lt;XLDeployApplicationHistoryItem&gt;() {</span>
+				@Override
+				public int compare(XLDeployApplicationHistoryItem o1, XLDeployApplicationHistoryItem o2) {
+					// Long compareTo for safety (int overflow)
+					// want most recent first
+<span class="nc" id="L432">					return Long.valueOf(o2.getCompletionDate()).compareTo(Long.valueOf(o1.getCompletionDate()));</span>
+				}
+    		});
+<span class="nc" id="L435">    	}</span>
+    	
+<span class="nc" id="L437">    	return rt;</span>
+    }
+    
+    private Date threeMonthsAgo() {
+<span class="nc" id="L441">    	Calendar time = Calendar.getInstance(TimeZone.getTimeZone(ZoneOffset.UTC));</span>
+<span class="nc" id="L442">    	time.add(Calendar.MONTH, -3);</span>
+    	
+<span class="nc" id="L444">    	return time.getTime();</span>
+    }
+    
+    private Date tomorrowEOD() {
+<span class="nc" id="L448">    	Calendar time = Calendar.getInstance(TimeZone.getTimeZone(ZoneOffset.UTC));</span>
+<span class="nc" id="L449">    	time.add(Calendar.DAY_OF_MONTH, 1);</span>
+<span class="nc" id="L450">    	time.set(Calendar.HOUR_OF_DAY, 23);</span>
+<span class="nc" id="L451">    	time.set(Calendar.MINUTE, 59);</span>
+<span class="nc" id="L452">    	time.set(Calendar.SECOND, 59);</span>
+    	
+<span class="nc" id="L454">    	return time.getTime();</span>
+    }
+    
+    private Date yesterdayBOD() {
+<span class="nc" id="L458">    	Calendar time = Calendar.getInstance(TimeZone.getTimeZone(ZoneOffset.UTC));</span>
+<span class="nc" id="L459">    	time.add(Calendar.DAY_OF_MONTH, -1);</span>
+<span class="nc" id="L460">    	time.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="nc" id="L461">    	time.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L462">    	time.set(Calendar.SECOND, 0);</span>
+    	
+<span class="nc" id="L464">    	return time.getTime();</span>
+    }
+    
+    private void dumpHistoryTable(Table&lt;XLDeployApplication, String, List&lt;XLDeployApplicationHistoryItem&gt;&gt; table) {
+<span class="nc" id="L468">    	StringBuilder sb = new StringBuilder(8192);</span>
+    	
+<span class="nc" id="L470">    	sb.append(&quot;\n === Application Deployment History Table === \n&quot;);</span>
+    	
+<span class="nc bnc" id="L472" title="All 2 branches missed.">    	for (Map.Entry&lt;XLDeployApplication, Map&lt;String, List&lt;XLDeployApplicationHistoryItem&gt;&gt;&gt; e : table.rowMap().entrySet()) {</span>
+<span class="nc" id="L473">    		XLDeployApplication application = e.getKey();</span>
+    		
+<span class="nc" id="L475">    		sb.append(&quot;   \\ -- &quot; + application.getApplicationId() + &quot;\n&quot;);</span>
+    		
+<span class="nc bnc" id="L477" title="All 2 branches missed.">    		for (Map.Entry&lt;String, List&lt;XLDeployApplicationHistoryItem&gt;&gt; c : e.getValue().entrySet()) {</span>
+<span class="nc" id="L478">    			String environmentId = c.getKey();</span>
+<span class="nc" id="L479">        		List&lt;XLDeployApplicationHistoryItem&gt; applicationHistory = c.getValue();</span>
+	    		
+<span class="nc" id="L481">	    		sb.append(&quot;      \\ -- &quot; + environmentId + &quot;\n&quot;);</span>
+<span class="nc bnc" id="L482" title="All 2 branches missed.">	    		for (XLDeployApplicationHistoryItem h : applicationHistory) {</span>
+<span class="nc" id="L483">		    		String packageName = h.getDeploymentPackage();</span>
+		    		//String applicationName = packageName != null? packageName.split(&quot;/&quot;)[0] : null;
+<span class="nc bnc" id="L485" title="All 2 branches missed.">		    		String applicationVersion = packageName != null? packageName.split(&quot;/&quot;)[1] : null;</span>
+	    			
+<span class="nc" id="L487">	    			String compl = FULL_DATE.format(new Date(h.getCompletionDate()));</span>
+	    			
+<span class="nc" id="L489">	    			sb.append(String.format(&quot;         + [%26s] %12s %9s %s\n&quot;, compl, h.getType(), h.getStatus(), applicationVersion));</span>
+<span class="nc" id="L490">	    		}</span>
+<span class="nc" id="L491">    		}</span>
+<span class="nc" id="L492">    	}</span>
+    	
+<span class="nc" id="L494">    	LOGGER.debug(sb.toString());</span>
+<span class="nc" id="L495">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

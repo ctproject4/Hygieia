@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GitHubGraphQLQuery.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:github-graphql-scm-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.model</a> &gt; <span class="el_source">GitHubGraphQLQuery.java</span></div><h1>GitHubGraphQLQuery.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.model;
+
+<span class="nc" id="L3">public class GitHubGraphQLQuery {</span>
+
+
+    public static final String QUERY_BASE_ALL_FIRST = &quot;query ($owner: String!, $name: String!, $branch: String!, $since: GitTimestamp!, $fetchCount: Int!) {\n&quot; +
+            &quot;  repository(owner: $owner, name: $name) {\n&quot;;
+
+    public static final String QUERY_BASE_ALL_AFTER = &quot;query ($owner: String!, $name: String!, $branch: String!, $afterPull : String!, $afterCommit : String!, $afterIssue : String!, $since: GitTimestamp!, $fetchCount: Int!) {\n&quot; +
+            &quot;  repository(owner: $owner, name: $name) {\n&quot;;
+
+    public static final String QUERY_BASE_COMMIT_ONLY_AFTER = &quot;query ($owner: String!, $name: String!, $branch: String!, $afterCommit : String!, $since: GitTimestamp!, $fetchCount: Int!) {\n&quot; +
+            &quot;  repository(owner: $owner, name: $name) {\n&quot;;
+
+    public static final String QUERY_BASE_ISSUE_ONLY_AFTER = &quot;query ($owner: String!, $name: String!, $afterIssue : String!, $fetchCount: Int!) {\n&quot; +
+            &quot;  repository(owner: $owner, name: $name) {\n&quot;;
+
+    public static final String QUERY_BASE_PULL_ONLY_AFTER = &quot;query ($owner: String!, $name: String!, $branch: String!, $afterPull : String!, $fetchCount: Int!) {\n&quot; +
+            &quot;  repository(owner: $owner, name: $name) {\n&quot;;
+
+    public static final String QUERY_BASE_ISSUE_AND_PULL_AFTER = &quot;query ($owner: String!, $name: String!, $branch: String!, $afterIssue : String!, $afterPull : String!, $fetchCount: Int!) {\n&quot; +
+            &quot;  repository(owner: $owner, name: $name) {\n&quot;;
+
+    public static final String QUERY_BASE_COMMIT_AND_ISSUE_AFTER = &quot;query ($owner: String!, $name: String!, $branch: String!, $afterCommit : String!, $afterIssue : String!, $since: GitTimestamp!, $fetchCount: Int!) {\n&quot; +
+            &quot;  repository(owner: $owner, name: $name) {\n&quot;;
+
+    public static final String QUERY_BASE_COMMIT_AND_PULL_AFTER = &quot;query ($owner: String!, $name: String!, $branch: String!, $afterPull : String!, $afterCommit : String!, $since: GitTimestamp!, $fetchCount: Int!) {\n&quot; +
+            &quot;  repository(owner: $owner, name: $name) {\n&quot;;
+
+
+    public static final String QUERY_COMMIT_HEADER_FIRST = &quot;  ref(qualifiedName: $branch) {\n&quot; +
+            &quot;    target {\n&quot; +
+            &quot;      ... on Commit {\n&quot; +
+            &quot;        history(since: $since, first: $fetchCount) {\n&quot;;
+
+    public static final String QUERY_COMMIT_HEADER_AFTER = &quot;  ref(qualifiedName: $branch) {\n&quot; +
+            &quot;    target {\n&quot; +
+            &quot;      ... on Commit {\n&quot; +
+            &quot;        history(since: $since, first: $fetchCount, after: $afterCommit) {\n&quot;;
+
+
+    public static final String QUERY_PULL_HEADER_FIRST = &quot;    pullRequests(first: $fetchCount, baseRefName: $branch, orderBy: {field: UPDATED_AT, direction: DESC}) {\n&quot;;
+
+    public static final String QUERY_PULL_HEADER_AFTER = &quot;    pullRequests(first: $fetchCount, after : $afterPull, baseRefName: $branch, orderBy: {field: UPDATED_AT, direction: DESC}) {\n&quot;;
+
+    public static final String QUERY_ISSUES_HEADER_FIRST = &quot;    issues(first: $fetchCount, orderBy: {field: UPDATED_AT, direction: DESC}) {\n&quot;;
+
+    public static final String QUERY_ISSUES_HEADER_AFTER = &quot;    issues(first: $fetchCount, after : $afterIssue, orderBy: {field: UPDATED_AT, direction: DESC}) {\n&quot;;
+
+
+    public static final String QUERY_COMMIT_MAIN =
+            &quot;          pageInfo {\n&quot; +
+                    &quot;            endCursor\n&quot; +
+                    &quot;            hasNextPage\n&quot; +
+                    &quot;          }\n&quot; +
+                    &quot;          edges {\n&quot; +
+                    &quot;            cursor\n&quot; +
+                    &quot;            node {\n&quot; +
+                    &quot;              oid\n&quot; +
+                    &quot;              parents(first:10) {\n&quot; +
+                    &quot;                nodes {\n&quot; +
+                    &quot;                  oid\n&quot; +
+                    &quot;                }\n&quot; +
+                    &quot;              }\n&quot; +
+                    &quot;              message\n&quot; +
+                    &quot;                committer {\n&quot; +
+                    &quot;                  user {\n&quot; +
+                    &quot;                    login\n&quot; +
+                    &quot;                  }\n&quot; +
+                    &quot;                  name\n&quot; +
+                    &quot;                  date\n&quot; +
+                    &quot;                }\n&quot; +
+                    &quot;                author {\n&quot; +
+                    &quot;                  name\n&quot; +
+                    &quot;                  user {\n&quot; +
+                    &quot;                    login\n&quot; +
+                    &quot;                  }\n&quot; +
+                    &quot;                  email\n&quot; +
+                    &quot;                  date\n&quot; +
+                    &quot;                }&quot; +
+                    &quot;              status {\n&quot; +
+                    &quot;                state\n&quot; +
+                    &quot;                contexts {\n&quot; +
+                    &quot;                  id\n&quot; +
+                    &quot;                  description\n&quot; +
+                    &quot;                }\n&quot; +
+                    &quot;              }\n&quot; +
+                    &quot;            }\n&quot; +
+                    &quot;          }\n&quot; +
+                    &quot;        }\n&quot; +
+                    &quot;      }\n&quot; +
+                    &quot;    }\n&quot; +
+                    &quot;  }\n&quot;;
+
+
+    public static final String QUERY_PULL_MAIN =
+            &quot;      totalCount \n&quot; +
+                    &quot;      pageInfo {\n&quot; +
+                    &quot;        endCursor\n&quot; +
+                    &quot;        hasNextPage\n&quot; +
+                    &quot;      }\n&quot; +
+                    &quot;      edges {\n&quot; +
+                    &quot;        cursor\n&quot; +
+                    &quot;        node {\n&quot; +
+                    &quot;          number\n&quot; +
+                    &quot;          mergeable\n&quot; +
+                    &quot;          state\n&quot; +
+                    &quot;          createdAt\n&quot; +
+                    &quot;          updatedAt\n&quot; +
+                    &quot;          mergedAt\n&quot; +
+                    &quot;          baseRef {\n&quot; +
+                    &quot;            target {\n&quot; +
+                    &quot;                oid\n&quot; +
+                    &quot;            }\n&quot; +
+                    &quot;          }\n&quot; +
+                    &quot;          baseRefName\n&quot; +
+                    &quot;          title\n&quot; +
+                    &quot;          mergeCommit {\n&quot; +
+                    &quot;            oid\n&quot; +
+                    &quot;          }\n&quot; +
+                    &quot;          headRepository {\n&quot; +
+                    &quot;            name          \n&quot; +
+                    &quot;            url          \n&quot; +
+                    &quot;          }\n&quot; +
+                    &quot;          headRef {\n&quot; +
+                    &quot;            target {\n&quot; +
+                    &quot;                oid\n&quot; +
+                    &quot;            }\n&quot; +
+                    &quot;          }\n&quot; +
+                    &quot;          headRefName&quot; +
+                    &quot;          author {\n&quot; +
+                    &quot;            login\n&quot; +
+                    &quot;            resourcePath\n&quot; +
+                    &quot;          }&quot; +
+                    &quot;          commits(first: 250) {\n&quot; +
+                    &quot;            totalCount\n&quot; +
+                    &quot;            nodes {\n&quot; +
+                    &quot;              commit {\n&quot; +
+                    &quot;                oid\n&quot; +
+                    &quot;                committedDate\n&quot; +
+                    &quot;                message\n&quot; +
+                    &quot;                status {\n&quot; +
+                    &quot;                  state\n&quot; +
+                    &quot;                  contexts {\n&quot; +
+                    &quot;                    state\n&quot; +
+                    &quot;                    targetUrl\n&quot; +
+                    &quot;                    description\n&quot; +
+                    &quot;                    context\n&quot; +
+                    &quot;                  }\n&quot; +
+                    &quot;                }&quot; +
+                    &quot;                author {\n&quot; +
+                    &quot;                  name\n&quot; +
+                    &quot;                  date\n&quot; +
+                    &quot;                  user {\n&quot; +
+                    &quot;                    login\n&quot; +
+                    &quot;                  }\n&quot; +
+                    &quot;                }&quot; +
+                    &quot;              }\n&quot; +
+                    &quot;            }\n&quot; +
+                    &quot;          }\n&quot; +
+                    &quot;          timeline(last: 100) {\n&quot; +
+                    &quot;            edges {\n&quot; +
+                    &quot;              node {\n&quot; +
+                    &quot;                __typename\n&quot; +
+                    &quot;                ... on MergedEvent {\n&quot; +
+                    &quot;                  createdAt\n&quot; +
+                    &quot;                  commit {\n&quot; +
+                    &quot;                    oid\n&quot; +
+                    &quot;                  }\n&quot; +
+                    &quot;                  pullRequest {\n&quot; +
+                    &quot;                    number\n&quot; +
+                    &quot;                  }\n&quot; +
+                    &quot;                  mergeRefName\n&quot; +
+                    &quot;                  actor {\n&quot; +
+                    &quot;                    login\n&quot; +
+                    &quot;                  }\n&quot; +
+                    &quot;                }&quot; +
+                    &quot;              }\n&quot; +
+                    &quot;            }\n&quot; +
+                    &quot;          }\n&quot; +
+                    &quot;          comments(first: 100) {\n&quot; +
+                    &quot;            totalCount\n&quot; +
+                    &quot;            nodes {\n&quot; +
+                    &quot;              bodyText\n&quot; +
+                    &quot;                author {\n&quot; +
+                    &quot;                  login\n&quot; +
+                    &quot;                }\n&quot; +
+                    &quot;              createdAt \n&quot; +
+                    &quot;              updatedAt \n&quot; +
+                    &quot;            }\n&quot; +
+                    &quot;          }\n&quot; +
+                    &quot;          reviews(first: 100) {\n&quot; +
+                    &quot;            totalCount\n&quot; +
+                    &quot;            nodes {\n&quot; +
+                    &quot;              id\n&quot; +
+                    &quot;              bodyText\n&quot; +
+                    &quot;              state\n&quot; +
+                    &quot;                author {\n&quot; +
+                    &quot;                  login\n&quot; +
+                    &quot;                }\n&quot; +
+                    &quot;              createdAt \n&quot; +
+                    &quot;              updatedAt \n&quot; +
+                    &quot;            }\n&quot; +
+                    &quot;          }\n&quot; +
+                    &quot;        }\n&quot; +
+                    &quot;      }\n&quot; +
+                    &quot;    }\n&quot;;
+
+
+    public static final String QUERY_ISSUE_MAIN =
+            &quot;      totalCount \n&quot; +
+                    &quot;      pageInfo {\n&quot; +
+                    &quot;        endCursor\n&quot; +
+                    &quot;        hasNextPage\n&quot; +
+                    &quot;      }\n&quot; +
+                    &quot;      edges {\n&quot; +
+                    &quot;        cursor\n&quot; +
+                    &quot;        node {\n&quot; +
+                    &quot;          number\n&quot; +
+                    &quot;          state\n&quot; +
+                    &quot;          createdAt\n&quot; +
+                    &quot;          updatedAt\n&quot; +
+                    &quot;          title\n&quot; +
+                    &quot;          author {\n&quot; +
+                    &quot;            login\n&quot; +
+                    &quot;          }&quot; +
+                    &quot;        }\n&quot; +
+                    &quot;      }\n&quot; +
+                    &quot;    }\n&quot;;
+
+
+    public static final String QUERY_END =
+            &quot;  }\n&quot; + &quot;}\n&quot;;
+
+    public static final String QUERY_NEW_PR_CHECK =&quot;query ($owner: String!, $name: String!, $branch:String!) {\n&quot; +
+            &quot;  repository(owner: $owner, name: $name) {\n&quot; +
+            &quot;    pullRequests(first: 1, baseRefName: $branch, orderBy: {field: UPDATED_AT, direction: DESC}) {\n&quot; +
+            &quot;      edges {\n&quot; +
+            &quot;        node {\n&quot; +
+            &quot;          number\n&quot; +
+            &quot;          updatedAt\n&quot; +
+            &quot;        }\n&quot; +
+            &quot;      }\n&quot; +
+            &quot;    }\n&quot; +
+            &quot;  }\n&quot; +
+            &quot;}&quot;;
+
+
+    public static final String QUERY_NEW_ISSUE_CHECK =
+            &quot;query ($owner: String!, $name: String!) {\n&quot; +
+                    &quot;  repository(owner: $owner, name: $name) {\n&quot; +
+                    &quot;    issues(first: 1, orderBy: {field: UPDATED_AT, direction: DESC}) {\n&quot; +
+                    &quot;      edges {\n&quot; +
+                    &quot;        node {\n&quot; +
+                    &quot;          number\n&quot; +
+                    &quot;          updatedAt\n&quot; +
+                    &quot;        }\n&quot; +
+                    &quot;      }\n&quot; +
+                    &quot;    }\n&quot; +
+                    &quot;  }\n&quot; +
+                    &quot;}&quot;;
+
+
+
+
+    public static final String QUERY_RATE_LIMIT = &quot;query {rateLimit {limit remaining resetAt}}&quot;;
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

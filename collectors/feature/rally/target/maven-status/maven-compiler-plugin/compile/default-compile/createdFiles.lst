@@ -1,0 +1,11 @@
+com/capitalone/dashboard/model/RallyProject.class
+com/capitalone/dashboard/collector/RallyCollectorTask.class
+com/capitalone/dashboard/Application.class
+com/capitalone/dashboard/model/RallyCollector.class
+com/capitalone/dashboard/collector/RallySettings.class
+com/capitalone/dashboard/model/RallyIteration.class
+com/capitalone/dashboard/repository/RallyProjectRepository.class
+com/capitalone/dashboard/collector/RestOperationsSupplier.class
+com/capitalone/dashboard/collector/DefaultRallyClient.class
+com/capitalone/dashboard/repository/RallyCollectorRepository.class
+com/capitalone/dashboard/collector/RallyClient.class

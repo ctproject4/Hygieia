@@ -1,0 +1,16 @@
+/home/Devops/Hygieia/collectors/feature/jira/src/main/java/com/capitalone/dashboard/Application.java
+/home/Devops/Hygieia/collectors/feature/jira/src/main/java/com/capitalone/dashboard/collector/FeatureCollectorTask.java
+/home/Devops/Hygieia/collectors/feature/jira/src/main/java/com/capitalone/dashboard/collector/FeatureSettings.java
+/home/Devops/Hygieia/collectors/feature/jira/src/main/java/com/capitalone/dashboard/collector/SprintFormatter.java
+/home/Devops/Hygieia/collectors/feature/jira/src/main/java/com/capitalone/dashboard/model/IssueResult.java
+/home/Devops/Hygieia/collectors/feature/jira/src/main/java/com/capitalone/dashboard/model/JiraMode.java
+/home/Devops/Hygieia/collectors/feature/jira/src/main/java/com/capitalone/dashboard/repository/FeatureBoardRepository.java
+/home/Devops/Hygieia/collectors/feature/jira/src/main/java/com/capitalone/dashboard/model/FeatureCollector.java
+/home/Devops/Hygieia/collectors/feature/jira/src/main/java/com/capitalone/dashboard/utils/Utilities.java
+/home/Devops/Hygieia/collectors/feature/jira/src/main/java/com/capitalone/dashboard/model/Epic.java
+/home/Devops/Hygieia/collectors/feature/jira/src/main/java/com/capitalone/dashboard/model/Sprint.java
+/home/Devops/Hygieia/collectors/feature/jira/src/main/java/com/capitalone/dashboard/collector/JiraClient.java
+/home/Devops/Hygieia/collectors/feature/jira/src/main/java/com/capitalone/dashboard/repository/FeatureCollectorRepository.java
+/home/Devops/Hygieia/collectors/feature/jira/src/main/java/com/capitalone/dashboard/collector/DefaultJiraClient.java
+/home/Devops/Hygieia/collectors/feature/jira/src/main/java/com/capitalone/dashboard/model/FeatureEpicResult.java
+/home/Devops/Hygieia/collectors/feature/jira/src/main/java/com/capitalone/dashboard/model/FeatureBoard.java

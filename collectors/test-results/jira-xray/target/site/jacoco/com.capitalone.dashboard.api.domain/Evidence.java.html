@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Evidence.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:jira-xray-testresult-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.api.domain</a> &gt; <span class="el_source">Evidence.java</span></div><h1>Evidence.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.api.domain;
+
+import java.net.URI;
+import java.nio.ByteBuffer;
+import java.util.Date;
+
+/**
+ * This class will get the details of evidences of a test run
+ */
+public class Evidence {
+    private Long id;
+    private String fileName;
+    private String fileSize;
+    private Date created;
+    private String author;
+    private URI fileURL;
+    //TODO: AS A MACHINE I WANT TO UPLOAD AN IMAGE TO A TESTRUN OR TESTSTEP IF I NEED IT
+    private ByteBuffer data;
+
+<span class="nc" id="L20">    public Evidence(Long id,String fileName,String fileSize,Date created,String author,URI fileURL){</span>
+<span class="nc" id="L21">        this.id=id;</span>
+<span class="nc" id="L22">        this.fileName=fileName;</span>
+<span class="nc" id="L23">        this.fileSize=fileSize;</span>
+<span class="nc" id="L24">        this.created=created;</span>
+<span class="nc" id="L25">        this.author=author;</span>
+<span class="nc" id="L26">        this.fileURL=fileURL;</span>
+
+<span class="nc" id="L28">    }</span>
+
+    public Long getId() {
+<span class="nc" id="L31">        return id;</span>
+    }
+
+    public void setId(Long id) {
+<span class="nc" id="L35">        this.id = id;</span>
+<span class="nc" id="L36">    }</span>
+
+    public String getFileName() {
+<span class="nc" id="L39">        return fileName;</span>
+    }
+
+    public void setFileName(String fileName) {
+<span class="nc" id="L43">        this.fileName = fileName;</span>
+<span class="nc" id="L44">    }</span>
+
+    public String getFileSize() {
+<span class="nc" id="L47">        return fileSize;</span>
+    }
+
+    public void setFileSize(String fileSize) {
+<span class="nc" id="L51">        this.fileSize = fileSize;</span>
+<span class="nc" id="L52">    }</span>
+
+    public Date getCreated() {
+<span class="nc" id="L55">        return created;</span>
+    }
+
+    public void setCreated(Date created) {
+<span class="nc" id="L59">        this.created = created;</span>
+<span class="nc" id="L60">    }</span>
+
+    public String getAuthor() {
+<span class="nc" id="L63">        return author;</span>
+    }
+
+    public void setAuthor(String author) {
+<span class="nc" id="L67">        this.author = author;</span>
+<span class="nc" id="L68">    }</span>
+
+    public URI getFileURL() {
+<span class="nc" id="L71">        return fileURL;</span>
+    }
+
+    public void setFileURL(URI fileURL) {
+<span class="nc" id="L75">        this.fileURL = fileURL;</span>
+<span class="nc" id="L76">    }</span>
+
+    public ByteBuffer getData() {
+<span class="nc" id="L79">        return data;</span>
+    }
+
+    public void setData(ByteBuffer data) {
+<span class="nc" id="L83">        this.data = data;</span>
+<span class="nc" id="L84">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

@@ -1,0 +1,3 @@
+com/capitalone/dashboard/collector/HpsmCollectorTaskTest.class
+com/capitalone/dashboard/collector/DefaultHpsmClientTest.class
+com/capitalone/dashboard/collector/DefaultBaseClientTest.class

@@ -1,0 +1,10 @@
+{ "_class" : "com.capitalone.dashboard.model.CollectorItem",
+"description" : "PROJECTNAME",
+"enabled" : true,
+"errors" : [ ],
+"pushed" : false,
+"collectorId" : ObjectId("COLLECTORCOLLECTIONOID"),
+"lastUpdated" : NumberLong(TIME),
+"options" : { "jobName" : "PROJECTNAME",
+"jobUrl" : "TFSURL/PROJECTNAME/",
+"instanceUrl" : "TFSURL" } }

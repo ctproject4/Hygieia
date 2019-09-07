@@ -1,0 +1,10 @@
+com/capitalone/dashboard/collector/BambooCollectorTask.class
+com/capitalone/dashboard/collector/BambooSettings.class
+com/capitalone/dashboard/collector/BambooClient.class
+com/capitalone/dashboard/model/BambooCollector.class
+com/capitalone/dashboard/model/BambooJob.class
+com/capitalone/dashboard/Application.class
+com/capitalone/dashboard/repository/BambooJobRepository.class
+com/capitalone/dashboard/collector/RestOperationsSupplier.class
+com/capitalone/dashboard/repository/BambooCollectorRepository.class
+com/capitalone/dashboard/collector/DefaultBambooClient.class

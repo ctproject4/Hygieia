@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>JenkinsCucumberTestCollectorTask.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:jenkins-cucumber-test-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">JenkinsCucumberTestCollectorTask.java</span></div><h1>JenkinsCucumberTestCollectorTask.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+import com.capitalone.dashboard.model.Build;
+import com.capitalone.dashboard.model.CollectorItem;
+import com.capitalone.dashboard.model.CollectorType;
+import com.capitalone.dashboard.model.JenkinsCucumberTestCollector;
+import com.capitalone.dashboard.model.JenkinsJob;
+import com.capitalone.dashboard.model.TestResult;
+import com.capitalone.dashboard.repository.BaseCollectorRepository;
+import com.capitalone.dashboard.repository.ComponentRepository;
+import com.capitalone.dashboard.repository.JenkinsCucumberTestCollectorRepository;
+import com.capitalone.dashboard.repository.JenkinsCucumberTestJobRepository;
+import com.capitalone.dashboard.repository.TestResultRepository;
+import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+@SuppressWarnings(&quot;PMD.UnnecessaryFullyQualifiedName&quot;)
+// Will need to rename com.capitalone.dashboard.Component as it conflicts with Spring.
+@Component
+public class JenkinsCucumberTestCollectorTask extends
+        CollectorTask&lt;JenkinsCucumberTestCollector&gt; {
+
+    private final JenkinsCucumberTestCollectorRepository jenkinsCucumberTestCollectorRepository;
+    private final JenkinsCucumberTestJobRepository jenkinsCucumberTestJobRepository;
+    private final TestResultRepository testResultRepository;
+    private final JenkinsClient jenkinsClient;
+    private final JenkinsSettings jenkinsCucumberTestSettings;
+    private final ComponentRepository dbComponentRepository;
+
+    @Autowired
+    public JenkinsCucumberTestCollectorTask(
+            TaskScheduler taskScheduler,
+            JenkinsCucumberTestCollectorRepository jenkinsCucumberTestCollectorRepository,
+            JenkinsCucumberTestJobRepository jenkinsCucumberTestJobRepository,
+            TestResultRepository testResultRepository,
+            JenkinsClient jenkinsCucumberTestClient,
+            JenkinsSettings jenkinsCucumberTestSettings,
+            ComponentRepository dbComponentRepository) {
+<span class="nc" id="L47">        super(taskScheduler, &quot;JenkinsCucumberTest&quot;);</span>
+<span class="nc" id="L48">        this.jenkinsCucumberTestCollectorRepository = jenkinsCucumberTestCollectorRepository;</span>
+<span class="nc" id="L49">        this.jenkinsCucumberTestJobRepository = jenkinsCucumberTestJobRepository;</span>
+<span class="nc" id="L50">        this.testResultRepository = testResultRepository;</span>
+<span class="nc" id="L51">        this.jenkinsClient = jenkinsCucumberTestClient;</span>
+<span class="nc" id="L52">        this.jenkinsCucumberTestSettings = jenkinsCucumberTestSettings;</span>
+<span class="nc" id="L53">        this.dbComponentRepository = dbComponentRepository;</span>
+<span class="nc" id="L54">    }</span>
+
+    @Override
+    public JenkinsCucumberTestCollector getCollector() {
+<span class="nc" id="L58">        return JenkinsCucumberTestCollector</span>
+<span class="nc" id="L59">                .prototype(jenkinsCucumberTestSettings.getServers());</span>
+    }
+
+    @Override
+    public BaseCollectorRepository&lt;JenkinsCucumberTestCollector&gt; getCollectorRepository() {
+<span class="nc" id="L64">        return jenkinsCucumberTestCollectorRepository;</span>
+    }
+
+    @Override
+    public String getCron() {
+<span class="nc" id="L69">        return jenkinsCucumberTestSettings.getCron();</span>
+    }
+
+    @Override
+    public void collect(JenkinsCucumberTestCollector collector) {
+
+<span class="nc" id="L75">        long start = System.currentTimeMillis();</span>
+
+<span class="nc" id="L77">        clean(collector);</span>
+
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        for (String instanceUrl : collector.getBuildServers()) {</span>
+<span class="nc" id="L80">            logBanner(instanceUrl);</span>
+
+<span class="nc" id="L82">            Map&lt;JenkinsJob, Set&lt;Build&gt;&gt; buildsByJob = jenkinsClient</span>
+<span class="nc" id="L83">                    .getInstanceJobs(instanceUrl);</span>
+<span class="nc" id="L84">            log(&quot;Fetched jobs&quot;, start);</span>
+
+<span class="nc" id="L86">            addNewJobs(buildsByJob.keySet(), collector);</span>
+            
+<span class="nc" id="L88">            List&lt;JenkinsJob&gt; enabledJobs = enabledJobs(collector, instanceUrl);</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">            if ( ! enabledJobs.isEmpty())</span>
+            {
+<span class="nc" id="L91">                addNewTestSuites(enabledJobs); </span>
+            }
+            else
+            {
+<span class="nc" id="L95">            	log(&quot;WARNING: No Enabled Jobs found with artifacts pattern: &quot; + jenkinsCucumberTestSettings.getCucumberJsonRegex());</span>
+            }
+<span class="nc" id="L97">            log(&quot;Finished&quot;, start);</span>
+<span class="nc" id="L98">        }</span>
+<span class="nc" id="L99">    }</span>
+
+    /**
+     * Clean up unused hudson/jenkins collector items
+     *
+     * @param collector the collector
+     */
+
+    private void clean(JenkinsCucumberTestCollector collector) {
+
+        // First delete jobs that will be no longer collected because servers have moved etc.
+<span class="nc" id="L110">        deleteUnwantedJobs(collector);</span>
+
+<span class="nc" id="L112">        Set&lt;ObjectId&gt; uniqueIDs = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">        for (com.capitalone.dashboard.model.Component comp : dbComponentRepository</span>
+<span class="nc" id="L114">                .findAll()) {</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">            if (comp.getCollectorItems() == null</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">                    || comp.getCollectorItems().isEmpty()) continue;</span>
+<span class="nc" id="L117">            List&lt;CollectorItem&gt; itemList = comp.getCollectorItems().get(</span>
+                    CollectorType.Test);
+<span class="nc bnc" id="L119" title="All 2 branches missed.">            if (itemList == null) continue;</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">            for (CollectorItem ci : itemList) {</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">                if (ci != null</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">                        &amp;&amp; ci.getCollectorId().equals(collector.getId())) {</span>
+<span class="nc" id="L123">                    uniqueIDs.add(ci.getId());</span>
+                }
+
+<span class="nc" id="L126">            }</span>
+<span class="nc" id="L127">        }</span>
+
+<span class="nc" id="L129">        List&lt;JenkinsJob&gt; jobList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L130">        Set&lt;ObjectId&gt; udId = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L131">        udId.add(collector.getId());</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">        for (JenkinsJob job : jenkinsCucumberTestJobRepository</span>
+<span class="nc" id="L133">                .findByCollectorIdIn(udId)) {</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">            if (job != null) {</span>
+<span class="nc" id="L135">                job.setEnabled(uniqueIDs.contains(job.getId()));</span>
+<span class="nc" id="L136">                jobList.add(job);</span>
+            }
+<span class="nc" id="L138">        }</span>
+<span class="nc" id="L139">        jenkinsCucumberTestJobRepository.save(jobList);</span>
+<span class="nc" id="L140">    }</span>
+
+    private void deleteUnwantedJobs(JenkinsCucumberTestCollector collector) {
+
+<span class="nc" id="L144">        List&lt;JenkinsJob&gt; deleteJobList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L145">        Set&lt;ObjectId&gt; udId = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L146">        udId.add(collector.getId());</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">        for (JenkinsJob job : jenkinsCucumberTestJobRepository.findByCollectorIdIn(udId)) {</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">            if (!collector.getBuildServers().contains(job.getInstanceUrl()) ||</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">                    (!job.getCollectorId().equals(collector.getId()))) {</span>
+<span class="nc" id="L150">                deleteJobList.add(job);</span>
+            }
+<span class="nc" id="L152">        }</span>
+
+<span class="nc" id="L154">        jenkinsCucumberTestJobRepository.delete(deleteJobList);</span>
+
+<span class="nc" id="L156">    }</span>
+    // Jenkins Helper methods
+
+    private List&lt;JenkinsJob&gt; enabledJobs(
+            JenkinsCucumberTestCollector collector, String instanceUrl) {
+<span class="nc" id="L161">        return jenkinsCucumberTestJobRepository.findEnabledJenkinsJobs(</span>
+<span class="nc" id="L162">                collector.getId(), instanceUrl);</span>
+    }
+
+    /**
+     * Adds new {@link JenkinsJob}s to the database as disabled jobs.
+     *
+     * @param jobs      list of {@link JenkinsJob}s
+     * @param collector the {@link JenkinsCucumberTestCollector}
+     */
+    private void addNewJobs(Set&lt;JenkinsJob&gt; jobs,
+                            JenkinsCucumberTestCollector collector) {
+<span class="nc" id="L173">        long start = System.currentTimeMillis();</span>
+<span class="nc" id="L174">        int count = 0;</span>
+
+<span class="nc bnc" id="L176" title="All 2 branches missed.">        for (JenkinsJob job : jobs) {</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">            if (jenkinsClient.buildHasCucumberResults(job.getJobUrl())</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">                    &amp;&amp; isNewJob(collector, job)) {</span>
+<span class="nc" id="L179">                job.setCollectorId(collector.getId());</span>
+<span class="nc" id="L180">                job.setEnabled(false); // Do not enable for collection. Will be</span>
+                // enabled when added to dashboard
+<span class="nc" id="L182">                job.setDescription(job.getJobName());</span>
+<span class="nc" id="L183">                jenkinsCucumberTestJobRepository.save(job);</span>
+<span class="nc" id="L184">                count++;</span>
+            }
+<span class="nc" id="L186">        }</span>
+<span class="nc" id="L187">        log(&quot;New jobs&quot;, start, count);</span>
+<span class="nc" id="L188">    }</span>
+
+    private void addNewTestSuites(List&lt;JenkinsJob&gt; enabledJobs) {
+<span class="nc" id="L191">        long start = System.currentTimeMillis();</span>
+<span class="nc" id="L192">        int count = 0;</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">        for (JenkinsJob job : enabledJobs) {</span>
+<span class="nc" id="L194">            Build buildSummary = jenkinsClient.getLastSuccessfulBuild(job.getJobUrl());</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">			if (isNewCucumberResult(job, buildSummary)) {</span>
+<span class="nc" id="L196">                job.setLastUpdated(System.currentTimeMillis());</span>
+<span class="nc" id="L197">                jenkinsCucumberTestJobRepository.save(job);</span>
+                // Obtain the Test Result
+<span class="nc" id="L199">                TestResult result = jenkinsClient</span>
+<span class="nc" id="L200">                        .getCucumberTestResult(job.getJobUrl());</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">                if (result != null) {</span>
+<span class="nc" id="L202">                    result.setCollectorItemId(job.getId());</span>
+<span class="nc" id="L203">                    result.setTimestamp(System.currentTimeMillis());</span>
+<span class="nc" id="L204">                    testResultRepository.save(result);</span>
+<span class="nc" id="L205">                    count++;</span>
+                }
+            }
+<span class="nc" id="L208">        }</span>
+<span class="nc" id="L209">        log(&quot;New test suites&quot;, start, count);</span>
+<span class="nc" id="L210">    }</span>
+
+    private boolean isNewJob(JenkinsCucumberTestCollector collector,
+                             JenkinsJob job) {
+<span class="nc bnc" id="L214" title="All 2 branches missed.">        return jenkinsCucumberTestJobRepository.findJenkinsJob(</span>
+<span class="nc" id="L215">                collector.getId(), job.getInstanceUrl(), job.getJobName()) == null;</span>
+    }
+
+    private boolean isNewCucumberResult(JenkinsJob job, Build build) {
+<span class="nc bnc" id="L219" title="All 2 branches missed.">        return testResultRepository.findByCollectorItemIdAndExecutionId(</span>
+<span class="nc" id="L220">                job.getId(), build.getNumber()) == null;</span>
+    }
+
+    @SuppressWarnings(&quot;unused&quot;)
+	private Set&lt;Build&gt; nullSafe(Set&lt;Build&gt; builds) {
+<span class="nc bnc" id="L225" title="All 2 branches missed.">        return builds == null ? new HashSet&lt;Build&gt;() : builds;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

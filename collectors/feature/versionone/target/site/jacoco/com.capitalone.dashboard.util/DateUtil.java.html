@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DateUtil.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:versionone-feature-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.util</a> &gt; <span class="el_source">DateUtil.java</span></div><h1>DateUtil.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.util;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
+
+<span class="fc" id="L15">public final class DateUtil {</span>
+<span class="fc" id="L16">	private static final Logger LOGGER = LoggerFactory.getLogger(DateUtil.class);</span>
+
+	public static final String ISO_DATE_TIME_FORMAT = &quot;yyyy-MM-dd'T'HH:mm:ss&quot;;
+
+	public static Date fromISODateTimeFormat(String isoString) {
+<span class="nc" id="L21">		String iString = isoString;</span>
+<span class="nc" id="L22">		int charIndex = iString.indexOf(&quot;.&quot;);</span>
+<span class="nc bnc" id="L23" title="All 2 branches missed.">		if (charIndex != -1) {</span>
+<span class="nc" id="L24">			iString = iString.substring(0, charIndex);</span>
+		}
+		try {
+<span class="nc" id="L27">			return new SimpleDateFormat(ISO_DATE_TIME_FORMAT).parse(iString);</span>
+<span class="nc" id="L28">		} catch (ParseException e) {</span>
+<span class="nc" id="L29">			LOGGER.error(&quot;Parse error of: &quot; + iString, e);</span>
+<span class="nc" id="L30">			return null;</span>
+		}
+	}
+
+	public static String toISODateRealTimeFormat(Date iDate) {
+<span class="nc" id="L35">		DateFormat df = new SimpleDateFormat(ISO_DATE_TIME_FORMAT);</span>
+<span class="nc" id="L36">		return df.format(iDate);</span>
+	}
+
+	public static Date getDatePriorToMinutes(Date fromDate, int minutes) {
+<span class="nc" id="L40">		Calendar calendar = Calendar.getInstance();</span>
+<span class="nc" id="L41">		calendar.setTime(fromDate);</span>
+<span class="nc" id="L42">		calendar.add(Calendar.MINUTE, -1 * minutes);</span>
+<span class="nc" id="L43">		return calendar.getTime();</span>
+	}
+
+	/**
+	 * Generates and retrieves the change date that occurs a minute prior to the
+	 * specified change date in ISO format.
+	 *
+	 * @param changeDateISO
+	 *            A given change date in ISO format
+	 * @return The ISO-formatted date/time stamp for a minute prior to the given
+	 *         change date
+	 */
+	public static String getChangeDateMinutePrior(String changeDateISO, int priorMinutes) {
+<span class="nc" id="L56">		return DateUtil.toISODateRealTimeFormat(DateUtil.getDatePriorToMinutes(</span>
+<span class="nc" id="L57">				DateUtil.fromISODateTimeFormat(changeDateISO), priorMinutes));</span>
+	}
+
+	/**
+	 *
+	 * @param dateStr Input string format 2008-01-07 21:30:15.000
+	 * @param fromPattern &quot;yyyy-MM-dd HH:mm:ss.S&quot;;
+	 * @return Date
+	 */
+	public static Date convertIntoDate(String dateStr, String fromPattern) {
+<span class="fc" id="L67">		Date retDate = null;</span>
+		try {
+<span class="fc" id="L69">			SimpleDateFormat sdf = new SimpleDateFormat(fromPattern);</span>
+<span class="fc" id="L70">			return new Date(sdf.parse(dateStr).getTime());</span>
+<span class="fc" id="L71">		} catch (ParseException e) {</span>
+<span class="fc" id="L72">			return retDate;</span>
+		}
+	}
+
+	/**
+	 * Evaluates whether a sprint length appears to be kanban or scrum
+	 * 
+	 * @param startDate
+	 *            The start date of a sprint in ISO format
+	 * @param endDate
+	 *            The end date of a sprint in ISO format
+	 * @return True indicates a scrum sprint; False indicates a Kanban sprint
+	 */
+	public boolean evaluateSprintLength(String startDate, String endDate, int maxKanbanIterationLength) {
+<span class="fc" id="L86">		boolean sprintIndicator = false;</span>
+<span class="fc" id="L87">		Calendar startCalendar = Calendar.getInstance();</span>
+<span class="fc" id="L88">		Calendar endCalendar = Calendar.getInstance();</span>
+
+<span class="pc bpc" id="L90" title="1 of 4 branches missed.">		if (!StringUtils.isAnyEmpty(startDate) &amp;&amp; !StringUtils.isAnyEmpty(endDate)) {</span>
+
+<span class="fc" id="L92">			Date strDt = convertIntoDate(startDate.substring(0, 4) + &quot;-&quot; + startDate.substring(5, 7) + &quot;-&quot; + startDate.substring(8, 10), &quot;yyyy-MM-dd&quot; );</span>
+<span class="fc" id="L93">			Date endDt = convertIntoDate(endDate.substring(0, 4) + &quot;-&quot; + endDate.substring(5, 7) + &quot;-&quot; + endDate.substring(8, 10), &quot;yyyy-MM-dd&quot;);</span>
+
+<span class="pc bpc" id="L95" title="1 of 4 branches missed.">			if (strDt != null &amp;&amp; endDate != null) {</span>
+<span class="fc" id="L96">				startCalendar.setTime(strDt);</span>
+<span class="fc" id="L97">				endCalendar.setTime(endDt);</span>
+
+<span class="fc" id="L99">				long diffMill = endCalendar.getTimeInMillis() - startCalendar.getTimeInMillis();</span>
+<span class="fc" id="L100">				long diffDays = TimeUnit.DAYS.convert(diffMill, TimeUnit.MILLISECONDS);</span>
+
+<span class="fc bfc" id="L102" title="All 2 branches covered.">				if (diffDays &lt;= maxKanbanIterationLength) {</span>
+					// Scrum-enough
+<span class="fc" id="L104">					sprintIndicator = true;</span>
+				}
+			}
+<span class="fc" id="L107">		} else {</span>
+			// Default to kanban
+<span class="fc" id="L109">			sprintIndicator = false;</span>
+
+		}
+
+<span class="fc" id="L113">		return sprintIndicator;</span>
+	}
+
+	/**
+	 * Determines if string is an integer of the radix base number system
+	 * provided.
+	 * 
+	 * @param s
+	 *            String to be evaluated for integer type
+	 * @param radix
+	 *            Base number system (e.g., 10 = base 10 number system)
+	 * @return boolean
+	 */
+	private boolean isInteger(String s, int radix) {
+<span class="nc" id="L127">		Scanner sc = new Scanner(s.trim());</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		if (!sc.hasNextInt(radix))</span>
+<span class="nc" id="L129">			return false;</span>
+		// we know it starts with a valid int, now make sure
+		// there's nothing left!
+<span class="nc" id="L132">		sc.nextInt(radix);</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		return !sc.hasNext();</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Utils.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:score-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard</a> &gt; <span class="el_source">Utils.java</span></div><h1>Utils.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard;
+
+import java.lang.reflect.Constructor;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.capitalone.dashboard.model.score.settings.ScoreComponentSettings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.capitalone.dashboard.model.score.settings.ScoreCriteria;
+import com.capitalone.dashboard.model.score.settings.ScoreThresholdSettings;
+import com.capitalone.dashboard.model.score.settings.ScoreTypeValue;
+
+<span class="nc" id="L16">public final class Utils {</span>
+
+<span class="fc" id="L18">  private static final Logger LOGGER = LoggerFactory.getLogger(Utils.class);</span>
+
+  public static String roundAlloc(Double alloc) {
+<span class="fc" id="L21">    return new DecimalFormat(&quot;#.#&quot;).format(alloc);</span>
+  }
+
+  public static boolean isScoreEnabled(ScoreComponentSettings paramSettings) {
+<span class="pc bpc" id="L25" title="2 of 4 branches missed.">    return (null != paramSettings &amp;&amp; !paramSettings.isDisabled());</span>
+  }
+
+  public static &lt;T&gt; T getInstanceIfNull(T obj, Class&lt;T&gt; tClass) {
+<span class="fc bfc" id="L29" title="All 2 branches covered.">    if (null == obj) {</span>
+      try {
+<span class="fc" id="L31">        Constructor&lt;T&gt; ctor = tClass.getConstructor();</span>
+<span class="fc" id="L32">        return ctor.newInstance();</span>
+<span class="nc" id="L33">      } catch (Exception ex) {</span>
+<span class="nc" id="L34">        LOGGER.error(&quot;Exception to create a instance for {}&quot;, tClass, ex);</span>
+      }
+    }
+<span class="fc" id="L37">    return obj;</span>
+  }
+
+  public static ScoreCriteria mergeCriteria(ScoreCriteria parent, ScoreCriteria child) {
+<span class="nc bnc" id="L41" title="All 2 branches missed.">    if (null == child) {</span>
+<span class="nc" id="L42">      return ScoreCriteria.cloneScoreCriteria(parent);</span>
+    }
+
+<span class="nc bnc" id="L45" title="All 2 branches missed.">    if (null == parent) {</span>
+<span class="nc" id="L46">      return child;</span>
+    }
+
+<span class="nc" id="L49">    ScoreCriteria childMerged = ScoreCriteria.cloneScoreCriteria(child);</span>
+
+<span class="nc bnc" id="L51" title="All 2 branches missed.">    if (null == childMerged.getNoWidgetFound()) {</span>
+<span class="nc" id="L52">      childMerged.setNoWidgetFound(</span>
+<span class="nc" id="L53">        ScoreTypeValue.cloneScoreTypeValue(parent.getNoWidgetFound())</span>
+        );
+    }
+
+<span class="nc bnc" id="L57" title="All 2 branches missed.">    if (null == childMerged.getNoDataFound()) {</span>
+<span class="nc" id="L58">      childMerged.setNoDataFound(</span>
+<span class="nc" id="L59">        ScoreTypeValue.cloneScoreTypeValue(parent.getNoDataFound())</span>
+        );
+    }
+
+<span class="nc bnc" id="L63" title="All 2 branches missed.">    if (null == childMerged.getDataRangeThresholds()) {</span>
+<span class="nc" id="L64">      childMerged.setDataRangeThresholds(</span>
+<span class="nc" id="L65">        cloneThresholds(parent.getDataRangeThresholds())</span>
+        );
+    }
+
+<span class="nc" id="L69">    return childMerged;</span>
+  }
+
+
+  public static List&lt;ScoreThresholdSettings&gt; cloneThresholds(List&lt;ScoreThresholdSettings&gt; thresholds) {
+<span class="nc bnc" id="L74" title="All 2 branches missed.">    if (null == thresholds) {</span>
+<span class="nc" id="L75">      return null;</span>
+    }
+<span class="nc" id="L77">    List&lt;ScoreThresholdSettings&gt; thresholdsClone = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">    for (ScoreThresholdSettings threshold : thresholds) {</span>
+<span class="nc" id="L79">      thresholdsClone.add(</span>
+<span class="nc" id="L80">        ScoreThresholdSettings.cloneScoreThresholdSettings(threshold)</span>
+        );
+<span class="nc" id="L82">    }</span>
+<span class="nc" id="L83">    return thresholdsClone;</span>
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

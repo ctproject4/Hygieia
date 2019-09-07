@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>HttpJenkinsClient.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:jenkins-codequality</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">HttpJenkinsClient.java</span></div><h1>HttpJenkinsClient.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+import com.capitalone.dashboard.jenkins.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+@Component
+public class HttpJenkinsClient implements JenkinsClient {
+
+
+    private RestTemplate restTemplate;
+    private JenkinsSettings settings;
+    private static final String JOBS_SEP=&quot;,&quot;;
+    private static final String JOBS_PARAM=&quot;jobs[name,url,lastSuccessfulBuild[timestamp,artifacts[*]]&quot;;
+    private static final String JOBS_CLOSE=&quot;]&quot;;
+    private static final String JENKINS_JOB_BASE_URL = &quot;%s/api/json?tree=&quot;;
+    private static final String JENKINS_ARTIFACT_URL = &quot;%s/lastSuccessfulBuild/artifact/%s&quot;;
+
+    @Autowired
+<span class="fc" id="L33">    public HttpJenkinsClient(RestTemplate restTemplate, JenkinsSettings settings) {</span>
+<span class="fc" id="L34">        this.restTemplate = restTemplate;</span>
+<span class="fc" id="L35">        this.settings = settings;</span>
+<span class="fc" id="L36">    }</span>
+
+    @Override
+    public List&lt;JenkinsJob&gt; getJobs(List&lt;String&gt; servers) {
+<span class="fc" id="L40">        List&lt;JenkinsJob&gt; jobs = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L41">        servers.forEach(server -&gt; {</span>
+            // TODO get the job depth stuff in place
+<span class="fc" id="L43">            StringBuilder jobDepth = new StringBuilder();</span>
+<span class="fc" id="L44">            jobDepth.append(JENKINS_JOB_BASE_URL);</span>
+<span class="fc" id="L45">            int maxJobDepth = this.settings.getJobDepth();</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">            for (int i = 0; i &lt; maxJobDepth ; i++) {</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">                if (i &gt; 0) {</span>
+<span class="fc" id="L48">                    jobDepth.append(JOBS_SEP);</span>
+                }
+<span class="fc" id="L50">                jobDepth.append(JOBS_PARAM);</span>
+            }
+<span class="fc bfc" id="L52" title="All 2 branches covered.">            for (int i = 0; i &lt; maxJobDepth; i++) {</span>
+<span class="fc" id="L53">                jobDepth.append(JOBS_CLOSE);</span>
+            }
+
+<span class="fc" id="L56">            String url = String.format(jobDepth.toString(), server);</span>
+            final ResponseEntity&lt;JobContainer&gt; jobsOnServer;
+            try {
+<span class="fc" id="L59">                jobsOnServer = restTemplate.exchange(new URI(url), HttpMethod.GET, createSecureRequestEntity(), JobContainer.class);</span>
+<span class="fc" id="L60">                jobs.addAll(jobsOnServer.getBody().getJobs());</span>
+<span class="fc" id="L61">            } catch (URISyntaxException e) {</span>
+                // silently swallow
+<span class="fc" id="L63">            }</span>
+<span class="fc" id="L64">        });</span>
+<span class="fc" id="L65">        return jobs;</span>
+    }
+
+    @Override
+    public &lt;T&gt; List&lt;T&gt; getLatestArtifacts(Class&lt;T&gt; type, JenkinsJob job, Pattern matchingJobPatterns) {
+
+<span class="fc" id="L71">        List&lt;Artifact&gt; allMatchingArtifacts = job.getLastSuccessfulBuild().getArtifacts().stream().filter(JenkinsPredicate.artifactContaining(matchingJobPatterns)).collect(Collectors.toList());</span>
+
+<span class="fc" id="L73">        List&lt;T&gt; xmlReports = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L74">        allMatchingArtifacts.forEach(artifact -&gt; {</span>
+<span class="fc" id="L75">            ResponseEntity&lt;T&gt; response = null;</span>
+            try {
+<span class="fc" id="L77">                response = restTemplate.exchange(new URI(String.format(JENKINS_ARTIFACT_URL, job.getUrl(), artifact.getRelativePath())), HttpMethod.GET, createSecureRequestEntity(), type);</span>
+<span class="fc" id="L78">                xmlReports.add(response.getBody());</span>
+<span class="fc" id="L79">            } catch (URISyntaxException e) {</span>
+                // silently fail
+<span class="fc" id="L81">            }</span>
+<span class="fc" id="L82">        });</span>
+
+<span class="fc" id="L84">        return xmlReports;</span>
+
+    }
+
+    public HttpEntity&lt;?&gt; createSecureRequestEntity() {
+<span class="pc bpc" id="L89" title="1 of 4 branches missed.">        if (settings.getApiKey() != null &amp;&amp; settings.getUsername() != null) {</span>
+<span class="fc" id="L90">            HttpHeaders securityHeader = new HttpHeaders();</span>
+<span class="fc" id="L91">            byte[] encodedAuth = org.apache.commons.codec.binary.Base64.encodeBase64((</span>
+<span class="fc" id="L92">                    settings.getUsername() + &quot;:&quot; + settings.getApiKey()).getBytes(StandardCharsets.US_ASCII));</span>
+<span class="fc" id="L93">            String authHeader = &quot;Basic &quot; + new String(encodedAuth);</span>
+<span class="fc" id="L94">            securityHeader.add(HttpHeaders.AUTHORIZATION, authHeader);</span>
+<span class="fc" id="L95">            return new HttpEntity&lt;&gt;(securityHeader);</span>
+        }
+<span class="fc" id="L97">        return HttpEntity.EMPTY;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

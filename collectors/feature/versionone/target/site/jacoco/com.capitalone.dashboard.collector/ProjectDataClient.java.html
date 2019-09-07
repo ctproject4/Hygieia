@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ProjectDataClient.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:versionone-feature-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">ProjectDataClient.java</span></div><h1>ProjectDataClient.java</h1><pre class="source lang-java linenums">
+package com.capitalone.dashboard.collector;
+
+import com.capitalone.dashboard.datafactory.versionone.VersionOneDataFactoryImpl;
+import com.capitalone.dashboard.misc.HygieiaException;
+import com.capitalone.dashboard.model.Collector;
+import com.capitalone.dashboard.model.Scope;
+import com.capitalone.dashboard.repository.FeatureCollectorRepository;
+import com.capitalone.dashboard.repository.ScopeRepository;
+import com.capitalone.dashboard.util.DateUtil;
+import com.capitalone.dashboard.util.FeatureCollectorConstants;
+import org.bson.types.ObjectId;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
+
+import java.util.List;
+
+/**
+ * This is the primary implemented/extended data collector for the feature
+ * collector. This will get data from the source system, but will grab the
+ * majority of needed data and aggregate it in a single, flat MongoDB collection
+ * for consumption.
+ */
+public class ProjectDataClient extends BaseClient {
+<span class="nc" id="L29">	private static final Logger LOGGER = LoggerFactory.getLogger(ProjectDataClient.class);</span>
+
+	private final FeatureSettings featureSettings;
+	private final ScopeRepository projectRepo;
+	private final FeatureCollectorRepository featureCollectorRepository;
+
+	/**
+	 * Extends the constructor from the super class.
+	 */
+	public ProjectDataClient(FeatureSettings featureSettings, ScopeRepository projectRepository,
+			FeatureCollectorRepository featureCollectorRepository,
+			VersionOneDataFactoryImpl vOneApi) {
+<span class="nc" id="L41">        super(vOneApi, featureSettings);</span>
+<span class="nc" id="L42">        LOGGER.debug(&quot;Constructing data collection for the feature widget, story-level data...&quot;);</span>
+
+<span class="nc" id="L44">		this.featureSettings = featureSettings;</span>
+<span class="nc" id="L45">		this.projectRepo = projectRepository;</span>
+<span class="nc" id="L46">		this.featureCollectorRepository = featureCollectorRepository;</span>
+<span class="nc" id="L47">	}</span>
+
+	/**
+	 * Updates the MongoDB with a JSONArray received from the source system
+	 * back-end with story-based data.
+	 *
+	 * @param tmpMongoDetailArray
+	 *            A JSON response in JSONArray format from the source system
+	 */
+    @Override
+	@SuppressWarnings(&quot;unchecked&quot;)
+	protected void updateMongoInfo(JSONArray tmpMongoDetailArray) {
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		for (Object obj : tmpMongoDetailArray) {</span>
+<span class="nc" id="L60">			JSONObject dataMainObj = (JSONObject) obj;</span>
+
+<span class="nc" id="L62">			Scope scope = new Scope();</span>
+
+<span class="nc" id="L64">			removeExistingEntity(getJSONString(dataMainObj, &quot;_oid&quot;));</span>
+
+			// collectorId
+<span class="nc" id="L67">			scope.setCollectorId(</span>
+<span class="nc" id="L68">					featureCollectorRepository.findByName(FeatureCollectorConstants.VERSIONONE).getId());</span>
+
+			// ID;
+<span class="nc" id="L71">			scope.setpId(getJSONString(dataMainObj, &quot;_oid&quot;));</span>
+
+			// name;
+<span class="nc" id="L74">			scope.setName(getJSONString(dataMainObj, &quot;Name&quot;));</span>
+
+			// beginDate;
+<span class="nc" id="L77">			scope.setBeginDate(getJSONString(dataMainObj, &quot;BeginDate&quot;));</span>
+
+			// endDate;
+<span class="nc" id="L80">			scope.setEndDate(getJSONString(dataMainObj, &quot;EndDate&quot;));</span>
+
+			// changeDate;
+<span class="nc" id="L83">			scope.setChangeDate(getJSONString(dataMainObj, &quot;ChangeDate&quot;));</span>
+
+			// assetState;
+<span class="nc" id="L86">			scope.setAssetState(getJSONString(dataMainObj, &quot;AssetState&quot;));</span>
+
+			// isDeleted;
+<span class="nc" id="L89">			scope.setIsDeleted(getJSONString(dataMainObj, &quot;IsDeleted&quot;));</span>
+
+			// path;
+<span class="nc" id="L92">			String projPath = scope.getName();</span>
+<span class="nc" id="L93">			List&lt;String&gt; projList = (List&lt;String&gt;) dataMainObj.get(&quot;ParentAndUp.Name&quot;);</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">			if (!CollectionUtils.isEmpty(projList)) {</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">				for (String proj : projList) {</span>
+<span class="nc" id="L96">					projPath = proj + &quot;--&gt;&quot; + projPath;</span>
+<span class="nc" id="L97">				}</span>
+<span class="nc" id="L98">				projPath = &quot;All--&gt;&quot; + projPath;</span>
+			} else {
+<span class="nc" id="L100">				projPath = &quot;All--&gt;&quot; + projPath;</span>
+			}
+<span class="nc" id="L102">			scope.setProjectPath(sanitizeResponse(projPath));</span>
+
+<span class="nc" id="L104">			projectRepo.save(scope);</span>
+<span class="nc" id="L105">		}</span>
+<span class="nc" id="L106">	}</span>
+
+    @Override
+	public String getMaxChangeDate() {
+<span class="nc" id="L110">		Collector col = featureCollectorRepository.findByName(FeatureCollectorConstants.VERSIONONE);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if (col == null)</span>
+<span class="nc" id="L112">			return &quot;&quot;;</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		if (StringUtils.isEmpty(featureSettings.getDeltaStartDate()))</span>
+<span class="nc" id="L114">			return &quot;&quot;;</span>
+
+<span class="nc" id="L116">		List&lt;Scope&gt; response = projectRepo</span>
+<span class="nc" id="L117">				.findTopByCollectorIdAndChangeDateGreaterThanOrderByChangeDateDesc(col.getId(),</span>
+<span class="nc" id="L118">                        featureSettings.getDeltaStartDate());</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		if (!CollectionUtils.isEmpty(response))</span>
+<span class="nc" id="L120">			return response.get(0).getChangeDate();</span>
+<span class="nc" id="L121">		return &quot;&quot;;</span>
+	}
+
+	public void updateProjectInformation() throws HygieiaException {
+<span class="nc" id="L125">		String returnDate = this.featureSettings.getDeltaStartDate();</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		if (!StringUtils.isEmpty(getMaxChangeDate())) {</span>
+<span class="nc" id="L127">			returnDate = getMaxChangeDate();</span>
+		}
+<span class="nc" id="L129">		returnDate = DateUtil.getChangeDateMinutePrior(returnDate,</span>
+<span class="nc" id="L130">				this.featureSettings.getScheduledPriorMin()); // getChangeDateMinutePrior(returnDate);</span>
+<span class="nc" id="L131">		String queryName = this.featureSettings.getProjectQuery();</span>
+<span class="nc" id="L132">		updateObjectInformation(getQuery(returnDate, queryName));</span>
+<span class="nc" id="L133">	}</span>
+
+
+	/**
+	 * Validates current entry and removes new entry if an older item exists in
+	 * the repo
+	 *
+	 * @param localId
+	 *            local repository item ID (not the precise mongoID)
+	 */
+	protected void removeExistingEntity(String localId) {
+<span class="nc bnc" id="L144" title="All 2 branches missed.">		if (StringUtils.isEmpty(localId))</span>
+<span class="nc" id="L145">			return;</span>
+<span class="nc" id="L146">		List&lt;Scope&gt; scopes = projectRepo.getScopeIdById(localId);</span>
+
+<span class="nc bnc" id="L148" title="All 2 branches missed.">		if (CollectionUtils.isEmpty(scopes))</span>
+<span class="nc" id="L149">			return;</span>
+
+<span class="nc" id="L151">		ObjectId tempEntId = scopes.get(0).getId();</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">		if (localId.equalsIgnoreCase(scopes.get(0).getpId())) {</span>
+<span class="nc" id="L153">			projectRepo.delete(tempEntId);</span>
+		}
+<span class="nc" id="L155">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

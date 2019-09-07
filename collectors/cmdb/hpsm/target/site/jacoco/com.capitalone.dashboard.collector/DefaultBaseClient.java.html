@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DefaultBaseClient.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">com.capitalone.dashboard:hpsm-cmdb-collector</a> &gt; <a href="index.source.html" class="el_package">com.capitalone.dashboard.collector</a> &gt; <span class="el_source">DefaultBaseClient.java</span></div><h1>DefaultBaseClient.java</h1><pre class="source lang-java linenums">package com.capitalone.dashboard.collector;
+
+import com.capitalone.dashboard.misc.HygieiaException;
+import com.capitalone.dashboard.model.HpsmSoapModel;
+import com.capitalone.dashboard.model.Incident;
+import com.capitalone.dashboard.util.HpsmCollectorConstants;
+import com.capitalone.dashboard.util.XmlUtil;
+import com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.httpclient.Credentials;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.SimpleHttpConnectionManager;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.RequestEntity;
+import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+public class DefaultBaseClient {
+<span class="fc" id="L41">    private static final Log LOG = LogFactory.getLog(DefaultBaseClient.class);</span>
+
+    private final HpsmSettings hpsmSettings;
+    private PostMethod post;
+<span class="fc" id="L45">    private SimpleHttpConnectionManager manager = new SimpleHttpConnectionManager(true);</span>
+<span class="fc" id="L46">    HttpClient httpclient = new HttpClient(manager);</span>
+<span class="fc" id="L47">    boolean usedClient = false;</span>
+    int port;
+    String strURL;
+    String protocol;
+    String server;
+    String resource;
+    String contentType;
+    String charset;
+<span class="fc" id="L55">    String userName = &quot;&quot;;</span>
+<span class="fc" id="L56">    String password = &quot;&quot;;</span>
+
+    private static final String APPLICATION_PREFIX = &quot;ASV&quot;;
+    private static final String ENVIRONMENT_PREFIX = &quot;ENV&quot;;
+
+    @Autowired
+<span class="fc" id="L62">    public DefaultBaseClient(HpsmSettings hpsmSettings) {</span>
+<span class="fc" id="L63">        this.hpsmSettings = hpsmSettings;</span>
+<span class="fc" id="L64">    }</span>
+
+    /**
+     *  Makes SOAP request for given soap message
+     * @param soapMessageString Generated SOAP ready for POST
+     * @param hpsmSoapModel hpsmSoapModel
+     * @return Soap response
+     */
+    protected String makeSoapCall(String soapMessageString, HpsmSoapModel hpsmSoapModel) throws HygieiaException {
+
+<span class="nc" id="L74">        String requestAction = hpsmSoapModel.getSoapAction();</span>
+<span class="nc" id="L75">        String response = &quot;&quot;;</span>
+<span class="nc" id="L76">        contentType = hpsmSettings.getContentType();</span>
+<span class="nc" id="L77">        charset = hpsmSettings.getCharset();</span>
+
+        try {
+<span class="nc" id="L80">            startHttpConnection();</span>
+
+<span class="nc" id="L82">            RequestEntity entity = new StringRequestEntity(soapMessageString, contentType, charset);</span>
+<span class="nc" id="L83">            post.setRequestEntity(entity);</span>
+<span class="nc" id="L84">            post.setRequestHeader(&quot;SOAPAction&quot;, requestAction);</span>
+
+<span class="nc" id="L86">            httpclient.executeMethod(post);</span>
+
+<span class="nc" id="L88">            response = getResponseString(post.getResponseBodyAsStream());</span>
+
+<span class="nc bnc" id="L90" title="All 2 branches missed.">            if(!&quot;OK&quot;.equals(post.getStatusText())){</span>
+<span class="nc" id="L91">                throw new HygieiaException(&quot;Soap Request Failure: &quot; +  post.getStatusCode() + &quot;|response: &quot; +response, HygieiaException.BAD_DATA);</span>
+            }
+
+<span class="nc" id="L94">            stopHttpConnection();</span>
+<span class="nc" id="L95">        } catch (IOException e) {</span>
+<span class="nc" id="L96">            LOG.error(&quot;Error while trying to make soap call: &quot; + e);</span>
+<span class="nc" id="L97">        }</span>
+
+<span class="nc" id="L99">        return response;</span>
+    }
+
+    protected void startHttpConnection() {
+<span class="nc" id="L103">        server = hpsmSettings.getServer();</span>
+<span class="nc" id="L104">        port = hpsmSettings.getPort();</span>
+<span class="nc" id="L105">        protocol = hpsmSettings.getProtocol() + &quot;://&quot;;</span>
+<span class="nc" id="L106">        resource = hpsmSettings.getResource();</span>
+<span class="nc" id="L107">        userName = hpsmSettings.getUser();</span>
+<span class="nc" id="L108">        password = hpsmSettings.getPass();</span>
+
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        if(!usedClient){</span>
+<span class="nc" id="L111">            strURL = protocol + server + &quot;:&quot; + port + &quot;/&quot; + resource;</span>
+<span class="nc" id="L112">            post = new PostMethod(strURL);</span>
+
+            // Get HTTP client
+<span class="nc" id="L115">            httpclient.getParams().setAuthenticationPreemptive(true);</span>
+
+<span class="nc" id="L117">            Credentials defaultcreds = new UsernamePasswordCredentials(userName, password);</span>
+<span class="nc" id="L118">            httpclient.getState().setCredentials(new AuthScope(server, port, AuthScope.ANY_REALM), defaultcreds);</span>
+<span class="nc" id="L119">            usedClient = true;</span>
+        }
+<span class="nc" id="L121">    }</span>
+
+    protected void stopHttpConnection() {
+<span class="nc bnc" id="L124" title="All 4 branches missed.">        if(post != null &amp;&amp; usedClient) { post.releaseConnection(); }</span>
+
+<span class="nc bnc" id="L126" title="All 4 branches missed.">        if(manager != null &amp;&amp; usedClient) { manager.shutdown(); }</span>
+
+<span class="nc" id="L128">        usedClient = false;</span>
+<span class="nc" id="L129">    }</span>
+
+    protected String getResponseString(InputStream in) throws IOException {
+<span class="nc" id="L132">        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();</span>
+<span class="nc" id="L133">        byte[] byteArray = new byte[1024];</span>
+        int count;
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        while ((count = in.read(byteArray, 0, byteArray.length)) &gt; 0) {</span>
+<span class="nc" id="L136">            outputStream.write(byteArray, 0, count);</span>
+        }
+<span class="nc" id="L138">        return new String(outputStream.toByteArray(), &quot;UTF-8&quot;);</span>
+    }
+
+    protected List&lt;Incident&gt; responseToIncidentList(String response) {
+<span class="nc" id="L142">        List &lt;Incident&gt; returnList = new ArrayList&lt;&gt;();</span>
+        try {
+<span class="nc" id="L144">            Document doc = responseToDoc(response);</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">            for(Node n: XmlUtil.asList(doc.getElementsByTagName(&quot;instance&quot;))){</span>
+<span class="nc" id="L146">                Map xmlMap = XmlUtil.getElementKeyValue(n.getChildNodes());</span>
+<span class="nc" id="L147">                returnList.addAll(getIncidentFromXmlMap(xmlMap));</span>
+<span class="nc" id="L148">            }</span>
+<span class="nc" id="L149">        } catch(Exception e){</span>
+<span class="nc" id="L150">            LOG.error(e);</span>
+<span class="nc" id="L151">        }</span>
+<span class="nc" id="L152">        return returnList;</span>
+    }
+
+    /**
+     *  Converts String response into document for parsing
+     * @param response SOAP response required for creation of Document
+     * @return Document Object
+     */
+    protected Document responseToDoc(String response){
+<span class="nc" id="L161">        Document doc = null;</span>
+        try {
+<span class="nc" id="L163">            DocumentBuilderFactory factory = new DocumentBuilderFactoryImpl();</span>
+<span class="nc" id="L164">            DocumentBuilderFactory.newInstance();</span>
+<span class="nc" id="L165">            DocumentBuilder builder =  factory.newDocumentBuilder();</span>
+<span class="nc" id="L166">            ByteArrayInputStream input =  new ByteArrayInputStream(response.getBytes(&quot;UTF-8&quot;));</span>
+<span class="nc" id="L167">            doc = builder.parse(input);</span>
+<span class="nc" id="L168">        } catch (ParserConfigurationException e) {</span>
+<span class="nc" id="L169">            LOG.error(&quot;ParserConfigurationException&quot;, e);</span>
+<span class="nc" id="L170">        } catch (UnsupportedEncodingException e) {</span>
+<span class="nc" id="L171">            LOG.error(&quot;UnsupportedEncodingException&quot;, e);</span>
+<span class="nc" id="L172">        } catch (IOException e) {</span>
+<span class="nc" id="L173">            LOG.error(&quot;IOException&quot;, e);</span>
+<span class="nc" id="L174">        } catch (SAXException e) {</span>
+<span class="nc" id="L175">            LOG.error(&quot;SAXException&quot;, e);</span>
+<span class="nc" id="L176">        }</span>
+
+<span class="nc" id="L178">        return doc;</span>
+    }
+
+    protected List&lt;Incident&gt; getIncidentFromXmlMap(Map map) {
+<span class="nc bnc" id="L182" title="All 4 branches missed.">        if(map == null || map.isEmpty()) return new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">        if(getStringValueFromMap(map, HpsmCollectorConstants.INCIDENT_ID).isEmpty()) return new ArrayList&lt;&gt;();</span>
+
+        // Environment Check
+<span class="nc" id="L186">        String environment = getStringValueFromMap(map,HpsmCollectorConstants.INCIDENT_ENVIRONMENT);</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">        if (!environmentCheck(environment)) { return new ArrayList&lt;&gt;();}</span>
+
+<span class="nc" id="L189">        Incident incident = new Incident();</span>
+<span class="nc" id="L190">        incident.setIncidentID(getStringValueFromMap(map,HpsmCollectorConstants.INCIDENT_ID));</span>
+<span class="nc" id="L191">        incident.setCategory(getStringValueFromMap(map,HpsmCollectorConstants.INCIDENT_CATEGORY));</span>
+<span class="nc" id="L192">        incident.setOpenTime(getStringValueFromMap(map,HpsmCollectorConstants.INCIDENT_OPEN_TIME));</span>
+<span class="nc" id="L193">        String closedTime = getStringValueFromMap(map,HpsmCollectorConstants.INCIDENT_CLOSE_TIME);</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">        if (!StringUtils.isEmpty(closedTime)) {</span>
+<span class="nc" id="L195">            incident.setClosedTime(closedTime);</span>
+        } else {
+<span class="nc" id="L197">            incident.setClosedTime(0L);</span>
+        }
+<span class="nc" id="L199">        incident.setOpenedBy(getStringValueFromMap(map,HpsmCollectorConstants.INCIDENT_OPEN_BY));</span>
+<span class="nc" id="L200">        incident.setUpdatedTime(getStringValueFromMap(map,HpsmCollectorConstants.INCIDENT_UPDATE_TIME));</span>
+<span class="nc" id="L201">        incident.setSeverity(getStringValueFromMap(map,HpsmCollectorConstants.INCIDENT_SEVERITY));</span>
+<span class="nc" id="L202">        incident.setPrimaryAssignmentGroup(getStringValueFromMap(map,HpsmCollectorConstants.INCIDENT_PRIMARY_ASSIGNMENT_GROUP));</span>
+<span class="nc" id="L203">        incident.setStatus(getStringValueFromMap(map,HpsmCollectorConstants.INCIDENT_STATUS));</span>
+
+        // Determine the affected Item.
+<span class="nc" id="L206">        String affectedItem = getStringValueFromMap(map,HpsmCollectorConstants.INCIDENT_AFFECTED_ITEM);</span>
+<span class="nc" id="L207">        String service = getStringValueFromMap(map,HpsmCollectorConstants.INCIDENT_SERVICE);</span>
+<span class="nc" id="L208">        String affectedItemResult = getAffectedItem(affectedItem, service);</span>
+<span class="nc" id="L209">        incident.setAffectedItem(affectedItemResult);</span>
+
+<span class="nc" id="L211">        incident.setIncidentDescription(getStringValueFromMap(map, HpsmCollectorConstants.INCIDENT_DESCRIPTION));</span>
+<span class="nc" id="L212">        List&lt;Incident&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L213">        list.add(incident);</span>
+
+<span class="nc" id="L215">        return list;</span>
+    }
+
+    protected boolean environmentCheck (String environment) {
+<span class="fc bfc" id="L219" title="All 2 branches covered.">        if (StringUtils.isEmpty(environment)) { return true; }</span>
+
+<span class="fc" id="L221">        List&lt;String&gt; configuredEnvironmentList = hpsmSettings.getIncidentEnvironments();</span>
+<span class="pc bpc" id="L222" title="2 of 4 branches missed.">        if (!CollectionUtils.isEmpty(configuredEnvironmentList) &amp;&amp; !StringUtils.isEmpty(environment)) {</span>
+<span class="fc" id="L223">            String searchResult = configuredEnvironmentList.stream()</span>
+<span class="fc" id="L224">                                    .filter(configuredEnv -&gt; configuredEnv.equalsIgnoreCase(environment))</span>
+<span class="fc" id="L225">                                    .findFirst().orElse(null);</span>
+<span class="fc bfc" id="L226" title="All 2 branches covered.">            if (!StringUtils.isEmpty(searchResult)) return true;</span>
+        }
+<span class="fc" id="L228">        return false;</span>
+    }
+
+    protected String getAffectedItem(String affectedItem, String service) {
+        // Return affectedItem, if it is truly a BAP/CI
+<span class="fc bfc" id="L233" title="All 2 branches covered.">        if  (!StringUtils.isEmpty(affectedItem)</span>
+<span class="pc bpc" id="L234" title="1 of 2 branches missed.">                &amp;&amp; !affectedItem.toUpperCase(Locale.ENGLISH).startsWith(APPLICATION_PREFIX)</span>
+<span class="fc bfc" id="L235" title="All 2 branches covered.">                &amp;&amp; !affectedItem.toUpperCase(Locale.ENGLISH).startsWith(ENVIRONMENT_PREFIX)) {</span>
+<span class="fc" id="L236">            return affectedItem;</span>
+        }
+
+        // Return the service if it happens to be a BAP/CI
+<span class="pc bpc" id="L240" title="1 of 2 branches missed.">        if  (!StringUtils.isEmpty(service)</span>
+<span class="fc bfc" id="L241" title="All 2 branches covered.">                &amp;&amp; !service.toUpperCase(Locale.ENGLISH).startsWith(APPLICATION_PREFIX)</span>
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">                &amp;&amp; !service.toUpperCase(Locale.ENGLISH).startsWith(ENVIRONMENT_PREFIX)) {</span>
+<span class="fc" id="L243">            return service;</span>
+        }
+
+        // Return affected Item if it is available.
+<span class="fc bfc" id="L247" title="All 2 branches covered.">        if  (!StringUtils.isEmpty(affectedItem)) { return affectedItem; }</span>
+
+        // Return service if it is available.
+<span class="pc bpc" id="L250" title="1 of 2 branches missed.">        if  (!StringUtils.isEmpty(service)) { return service; }</span>
+
+<span class="nc" id="L252">        return null;</span>
+    }
+
+    protected String getStringValueFromMap(Map map, String key) {
+<span class="nc bnc" id="L256" title="All 2 branches missed.">        if(!map.containsKey(key)</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">                || map.get(key) == null</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">                || &quot;&quot;.equals(key)) return &quot;&quot;;</span>
+<span class="nc" id="L259">        return map.get(key).toString();</span>
+    }
+
+    /**
+     * Date utility
+     *
+     * @param dateInstance
+     * @param offsetDays
+     * @param offsetMinutes
+     * @return
+     */
+    protected static DateTime getDate(DateTime dateInstance, int offsetDays, int offsetMinutes) {
+<span class="fc" id="L271">        return dateInstance.minusDays(offsetDays).minusMinutes(offsetMinutes);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>
