@@ -72,7 +72,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "angular": "~1.5.9",
+    "angular": "~1.7.9",
     "angular-animate": "~1.5.9",
     "angular-chart.js": "^1.1.1",
     "chartist": "~0.9.5",
